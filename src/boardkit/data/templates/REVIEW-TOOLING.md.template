@@ -1,0 +1,68 @@
+# Review and delegation tooling for this repo
+
+This file is a per-project fill-in, not a generic doc. It pins the actual
+tools and harness bindings this repo uses for review and delegation, so a
+board owner does not have to rediscover tool mechanics every session. Cards
+cite this file instead of repeating it.
+
+A repo's `REVIEW-TOOLING.md` overrides any generic delegation-skill guidance
+a harness might load by default. If a skill's default instructions conflict
+with what is pinned here, this file wins.
+
+## The standing rule
+
+Every final artifact (a plan, a card, an evidence write-up, an architecture
+decision) gets one adversarial review by a model from a different family
+than its author, before it reaches a user gate. For code, that is the Gate
+A review defined in `PROCESS.md` and `MODEL-CLASSES.md`, which runs in the
+board owner's own harness with its native reviewer under the
+reviewer-differs-from-author invariant. For prose and design artifacts,
+pick a reviewer from a different family than the author using the
+harness-bindings table below.
+
+## Harness bindings
+
+One row per board-owner harness. Fill this in for your repo; the two
+example rows show the shape.
+
+| Board owner (harness) | Executor pool | Gate A reviewer | Gate F route | Defers |
+| --- | --- | --- | --- | --- |
+| Claude Code | Claude subagents (`general`, `Explore`) | fresh-context Claude subagent loading the language review skill | a different-family frontier model via its own CLI | nothing |
+| OpenCode | small-class agents in-harness | a different-model OpenCode agent loading the language review skill | a different-family frontier model via its own CLI | nothing |
+<!-- | codex | codex subagents | per pre-vet; reviewer-differs-from-author invariant applies unchanged | a Claude Code frontier subagent | wiki/handoff writing, if this repo has one | -->
+<!-- codex is a known-working board-owner harness, deferred here only because
+     this repo has not wired it yet. Uncomment and fill in once it is. -->
+
+## Tools, in order of preference
+
+List the tools this repo actually uses for review and delegation, most
+preferred first, with the invocation each one needs. Replace this section
+entirely; it ships empty on purpose.
+
+1. `<tool name>`: what it is used for, how to invoke it, where its binary or
+   config lives.
+2. `<tool name>`: same.
+
+## Transport rule
+
+Prefer CLI invocations over MCP transports for driving another agent
+harness: `opencode run` or `codex exec` rather than an MCP
+tool call into the same harness. MCP transports to agent harnesses have
+been observed hanging past their expected completion time, and returning
+empty results from a server that finished its work correctly on the
+CLI side. Use CLI invocations as the default; treat an MCP path to another
+harness as a fallback that needs its own pre-vet echo test before a wave
+depends on it.
+
+## Reviewer pre-vet
+
+Before a wave or gate depends on any reviewer named above, run the pre-vet
+checklist in `MODEL-CLASSES.md`: reachability, usage headroom, permission
+profile, and model identity. An unvetted, quota-exhausted, or
+under-permissioned reviewer defers per `PROCESS.md`.
+
+## Budget etiquette
+
+Restate or tighten the budget etiquette from `MODEL-CLASSES.md` here if
+this repo has repo-specific cost constraints (a shared quota, a per-wave
+budget cap). Leave this section out if the generic guidance is enough.

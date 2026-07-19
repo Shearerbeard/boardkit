@@ -19,6 +19,25 @@ def test_init_scaffolds_config_and_template(tmp_path: Path) -> None:
     template = tmp_path / "docs" / "board" / "cards" / "_template.md"
     assert template.is_file()
 
+    for rel in (
+        "docs/board/PROCESS.md",
+        "docs/board/MODEL-CLASSES.md",
+        "docs/board/REVIEW-TOOLING.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "GEMINI.md",
+    ):
+        assert (tmp_path / rel).is_file(), f"init did not place {rel}"
+
+
+def test_init_leaves_existing_entry_shims_untouched(tmp_path: Path) -> None:
+    existing = tmp_path / "AGENTS.md"
+    existing.write_text("mine\n", encoding="utf-8")
+
+    assert cmd_init(_Args(config=str(tmp_path / CONFIG_FILENAME))) == 0
+    assert existing.read_text(encoding="utf-8") == "mine\n"
+    assert (tmp_path / "CLAUDE.md").is_file()
+
 
 def test_init_refuses_to_overwrite_existing_config(tmp_path: Path) -> None:
     config_path = tmp_path / CONFIG_FILENAME

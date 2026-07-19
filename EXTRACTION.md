@@ -37,7 +37,7 @@ material, stripped before publish).
 | `MODEL-CLASSES.md` | `PROCESS.md` roles section + `REVIEW-TOOLING.md` harness bindings, pre-vet, attended/unattended policy | author | Genericize to model *classes* (frontier orchestrator / smart writer-reviewer / small explorer) with current pins (GLM-5.2, Kimi K2.7, MiniMax M3, GPT-5.x, Claude) as worked examples. Carries: smart/any executor classes, reviewer-differs-from-author invariant, reviewer pre-vet checklist, empty-return-is-failed-delegation, attended/unattended guidance. |
 | `REVIEW-TOOLING.md` template | `docs/redesign/REVIEW-TOOLING.md` | template | The per-project override doc: fill-in harness-bindings table, tool bindings, budget etiquette. Kit ships the shape; each project pins its own tools. |
 | AGENTS.md / CLAUDE.md shims | terminalbench-aura root `AGENTS.md` + `CLAUDE.md` | template | Entry-point pattern: AGENTS.md canonical, CLAUDE.md/GEMINI.md one-line shims. Board-owner role rule and read order included. |
-| Case-insensitivity trap note | PROCESS.md / AGENTS.md | port | `board.md` vs `BOARD.md` collision on case-insensitive filesystems; kit avoids the collision by construction (no frozen `BOARD.md` at root). |
+| Case-insensitivity trap note | PROCESS.md / AGENTS.md | dropped | `board.md` vs `BOARD.md` collision was an artifact of aura's frozen root archive; boardkit repos have no colliding file by construction, so no note ships. |
 
 ## Skills plugin (Phase 3)
 
