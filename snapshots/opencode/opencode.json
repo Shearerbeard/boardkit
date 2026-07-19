@@ -1,0 +1,152 @@
+{
+  "model": "fireworks-ai/accounts/fireworks/models/glm-5p2",
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "plan",
+  "agent": {
+    "build": {
+      "model": "fireworks-ai/accounts/fireworks/models/glm-5p2",
+      "options": {
+        "reasoningEffort": "high"
+      }
+    },
+    "plan": {
+      "model": "fireworks-ai/accounts/fireworks/models/glm-5p2",
+      "options": {
+        "reasoningEffort": "high"
+      }
+    },
+    "explore": {
+      "model": "fireworks-ai/accounts/fireworks/models/minimax-m3",
+      "permission": {
+        "skill": {
+          "*": "deny",
+          "gate-probes": "allow",
+          "docs-*": "allow",
+          "python-*": "allow",
+          "rust-*": "allow"
+        }
+      }
+    },
+    "general": {
+      "model": "fireworks-ai/accounts/fireworks/models/minimax-m3",
+      "permission": {
+        "skill": {
+          "*": "deny",
+          "gate-probes": "allow",
+          "docs-*": "allow",
+          "python-*": "allow",
+          "rust-*": "allow"
+        }
+      }
+    }
+  },
+  "lsp": {
+    "vale": {
+      "command": [
+        "vale-ls"
+      ],
+      "extensions": [
+        ".md",
+        ".rs",
+        ".txt"
+      ],
+      "initialization": {
+        "configPath": "{env:HOME}/.vale.ini"
+      }
+    }
+  },
+  "mcp": {
+    "agy": {
+      "type": "local",
+      "command": [
+        "agymcp"
+      ],
+      "enabled": true,
+      "timeout": 30000
+    }
+  },
+  "plugin": [
+    "opencode-with-claude@1.6.11"
+  ],
+  "provider": {
+    "opencode": {},
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    },
+    "anthropic": {
+      "options": {
+        "baseURL": "http://127.0.0.1:3456",
+        "apiKey": "dummy"
+      }
+    },
+    "llama": {
+      "api": "openai",
+      "models": {
+        "qwen36-256k": {
+          "id": "qwen36-256k",
+          "name": "Qwen 3.6 MoE (256K x1)",
+          "reasoning": true,
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
+        },
+        "qwen36-27b-max": {
+          "id": "qwen36-27b-max",
+          "name": "Qwen 3.6 27B Dense (262K x1)",
+          "reasoning": true,
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
+        },
+        "qwen3-coder-128k": {
+          "id": "qwen3-coder-128k",
+          "name": "Qwen3 Coder (128K x1)",
+          "reasoning": true,
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "limit": {
+            "context": 128000,
+            "output": 8192
+          }
+        },
+        "gemma4-192k": {
+          "id": "gemma4-192k",
+          "name": "Gemma 4 26B (192K x1)",
+          "reasoning": false,
+          "limit": {
+            "context": 196608,
+            "output": 8192
+          }
+        }
+      },
+      "options": {
+        "apiKey": "none",
+        "baseURL": "http://localhost:11435/v1"
+      }
+    },
+    "fireworks-ai": {}
+  },
+  "permission": {
+    "external_directory": {
+      "{env:HOME}/workspace/aura-session-docs": "allow",
+      "{env:HOME}/workspace/aura-session-docs/*": "allow",
+      "{env:HOME}/workspace/aura-session-docs/**": "allow",
+      "{env:HOME}/workspace/aura-session-docs/**/*": "allow",
+      "{env:HOME}/workspace/aura-session-docs/workstreams/*": "allow",
+      "{env:HOME}/workspace/aura-session-docs/scripts/*": "allow",
+      "{env:HOME}/workspace/aura-session-docs/wiki/**": "allow",
+      "{env:HOME}/workspace/aura-session-docs/wiki/**/*": "allow"
+    }
+  }
+}
