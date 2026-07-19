@@ -90,3 +90,14 @@ def test_valid_config_resolves_paths_relative_to_config_root(tmp_path: Path) -> 
     assert config.board.cards_dir == (tmp_path / "cards").resolve()
     assert config.review.repo == tmp_path.resolve()
     assert config.review.output_dir == (tmp_path / "reviews").resolve()
+
+
+def test_non_string_path_values_are_config_errors(tmp_path: Path) -> None:
+    bad = tmp_path / "boardkit.toml"
+    bad.write_text(
+        '[board]\ncards_dir = 7\nid_prefix = "S"\nsentinel_ids = []\n'
+        '[review]\nrepo = "."\noutput_dir = "reviews"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="cards_dir"):
+        load_config(bad)

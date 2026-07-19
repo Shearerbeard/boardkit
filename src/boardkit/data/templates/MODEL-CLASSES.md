@@ -7,9 +7,12 @@ month to month; the class each one belongs to is what the board reasons
 about.
 
 The concrete model names in this file are dated worked examples, current as
-of the date this file was last edited. Treat them as illustrations of the
+of the examples date below. Treat them as illustrations of the
 class, not as a pin. Update the examples when the models you actually use
 change; the class definitions below them should rarely need to.
+
+Examples last updated: 2026-07-18. Bump this date whenever you touch a
+model example.
 
 ## Class taxonomy
 

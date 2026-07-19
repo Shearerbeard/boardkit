@@ -6,9 +6,17 @@ phase changes state. `EXTRACTION.md` holds the per-artifact source map.
 
 ## Current state (update every session)
 
-Last updated: 2026-07-18, end of the Phase 2 session.
+Last updated: 2026-07-18, overnight, after the codex Gate F run.
 
-**Open gate: Gate U over Phases 1 and 2 together.** The user has not yet
+**Gate F has run.** At the user's request, a codex CLI review (GPT-5.x
+family, different from every author model) went over Phases 0-2
+adversarially. Verdict as returned: FAIL, 0 blocker / 6 major / 2 minor.
+All eight findings are dispositioned and the accepted ones fixed; the full
+ledger with per-finding dispositions is `reviews/2026-07-18-codex-gate-f.md`
+(start there in the AM). Post-fix Gate S: pytest, ruff, and vale all clean.
+
+**Open gate: Gate U over Phases 1 and 2 together, now including the Gate F
+fix commit.** The user has not yet
 approved. Nothing past this gate may start until they do. What the user is
 being asked to review:
 
@@ -31,8 +39,9 @@ being asked to review:
 
 Gate S and Gate A both passed for Phases 1 and 2; the Gate A findings and
 their fixes are recorded in the two commit messages. A fresh session resuming
-this work: read this file, then EXTRACTION.md, run `uv run pytest -q` to
-confirm green (16 tests), and re-present the gate above to the user. Do not
+this work: read this file, then EXTRACTION.md and the Gate F ledger in
+`reviews/`, run `uv run pytest -q` to
+confirm green, and re-present the gate above to the user. Do not
 start Phase 3 without explicit user approval of this gate.
 
 Standing rules for every phase:

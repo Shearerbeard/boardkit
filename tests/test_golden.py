@@ -8,6 +8,12 @@ from boardkit.config import load_config
 # docs/redesign/cards/ except for one deviation - the generated-view banner
 # lines in INDEX.md and board.md say "boardkit render" instead of the source
 # repo's "scripts/cards_index.py". Every other byte is checked as-is.
+#
+# NEVER regenerate the committed INDEX.md/board.md fixtures with boardkit
+# itself: a renderer bug would then be baked into the expectation and this
+# test would prove nothing. The fixtures may only be refreshed by re-copying
+# from the source repo's board. test_golden_views_match_card_population below
+# is the renderer-independent tripwire for that mistake.
 GOLDEN_CARDS_DIR = Path(__file__).parent / "golden" / "aura-cards"
 
 
@@ -24,6 +30,22 @@ def test_render_matches_committed_golden_views(golden_board: Path) -> None:
         rendered = result.views[name]
         committed = (GOLDEN_CARDS_DIR / name).read_text(encoding="utf-8")
         assert rendered == committed, f"{name} is not byte-identical to the committed golden"
+
+
+def test_golden_views_match_card_population(golden_board: Path) -> None:
+    """Renderer-independent guard: the committed views must account for every
+    card file, counted straight from the filesystem, not via the renderer."""
+    card_files = [
+        p
+        for p in GOLDEN_CARDS_DIR.glob("*.md")
+        if p.name not in ("INDEX.md", "board.md") and not p.name.startswith("_")
+    ]
+    index_rows = [
+        line
+        for line in (GOLDEN_CARDS_DIR / "INDEX.md").read_text(encoding="utf-8").splitlines()
+        if line.startswith("| ") and not line.startswith(("| ID", "| ---"))
+    ]
+    assert len(index_rows) == len(card_files)
 
 
 def test_check_passes_clean_on_untouched_golden(golden_board: Path) -> None:

@@ -76,6 +76,8 @@ def load_config(path: Path | None) -> Config:
 
     board_data = data["board"]
     _require_keys("board", board_data, BOARD_KEYS)
+    if not isinstance(board_data["cards_dir"], str) or not board_data["cards_dir"]:
+        raise ValueError("[board]: cards_dir must be a non-empty string path")
     if not isinstance(board_data["id_prefix"], str) or not board_data["id_prefix"]:
         raise ValueError("[board]: id_prefix must be a non-empty string")
     if not isinstance(board_data["sentinel_ids"], list) or not all(
@@ -85,6 +87,9 @@ def load_config(path: Path | None) -> Config:
 
     review_data = data["review"]
     _require_keys("review", review_data, REVIEW_KEYS)
+    for key in ("repo", "output_dir"):
+        if not isinstance(review_data[key], str) or not review_data[key]:
+            raise ValueError(f"[review]: {key} must be a non-empty string path")
 
     root = config_path.parent.resolve()
     board = BoardConfig(

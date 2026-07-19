@@ -37,6 +37,7 @@ REQUIRED = [
     "user-gates",
 ]
 GENERATED = {"INDEX.md", "board.md"}
+WIP_LIMIT = 2  # PROCESS.md board mechanics: at most two cards in-progress
 
 BOARD_HEADER = "---\n\nkanban-plugin: board\n\n---\n"
 COLUMN_TITLES = {
@@ -144,6 +145,35 @@ def check_dag(cards: dict[str, dict], errors: list[str]) -> None:
                     errors.append(
                         f"{card['_file']}: ready but dependency {dep} is {cards[dep]['status']}"
                     )
+    # board invariants from PROCESS.md that the views cannot show
+    in_progress = [c for c in cards.values() if c["status"] == "in-progress"]
+    if len(in_progress) > WIP_LIMIT:
+        names = ", ".join(sorted(c["id"] for c in in_progress))
+        errors.append(
+            f"WIP limit exceeded: {len(in_progress)} cards in-progress ({names}), limit {WIP_LIMIT}"
+        )
+    for card in cards.values():
+        for ref in card["serialize-with"]:
+            if (
+                ref in cards
+                and card["status"] == "in-progress"
+                and cards[ref]["status"] == "in-progress"
+                and card["id"] < ref  # report each pair once
+            ):
+                errors.append(
+                    f"{card['_file']}: serialized cards {card['id']} and {ref} "
+                    "are both in-progress"
+                )
+        if (
+            card["status"] == "in-review"
+            and card["lineage"] != "none"
+            and not card.get("commit-range")
+        ):
+            errors.append(
+                f"{card['_file']}: in-review with lineage {card['lineage']} "
+                "but no commit-range set"
+            )
+
     state: dict[str, int] = {}
 
     def visit(cid: str, stack: list[str]) -> None:

@@ -17,7 +17,8 @@ render` writes them and `boardkit check` validates them against the cards
 and fails on drift. Never hand-edit a generated view. If a view looks wrong,
 fix the card frontmatter that produced it and regenerate.
 
-Frontmatter fields, all required:
+Frontmatter fields, all required except `commit-range`, which is added at
+the moment the card enters `in-review` (see its entry below):
 
 - `id`: the card's identifier, matching the id scheme in `boardkit.toml`.
 - `title`: a short imperative title.

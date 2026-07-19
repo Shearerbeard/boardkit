@@ -137,6 +137,17 @@ def cmd_init(args: argparse.Namespace) -> int:
         shutil.copyfile(TEMPLATES_DIR / source_name, dest)
 
     config = load_config(config_path)
+
+    # review packets are local working material; install the gitignore contract
+    gitignore = root / ".gitignore"
+    ignore_line = config.review.output_dir.relative_to(root).as_posix() + "/"
+    existing_ignore = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
+    if ignore_line not in existing_ignore.splitlines():
+        with gitignore.open("a", encoding="utf-8") as f:
+            if existing_ignore and not existing_ignore.endswith("\n"):
+                f.write("\n")
+            f.write(f"{ignore_line}\n")
+
     result = build_board(config)
     for name, content in result.views.items():
         (config.board.cards_dir / name).write_text(content, encoding="utf-8")

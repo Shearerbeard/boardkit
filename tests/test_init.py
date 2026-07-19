@@ -56,3 +56,13 @@ def test_fresh_board_with_zero_cards_is_valid(tmp_path: Path) -> None:
     # init must leave a board that checks clean with no intervening render
     assert cmd_check(_Args(config=str(config_path))) == 0
     assert cmd_render(_Args(config=str(config_path))) == 0
+
+
+def test_init_installs_review_packet_gitignore(tmp_path: Path) -> None:
+    (tmp_path / ".gitignore").write_text("node_modules/\n", encoding="utf-8")
+    assert cmd_init(_Args(config=str(tmp_path / CONFIG_FILENAME))) == 0
+
+    content = tmp_path / ".gitignore"
+    lines = content.read_text(encoding="utf-8").splitlines()
+    assert "node_modules/" in lines  # existing content preserved
+    assert "docs/board/reviews/" in lines
