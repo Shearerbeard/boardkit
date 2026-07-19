@@ -4,6 +4,37 @@ The phased extraction plan, recorded here so any fresh session (or fresh model)
 can resume it without chat history. Update the status column in the same turn a
 phase changes state. `EXTRACTION.md` holds the per-artifact source map.
 
+## Current state (update every session)
+
+Last updated: 2026-07-18, end of the Phase 2 session.
+
+**Open gate: Gate U over Phases 1 and 2 together.** The user has not yet
+approved. Nothing past this gate may start until they do. What the user is
+being asked to review:
+
+1. The CLI/config public interface: `boardkit check | render | review-packet |
+   init` and the `boardkit.toml` schema (commit 31893d5). Fidelity is proven
+   by the golden test in `tests/test_golden.py` (byte-identical views vs. a
+   snapshot of the source repo's live board, banner lines excepted).
+2. The process docs placed by `init` (commit cec6a0f):
+   `src/boardkit/data/templates/PROCESS.md` and `MODEL-CLASSES.md` are the two
+   that need the user's judgment: did the generic/specific
+   split keep the rules they actually run by? Supporting files:
+   `REVIEW-TOOLING.md.template`, `AGENTS.md.template`, and the CLAUDE/GEMINI
+   shims.
+3. Known judgment calls made without the user (flag these): the smart-class
+   attended policy was restored to require BOTH attendance and a
+   planner-vetted wave; the case-insensitivity trap note was dropped as
+   avoided-by-construction (EXTRACTION.md records the disposition change);
+   `init` ships the docs now (pulled forward from Phase 4) because the
+   cold-agent read order otherwise pointed at files that did not exist.
+
+Gate S and Gate A both passed for Phases 1 and 2; the Gate A findings and
+their fixes are recorded in the two commit messages. A fresh session resuming
+this work: read this file, then EXTRACTION.md, run `uv run pytest -q` to
+confirm green (16 tests), and re-present the gate above to the user. Do not
+start Phase 3 without explicit user approval of this gate.
+
 Standing rules for every phase:
 
 - A docs bus test is a standing Gate S check on every doc-producing phase, not
