@@ -76,7 +76,11 @@ Restate or tighten the budget etiquette from `MODEL-CLASSES.md` here if
 this repo has repo-specific cost constraints (a shared quota, a per-wave
 budget cap). Leave this section out if the generic guidance is enough.
 
+## Wave-close cost record
+
 A delegated wave's closing handoff records per-session cost, duration, and
-token totals per the wave-close cost duty in `MODEL-CLASSES.md`; put the
+token totals per the wave-close cost duty in `MODEL-CLASSES.md`. Put the
 harness-specific recovery recipe (the query or command that pulls those
-numbers out of this repo's session store) here.
+numbers out of this repo's session store) here. Unlike budget etiquette
+above, this section is not optional: without the recipe the duty cannot be
+carried out.

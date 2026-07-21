@@ -56,10 +56,11 @@ Statuses and their lifecycle:
 - `in-review`: the work is complete and awaiting gate review. A card with a
   branch lineage enters this status only once `commit-range` is set and its
   review packet is generated with `boardkit review-packet <id>`. An
-  external-repo code card (`lineage: none`) instead records its external
-  commit shas in the card log as work lands, and generates a packet over that
-  range with `boardkit review-packet <id> --repo <path>` when the user wants
-  one.
+  external-repo code card (`lineage: none`) records its external commit shas
+  in the card log as work lands, then copies the logged range into
+  `commit-range` when it enters this status, so
+  `boardkit review-packet <id> --repo <path>` can generate the packet its
+  gates present.
 - `done`: every gate on the card has passed, and the log records who
   verified the acceptance criteria and how.
 
@@ -143,7 +144,9 @@ family, that card's Gate A stays open rather than self-reviewing.
   typecheck, test, `boardkit check`, or whatever the card's own tooling
   provides). Fix failures before proceeding. When a card's gate checklist
   says acceptance output is reported verbatim, paste the full command
-  output, not a summary.
+  output, not a summary. Gate S also carries the doc-sync duty: the card's
+  report names which living documents its diff affects, or states none
+  (the duty itself is described under Gate D below).
 - Gate A, agent: a fresh subagent with no implementation context reviews the
   diff against the card's acceptance criteria and either finds issues or
   signs off explicitly. The reviewer's model must differ from every model
@@ -165,9 +168,9 @@ family, that card's Gate A stays open rather than self-reviewing.
   extends to include the fix commit, the review packet regenerates over the
   full range, and a fresh Gate A review covers the fix commit. Marking a
   card done without this leaves the fix commit unreviewed. An external-repo
-  card (`lineage: none`) carries the same duty against its card log: the fix
-  commit extends the logged sha range, and the packet regenerates over the
-  full range with `--repo <path>` for a fresh Gate A.
+  card (`lineage: none`) carries the same duty: the fix commit extends the
+  logged sha range and the card's `commit-range`, and the packet regenerates
+  over the full range with `--repo <path>` for a fresh Gate A.
 - Gate M, manual: the agent exercises the behavior end to end and reports
   what happened.
 - Gate D, drift audit: before any user gate opens, a fresh lower-cost agent
@@ -227,7 +230,12 @@ type design, the compile-clean skeleton step, and the adversarial
 design-review panel between skeleton and fill ship as the `typed-holes`
 skill. Load that skill when a card's deliverable is new domain types. The
 skill ships in a later phase; until it does, a card whose deliverable is new
-domain types carries the type-discipline rules directly in its dispatch brief.
+domain types carries the type-discipline rules directly in its dispatch
+brief. In short: design the domain types first, so invalid states are
+unrepresentable and constructors return errors rather than trusting input;
+land the type skeleton with unimplemented bodies as its own compile-clean
+commit; run an adversarial design review of the types between the skeleton
+and the first filled-in body.
 
 ## Recovery protocol
 
@@ -246,5 +254,6 @@ from chat memory:
    suspect card first.
 6. Never cross a user gate that the card log does not show as approved.
 
-All recovery-critical state lives in the card files and the generated views;
-nothing recovery-critical lives only in chat history or a scratch file.
+All recovery-critical state lives in the repo's files: the cards, this
+document, and git state. Nothing recovery-critical lives only in chat
+history or a scratch file.

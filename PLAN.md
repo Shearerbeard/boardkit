@@ -72,7 +72,7 @@ Standing rules for every phase:
 | Phase | Deliverable | Gates | Status |
 |---|---|---|---|
 | 0 | Scaffold, EXTRACTION.md, snapshots of unversioned flow assets | S, A | done (commit 89a07ae) |
-| 1 | `boardkit` CLI: check/render/review-packet/init, boardkit.toml, golden test vs the real aura board | S, A | done |
+| 1 | `boardkit` CLI: check/render/review-packet/init, boardkit.toml, golden test vs a Phase 1 snapshot of the aura board | S, A | done |
 | 2 | Process docs: PROCESS.md, MODEL-CLASSES.md, REVIEW-TOOLING template, AGENTS/CLAUDE shims | S, A, **U** | awaiting Gate U |
 | 3 | Skills plugin: typed-holes (new), board-hygiene (generalized), delegating-work (CLI-first rewrite); opencode agent defs | S, A | pending |
 | 4 | `boardkit init` full bootstrap: plugin install, claude-skills sibling detect, agent-def placement; temp-HOME install test | S, A, M | pending |
