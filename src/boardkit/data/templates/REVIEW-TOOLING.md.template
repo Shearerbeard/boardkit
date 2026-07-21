@@ -20,6 +20,15 @@ reviewer-differs-from-author invariant. For prose and design artifacts,
 pick a reviewer from a different family than the author using the
 harness-bindings table below.
 
+An adversarial review of a standalone prose artifact that is not a card (a
+plan, an ADR, a design doc) appends a numbered findings ledger to the
+artifact itself, so the record travels with it. The ledger carries an
+explicit verdict and names both the author model and the reviewer model.
+Each finding records its disposition: the fix applied, or the reason the
+finding was rejected. An empty or verdict-less return is a failed review,
+never a clean pass. Zero findings is recorded as an explicit PASS,
+distinguishable from a tool that silently returned nothing.
+
 ## Harness bindings
 
 One row per board-owner harness. Fill this in for your repo; the two
@@ -66,3 +75,8 @@ under-permissioned reviewer defers per `PROCESS.md`.
 Restate or tighten the budget etiquette from `MODEL-CLASSES.md` here if
 this repo has repo-specific cost constraints (a shared quota, a per-wave
 budget cap). Leave this section out if the generic guidance is enough.
+
+A delegated wave's closing handoff records per-session cost, duration, and
+token totals per the wave-close cost duty in `MODEL-CLASSES.md`; put the
+harness-specific recovery recipe (the query or command that pulls those
+numbers out of this repo's session store) here.

@@ -117,3 +117,12 @@ not by default. If a small explorer class model fails a search task, try
 a smart-class model next; do not reach for frontier on the first miss.
 Reserve frontier orchestrator class calls for board ownership and Gate F,
 where the invariant above requires it.
+
+## Wave-close cost duty
+
+A delegated wave's closing handoff records the orchestrator model string,
+every delegated session id, and per-session cost, duration, and token
+totals. How to recover these numbers is harness-specific and belongs in
+the repo's `REVIEW-TOOLING.md`, not here. Without this record the program
+cannot answer whether the cheaper orchestrator is actually cheaper, and
+every retro pays the recovery cost the closing session should have paid.
