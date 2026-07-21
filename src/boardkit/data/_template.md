@@ -42,7 +42,9 @@ Worktree cards: local branch `card/<id>` off the base named by
 board owner sets the `commit-range` frontmatter when the card enters
 In Review (it feeds `boardkit review-packet`, PROCESS.md board
 mechanics) and repeats the final range in the Done log entry. Cards
-with no branch of their own: state "direct" instead.
+with no branch of their own: state "direct" instead. External-repo
+cards (`lineage: none`) keep no branch; they state "direct" and record
+their external commit shas in the Log as work lands.
 
 ## Log
 
