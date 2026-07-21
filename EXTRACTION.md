@@ -22,7 +22,7 @@ material, stripped before publish).
 
 | Kit artifact | Source | Disposition | Notes |
 |---|---|---|---|
-| `boardkit check` / `render` | `scripts/cards_index.py` (terminalbench-aura) | port | Parameterize cards dir (`docs/redesign/cards`), card-id scheme (`S\d+\|MILESTONE`), allowed statuses. Golden test: byte-identical output vs. a snapshot of the live board. |
+| `boardkit check` / `render` | `scripts/cards_index.py` (terminalbench-aura) | port | Parameterize cards dir (`docs/redesign/cards`), card-id scheme (`S\d+\|MILESTONE`), allowed statuses. Golden test: byte-identical output vs. a Phase 1 snapshot of the source board (cards S0-S37). |
 | `boardkit review-packet` | `scripts/card_review_packet.py` | port | Remove hardcoded `DEFAULT_REPO` absolute path; repo path comes from `boardkit.toml`. Output dir stays gitignored working material. |
 | `boardkit init` | none (pattern: claude-skills `bin/install-skills`) | author | Scaffolds cards dir, template, `boardkit.toml`, AGENTS.md/CLAUDE.md shims; grows sibling-install and agent-def placement in Phase 4. |
 | `boardkit.toml` schema | none | author | cards dir, id prefix + sentinel, review repo path, statuses. |
@@ -44,7 +44,7 @@ material, stripped before publish).
 | Kit artifact | Source | Disposition | Notes |
 |---|---|---|---|
 | `typed-holes` skill | `PROCESS.md` "Type discipline" + `TYPE_PLAN.md` conventions + retro-2026-07-02 ("golden frames") | author | Net-new skill; exists nowhere as a skill today. DMMF types first; compile-clean `todo!()` skeleton as its own commit; every public type maps to a business rule + forbidden invalid state; adversarial design panel between skeleton and fill; then small-model fill. "Ollama holes" is the informal name for this practice. |
-| `board-hygiene` skill | `.claude/skills/board-hygiene/SKILL.md` (terminalbench-aura) | port | Generic steps kept (frontmatter-is-truth, log-in-same-turn, view regen, orientation canary); repo-specific steps (repo-map sync) become config-driven hooks. |
+| `board-hygiene` skill | `.claude/skills/board-hygiene/SKILL.md` (terminalbench-aura) | port | Generic steps kept (frontmatter-is-truth, log-in-same-turn, view regen, orientation canary); repo-specific steps (repo-map sync) become config-driven hooks. The Phase-3 port needs the skill steps plus the source PROCESS.md-level cold-start orientation-canary mandate ("a miss is a hard stop", source PROCESS.md ~230-238). The kit PROCESS.md leaves that mandate out for now, pending Phase 3. |
 | `delegating-work` skill | snapshots/user-skills/* + `REVIEW-TOOLING.md` transport guidance | author | CLI-first rewrite: `opencode run` / `codex exec` over MCP. Sources: REVIEW-TOOLING.md transport rule (MCP `opencode_fire`/`opencode_run` observed hanging, stale embedded build returning empty text) and the author's direct report that Claude Code struggles juggling OpenCode over MCP. Supersedes collaborating-with-opencode and collaborating-with-antigravity for board work. |
 | Plugin marketplace layout + frontmatter validator | claude-skills `.claude-plugin/`, `bin/_check-frontmatter.py`, `bin/install-skills`, `bin/check-install` | port | Same mechanism: Claude Code marketplace + flat copy to `~/.agents/skills/` for OpenCode, manifest-based pruning, temp-`$HOME` install test. |
 
@@ -65,6 +65,17 @@ material, stripped before publish).
 | `snapshots/opencode/agent/*.md` | `~/.config/opencode/agent/` -> `~/.dotfiles` | Working copies for Phase 3 genericization (also safe in dotfiles). |
 | `snapshots/opencode/opencode.json` | same | Agent/skill-permission blocks. Checked: no real secrets (placeholder apiKey values only). |
 | `snapshots/user-skills/collaborating-with-*` | `~/.claude/skills/` | Previously unversioned anywhere; this is now their only backup. Source material for the `delegating-work` rewrite. |
+
+## Dropped (program-specific)
+
+| Dropped rule | Source | Why dropped |
+|---|---|---|
+| OTEL trace-receipt canary + benchmark-provenance user gates | `docs/redesign/PROCESS.md` ~421-428 | Specific to the aura benchmark program. |
+| Gate M comparison-validity / provenance-delta table | `docs/redesign/PROCESS.md` ~398-411 | Specific to the aura benchmark program. |
+| Single-variable benchmark loop rules | root `AGENTS.md`, "Benchmark Loop Rules" | Specific to the aura benchmark program. |
+| Wiki-handoff writing bound to Claude Code | `docs/redesign/PROCESS.md` ~208-213, 441-443 | Specific to the aura benchmark program. |
+| Vale-on-every-touched-markdown hygiene step | `.claude/skills/board-hygiene/SKILL.md:36` | Repo-specific tooling: the linter choice is repo-specific, and the REVIEW-TOOLING template is where a repo pins its linter. |
+| Bounded-router ossification-risk rule | `docs/redesign/PROCESS.md` ~552-572 | Specific to the aura benchmark program. |
 
 ## Publish gate obligations (Phase 6)
 

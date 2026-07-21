@@ -23,7 +23,8 @@ being asked to review:
 1. The CLI/config public interface: `boardkit check | render | review-packet |
    init` and the `boardkit.toml` schema (commit 31893d5). Fidelity is proven
    by the golden test in `tests/test_golden.py` (byte-identical views vs. a
-   snapshot of the source repo's live board, banner lines excepted).
+   Phase 1 snapshot of the source board, cards S0-S37, banner lines excepted,
+   not the live board).
 2. The process docs placed by `init` (commit cec6a0f):
    `src/boardkit/data/templates/PROCESS.md` and `MODEL-CLASSES.md` are the two
    that need the user's judgment: did the generic/specific
