@@ -28,10 +28,9 @@ All eight findings are dispositioned and the accepted ones fixed; the full
 ledger with per-finding dispositions is `reviews/2026-07-18-codex-gate-f.md`
 (start there in the AM). Post-fix Gate S: pytest, ruff, and vale all clean.
 
-**Open gate: Gate U over Phases 1 and 2 together, now including the Gate F
-fix commit.** The user has not yet
-approved. Nothing past this gate may start until they do. What the user is
-being asked to review:
+**Gate U approved, 2026-07-21.** The user approved Phases 1 and 2 together,
+covering the Gate F fix commit and the audit-remediation wave
+(c83076a..64305fe). Phase 3 may start. What the user reviewed:
 
 1. The CLI/config public interface: `boardkit check | render | review-packet |
    init` and the `boardkit.toml` schema (commit 31893d5). Fidelity is proven
@@ -54,9 +53,9 @@ being asked to review:
 Gate S and Gate A both passed for Phases 1 and 2; the Gate A findings and
 their fixes are recorded in the two commit messages. A fresh session resuming
 this work: read this file, then EXTRACTION.md and the Gate F ledger in
-`reviews/`, run `uv run pytest -q` to
-confirm green, and re-present the gate above to the user. Do not
-start Phase 3 without explicit user approval of this gate.
+`reviews/`, run `uv run pytest -q` to confirm green, and start on Phase 3.
+The board-hygiene row in EXTRACTION.md carries the Phase 3 obligation to
+restore the PROCESS-level orientation-canary hard stop along with the skill.
 
 Standing rules for every phase:
 
@@ -86,7 +85,7 @@ Standing rules for every phase:
 |---|---|---|---|
 | 0 | Scaffold, EXTRACTION.md, snapshots of unversioned flow assets | S, A | done (commit 89a07ae) |
 | 1 | `boardkit` CLI: check/render/review-packet/init, boardkit.toml, golden test vs a Phase 1 snapshot of the aura board | S, A | done |
-| 2 | Process docs: PROCESS.md, MODEL-CLASSES.md, REVIEW-TOOLING template, AGENTS/CLAUDE shims | S, A, **U** | awaiting Gate U |
+| 2 | Process docs: PROCESS.md, MODEL-CLASSES.md, REVIEW-TOOLING template, AGENTS/CLAUDE shims | S, A, **U** | done (Gate U approved 2026-07-21) |
 | 3 | Skills plugin: typed-holes (new), board-hygiene (generalized), delegating-work (CLI-first rewrite); opencode agent defs | S, A | pending |
 | 4 | `boardkit init` full bootstrap: plugin install, claude-skills sibling detect, agent-def placement; temp-HOME install test | S, A, M | pending |
 | 5 | Dogfood: one card through the full lifecycle in a scratch repo, Claude Code leg + attended OpenCode leg | S, A, M, **T** | pending |
