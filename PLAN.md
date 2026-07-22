@@ -6,7 +6,20 @@ phase changes state. `EXTRACTION.md` holds the per-artifact source map.
 
 ## Current state (update every session)
 
-Last updated: 2026-07-18, overnight, after the codex Gate F run.
+Last updated: 2026-07-21, after the audit-remediation wave.
+
+**An audit-remediation wave has landed on top of the Gate F fixes** (commits
+c83076a..dec0775). A three-worker audit against the source repo found six
+process rules the extraction silently dropped, plus an untested module. The
+wave restores the rules to the kit templates (standing U(code-review) gate,
+wave-close cost duty, living-contract anchor/doc-sync duties, external-repo
+sha duties, recovery-state-in-files, standalone prose review ledger), records
+every deliberate drop in EXTRACTION.md's new "Dropped (program-specific)"
+table, notes the orientation-canary hard-stop mandate on the board-hygiene
+row for Phase 3, and adds direct tests for `review_packet.py` (suite 22 ->
+37). Each stage passed Gate A; a codex (GPT-5.6-sol) wave review FAILed with
+6 findings, all fixed in dec0775 and re-reviewed to PASS. The open Gate U
+below now covers these commits too.
 
 **Gate F has run.** At the user's request, a codex CLI review (GPT-5.x
 family, different from every author model) went over Phases 0-2
