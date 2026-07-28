@@ -26,7 +26,7 @@ lineage: {lineage}
 executor: any
 gates: "S -> A"
 user-gates: []
----
+{extra}---
 
 # {id}: {title}
 """
@@ -37,6 +37,7 @@ def _write_card(cards_dir: Path, filename: str, **fields) -> None:
         "depends": "[]",
         "serialize_with": "[]",
         "lineage": "none",
+        "extra": "",
         **fields,
     }
     text = CARD_FRONTMATTER.format(**values)
@@ -111,6 +112,99 @@ def test_wip_limit_enforced(tmp_path: Path) -> None:
         build_board(config)
 
     assert any("WIP limit exceeded" in e for e in excinfo.value.errors)
+
+
+def test_side_quest_card_does_not_count_toward_wip(tmp_path: Path) -> None:
+    """PROCESS.md board mechanics: a flow the user declares a detached side
+    quest is exempt from the WIP limit, so its cards do not count."""
+    cards_dir = tmp_path / "cards"
+    cards_dir.mkdir()
+    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    for n in (1, 2):
+        _write_card(
+            cards_dir, f"s{n}-c{n}.md", id=f"S{n}", title=f"C{n}", status="in-progress"
+        )
+    _write_card(
+        cards_dir,
+        "s3-c3.md",
+        id="S3",
+        title="C3",
+        status="in-progress",
+        extra="side-quest: true\n",
+    )
+
+    result = build_board(load_config(tmp_path / "boardkit.toml"))
+
+    assert [c["id"] for c in result.cards] == ["S1", "S2", "S3"]
+
+
+def test_side_quest_cards_still_count_once_they_exceed_the_limit_themselves(
+    tmp_path: Path,
+) -> None:
+    """The exemption removes side-quest cards from the count; it does not
+    disable the limit for the mainline cards that remain."""
+    cards_dir = tmp_path / "cards"
+    cards_dir.mkdir()
+    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    for n in (1, 2, 3):
+        _write_card(
+            cards_dir, f"s{n}-c{n}.md", id=f"S{n}", title=f"C{n}", status="in-progress"
+        )
+    _write_card(
+        cards_dir,
+        "s4-c4.md",
+        id="S4",
+        title="C4",
+        status="in-progress",
+        extra="side-quest: true\n",
+    )
+
+    with pytest.raises(BoardError) as excinfo:
+        build_board(load_config(tmp_path / "boardkit.toml"))
+
+    errors = [e for e in excinfo.value.errors if "WIP limit exceeded" in e]
+    assert len(errors) == 1
+    assert "S4" not in errors[0]
+
+
+def test_side_quest_must_be_a_boolean(tmp_path: Path) -> None:
+    cards_dir = tmp_path / "cards"
+    cards_dir.mkdir()
+    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        title="A",
+        status="in-progress",
+        extra="side-quest: yes please\n",
+    )
+
+    with pytest.raises(BoardError) as excinfo:
+        build_board(load_config(tmp_path / "boardkit.toml"))
+
+    assert any("'side-quest' must be true or false" in e for e in excinfo.value.errors)
+
+
+def test_side_quest_card_still_obeys_the_serialize_mutex(tmp_path: Path) -> None:
+    """The template's exemption covers the WIP count only; it says nothing
+    about shared files, so two serialized cards still may not run together."""
+    cards_dir = tmp_path / "cards"
+    cards_dir.mkdir()
+    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    _write_card(
+        cards_dir, "s1-a.md", id="S1", title="A", status="in-progress",
+        serialize_with="[S2]",
+    )
+    _write_card(
+        cards_dir, "s2-b.md", id="S2", title="B", status="in-progress",
+        serialize_with="[S1]", extra="side-quest: true\n",
+    )
+
+    with pytest.raises(BoardError) as excinfo:
+        build_board(load_config(tmp_path / "boardkit.toml"))
+
+    assert any("both in-progress" in e for e in excinfo.value.errors)
 
 
 def test_serialized_cards_may_not_both_be_in_progress(tmp_path: Path) -> None:

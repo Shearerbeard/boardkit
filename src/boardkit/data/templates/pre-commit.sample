@@ -1,0 +1,14 @@
+#!/bin/sh
+# boardkit pre-commit sample. Not installed: `boardkit init` writes this
+# file and never touches .git/hooks, because installing a hook behind a
+# scaffolding command is the kind of side effect you find out about at the
+# worst moment. Turn it on yourself:
+#
+#     cp docs/board/pre-commit.sample .git/hooks/pre-commit
+#     chmod +x .git/hooks/pre-commit
+#
+# It fails the commit when a card is invalid or a generated view has
+# drifted from card frontmatter. The fix is always the card, then
+# `boardkit render`; never the generated view. To commit past it once, use
+# `git commit --no-verify`.
+exec boardkit check

@@ -17,7 +17,6 @@ Config's [review] section; there is no hardcoded default repo.
 from __future__ import annotations
 
 import re
-import shutil
 import subprocess
 from pathlib import Path
 from typing import NamedTuple
@@ -28,7 +27,14 @@ from boardkit.config import Config
 
 RANGE_RE = re.compile(r"^[0-9a-f]{7,40}\.\.[0-9a-f]{7,40}$")
 HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+SUFFIX_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 MAX_HUNKS_PER_FILE = 5
+# Everything this module writes, and the only things a rerun may delete. The
+# per-commit index is zero-padded to two digits but is not capped there: a
+# card with a hundred commits writes `100-<sha>.diff`, so the sweep matches
+# two or more digits. Anything else in the directory is reviewer material.
+GENERATED_DIFF_RE = re.compile(r"^\d{2,}-[0-9a-f]{7,40}\.diff$")
+GENERATED_NAMES = ("full-range.diff", "REVIEW.md")
 
 
 class Commit(NamedTuple):
@@ -143,13 +149,49 @@ def render_review(meta: dict, commit_range: str, repo: Path, commits: list[Commi
     return "\n".join(lines)
 
 
-def build_review_packet(config: Config, card_id: str, repo: Path | None = None) -> Path:
+def clean_generated(outdir: Path) -> None:
+    """Delete this module's own outputs from `outdir`, and nothing else.
+
+    The review directory also holds gate ledgers and reviewer transcripts
+    that nothing can regenerate, so a rerun never removes the directory.
+    """
+    if not outdir.exists():
+        return
+    for stale in outdir.glob("*.diff"):
+        if GENERATED_DIFF_RE.match(stale.name):
+            stale.unlink()
+    for name in GENERATED_NAMES:
+        stale = outdir / name
+        if stale.exists():
+            stale.unlink()
+
+
+def build_review_packet(
+    config: Config,
+    card_id: str,
+    repo: Path | None = None,
+    suffix: str | None = None,
+    commit_range: str | None = None,
+) -> Path:
     """Build the review packet for `card_id`; returns the output directory.
 
-    `repo` overrides config.review.repo. Raises ReviewPacketError on any
-    fatal condition (missing card, missing commit-range, bad repo, ...).
+    `repo` overrides config.review.repo. `suffix` names the repo this
+    packet covers, for a card whose work spans more than one repo: the
+    output directory becomes `<output_dir>/<ID>-<suffix>` so an
+    external-repo diff never lands in the primary packet's directory.
+    `commit_range` overrides the card's `commit-range` frontmatter, which
+    names shas in the primary repo only; a second repo has its own history,
+    so its packet needs its own range alongside `repo` and `suffix`. With
+    the override the card needs no frontmatter range at all.
+    Raises ReviewPacketError on any fatal condition (missing card, missing
+    commit-range, bad repo, malformed suffix, ...).
     """
     target_repo = repo if repo is not None else config.review.repo
+    if suffix is not None and not SUFFIX_RE.match(suffix):
+        raise ReviewPacketError(
+            f"--suffix '{suffix}' is not a lowercase slug "
+            "(a-z, 0-9, single dashes between them)"
+        )
 
     meta = load_card(config.board.cards_dir, card_id)
     if str(meta.get("id", "")).upper() != card_id.upper():
@@ -157,7 +199,11 @@ def build_review_packet(config: Config, card_id: str, repo: Path | None = None) 
             f"{meta['_file']}: frontmatter id '{meta.get('id')}' does not "
             f"match requested '{card_id}'"
         )
-    commit_range = meta.get("commit-range")
+    if commit_range is None:
+        commit_range = meta.get("commit-range")
+        source = f"{meta['_file']}: commit-range"
+    else:
+        source = "--commit-range"
     if not commit_range:
         raise ReviewPacketError(
             f"{meta['_file']}: no 'commit-range' frontmatter. Find the range "
@@ -165,17 +211,15 @@ def build_review_packet(config: Config, card_id: str, repo: Path | None = None) 
             "<primary-branch>, record it on the card, and re-run."
         )
     if not RANGE_RE.match(str(commit_range)):
-        raise ReviewPacketError(
-            f"{meta['_file']}: commit-range '{commit_range}' is not A..B hex shas"
-        )
+        raise ReviewPacketError(f"{source} '{commit_range}' is not A..B hex shas")
     if not target_repo.is_dir():
         raise ReviewPacketError(f"repo {target_repo} does not exist; pass --repo")
 
     commits = commit_list(target_repo, str(commit_range))
-    outdir = config.review.output_dir / card_id.upper()
-    if outdir.exists():
-        shutil.rmtree(outdir)
-    outdir.mkdir(parents=True)
+    dirname = card_id.upper() if suffix is None else f"{card_id.upper()}-{suffix}"
+    outdir = config.review.output_dir / dirname
+    clean_generated(outdir)
+    outdir.mkdir(parents=True, exist_ok=True)
 
     for index, commit in enumerate(commits, start=1):
         patch = git(target_repo, "show", "--stat", "--patch", commit.sha)

@@ -66,3 +66,34 @@ def test_init_installs_review_packet_gitignore(tmp_path: Path) -> None:
     lines = content.read_text(encoding="utf-8").splitlines()
     assert "node_modules/" in lines  # existing content preserved
     assert "docs/board/reviews/" in lines
+
+
+def test_init_writes_an_opt_in_pre_commit_sample(tmp_path: Path) -> None:
+    assert cmd_init(_Args(config=str(tmp_path / CONFIG_FILENAME))) == 0
+
+    sample = tmp_path / "docs" / "board" / "pre-commit.sample"
+    assert sample.is_file()
+    body = sample.read_text(encoding="utf-8")
+    assert body.startswith("#!/bin/sh\n")
+    assert "boardkit check" in body
+    # the header has to say how to turn it on; a sample nobody can install
+    # is just a file
+    assert ".git/hooks/pre-commit" in body
+
+
+def test_init_never_installs_a_git_hook(tmp_path: Path) -> None:
+    hooks = tmp_path / ".git" / "hooks"
+    hooks.mkdir(parents=True)
+
+    assert cmd_init(_Args(config=str(tmp_path / CONFIG_FILENAME))) == 0
+
+    assert list(hooks.iterdir()) == []
+
+
+def test_init_refuses_to_overwrite_an_existing_pre_commit_sample(tmp_path: Path) -> None:
+    sample = tmp_path / "docs" / "board" / "pre-commit.sample"
+    sample.parent.mkdir(parents=True)
+    sample.write_text("mine\n", encoding="utf-8")
+
+    assert cmd_init(_Args(config=str(tmp_path / CONFIG_FILENAME))) == 1
+    assert sample.read_text(encoding="utf-8") == "mine\n"

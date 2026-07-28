@@ -60,15 +60,22 @@ class Env:
     tmp_path: Path
     repo: Path
     decoy_repo: Path
+    second_repo: Path
     cards_dir: Path
     output_dir: Path
     base_sha: str
     mid_sha: str
     last_sha: str
+    second_base_sha: str
+    second_last_sha: str
 
     @property
     def range(self) -> str:
         return f"{self.base_sha}..{self.last_sha}"
+
+    @property
+    def second_range(self) -> str:
+        return f"{self.second_base_sha}..{self.second_last_sha}"
 
     def write_card(self, name: str, frontmatter: str, body: str = "body\n") -> Path:
         path = self.cards_dir / name
@@ -121,6 +128,15 @@ def env(tmp_path: Path) -> Env:
     decoy_repo = tmp_path / "decoy"
     _init_repo(decoy_repo)
 
+    # A genuinely separate repo, as a multi-repo card's second repo is: its
+    # own history, so none of `repo`'s shas resolve inside it.
+    second_repo = tmp_path / "second"
+    _init_repo(second_repo)
+    (second_repo / "adapter.txt").write_text("adapter original\n", encoding="utf-8")
+    second_base_sha = _commit(second_repo, "D0 second repo base")
+    (second_repo / "adapter.txt").write_text("adapter rewritten\n", encoding="utf-8")
+    second_last_sha = _commit(second_repo, "D1 second repo change")
+
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
 
@@ -128,11 +144,14 @@ def env(tmp_path: Path) -> Env:
         tmp_path=tmp_path,
         repo=repo,
         decoy_repo=decoy_repo,
+        second_repo=second_repo,
         cards_dir=cards_dir,
         output_dir=tmp_path / "reviews",
         base_sha=base_sha,
         mid_sha=mid_sha,
         last_sha=last_sha,
+        second_base_sha=second_base_sha,
+        second_last_sha=second_last_sha,
     )
 
 
@@ -233,19 +252,175 @@ def test_hunk_pointers_capped_at_max(env: Env) -> None:
     assert "(+2 more hunks)" in anchor_line
 
 
-def test_output_dir_wiped_and_recreated_on_rerun(env: Env) -> None:
+def test_rerun_keeps_reviewer_material_alongside_the_packet(env: Env) -> None:
+    """The output dir also holds gate ledgers and reviewer transcripts that
+    nothing can regenerate; a rerun replaces only this module's own outputs."""
     config = env.write_config()
     _valid_card(env)
 
     outdir = build_review_packet(config, CARD_ID)
-    stale = outdir / "stale.txt"
-    stale.write_text("leftover\n", encoding="utf-8")
+    ledger = outdir / "gate-a-findings.md"
+    ledger.write_text("1. finding, fixed in C2\n", encoding="utf-8")
+    transcript = outdir / "transcripts" / "reviewer.txt"
+    transcript.parent.mkdir()
+    transcript.write_text("verdict: PASS\n", encoding="utf-8")
 
     outdir2 = build_review_packet(config, CARD_ID)
 
     assert outdir2 == outdir
-    assert outdir.is_dir()
-    assert not stale.exists()
+    assert ledger.read_text(encoding="utf-8") == "1. finding, fixed in C2\n"
+    assert transcript.read_text(encoding="utf-8") == "verdict: PASS\n"
+    assert (outdir / "full-range.diff").is_file()
+    assert (outdir / "REVIEW.md").is_file()
+
+
+def test_rerun_removes_per_commit_diffs_from_the_previous_range(env: Env) -> None:
+    """A shrunk range must not leave orphan NN-*.diff files behind, or the
+    reviewer reads diffs that are no longer part of the card."""
+    config = env.write_config()
+    _valid_card(env)
+
+    outdir = build_review_packet(config, CARD_ID)
+    assert (outdir / f"02-{env.last_sha[:8]}.diff").is_file()
+
+    _valid_card(env, commit_range=f"{env.base_sha}..{env.mid_sha}")
+    build_review_packet(config, CARD_ID)
+
+    assert (outdir / f"01-{env.mid_sha[:8]}.diff").is_file()
+    assert not (outdir / f"02-{env.last_sha[:8]}.diff").exists()
+
+
+def test_rerun_removes_three_digit_per_commit_diffs(env: Env) -> None:
+    """A card with 100 or more commits writes `100-<sha>.diff`; the cleanup
+    sweep has to reach those too, and still leave foreign files alone."""
+    config = env.write_config()
+    _valid_card(env)
+
+    outdir = build_review_packet(config, CARD_ID)
+    wide = outdir / f"100-{env.last_sha[:8]}.diff"
+    wide.write_text("stale patch from a longer range\n", encoding="utf-8")
+    single_digit = outdir / f"1-{env.last_sha[:8]}.diff"
+    single_digit.write_text("not something this module writes\n", encoding="utf-8")
+
+    build_review_packet(config, CARD_ID)
+
+    assert not wide.exists()
+    assert single_digit.is_file()
+
+
+def test_suffix_gives_the_card_a_per_repo_output_dir(env: Env) -> None:
+    config = env.write_config()
+    _valid_card(env)
+
+    outdir = build_review_packet(config, CARD_ID, suffix="adapter")
+
+    assert outdir == env.output_dir / f"{CARD_ID}-adapter"
+    assert (outdir / "REVIEW.md").is_file()
+    # the unsuffixed dir stays untouched, so both repos' packets coexist
+    assert not (env.output_dir / CARD_ID).exists()
+
+
+def test_packets_for_two_genuinely_different_repos_coexist(env: Env) -> None:
+    """A multi-repo card's second repo has its own history: the card's
+    `commit-range` shas do not exist there, so the second packet needs the
+    `--commit-range` override as well as `--repo` and `--suffix`."""
+    config = env.write_config()
+    _valid_card(env)
+
+    primary = build_review_packet(config, CARD_ID)
+    secondary = build_review_packet(
+        config,
+        CARD_ID,
+        repo=env.second_repo,
+        suffix="adapter",
+        commit_range=env.second_range,
+    )
+
+    assert primary == env.output_dir / CARD_ID
+    assert secondary == env.output_dir / f"{CARD_ID}-adapter"
+
+    primary_review = (primary / "REVIEW.md").read_text(encoding="utf-8")
+    secondary_review = (secondary / "REVIEW.md").read_text(encoding="utf-8")
+
+    # each packet is built from its own repo's range, not the other's
+    assert "C2 delete a file" in primary_review
+    assert "D1 second repo change" not in primary_review
+    assert "D1 second repo change" in secondary_review
+    assert "C2 delete a file" not in secondary_review
+    assert env.second_range in secondary_review
+    assert env.range not in secondary_review
+
+    secondary_full = (secondary / "full-range.diff").read_text(encoding="utf-8")
+    assert "+adapter rewritten" in secondary_full
+    assert (secondary / f"01-{env.second_last_sha[:8]}.diff").is_file()
+
+
+def test_second_repo_without_the_override_cannot_resolve_the_cards_range(env: Env) -> None:
+    """The regression the override exists for: the frontmatter range names
+    shas that the second repo has never seen."""
+    config = env.write_config()
+    _valid_card(env)
+
+    with pytest.raises(ReviewPacketError, match="git log"):
+        build_review_packet(config, CARD_ID, repo=env.second_repo, suffix="adapter")
+
+
+def test_commit_range_override_beats_the_frontmatter_range(env: Env) -> None:
+    config = env.write_config()
+    _valid_card(env)
+
+    outdir = build_review_packet(
+        config, CARD_ID, commit_range=f"{env.base_sha}..{env.mid_sha}"
+    )
+    review = (outdir / "REVIEW.md").read_text(encoding="utf-8")
+
+    assert "C1 modify many files" in review
+    assert "C2 delete a file" not in review
+
+
+def test_malformed_commit_range_override_rejected(env: Env) -> None:
+    config = env.write_config()
+    _valid_card(env)
+
+    with pytest.raises(ReviewPacketError, match="not A..B hex"):
+        build_review_packet(config, CARD_ID, commit_range="zzzzzzz..yyyyyyy")
+
+
+def test_cli_passes_the_commit_range_override_through(env: Env) -> None:
+    from boardkit.cli import build_parser, cmd_review_packet
+
+    env.write_config()
+    _valid_card(env)
+    args = build_parser().parse_args(
+        [
+            "--config",
+            str(env.tmp_path / "boardkit.toml"),
+            "review-packet",
+            CARD_ID,
+            "--repo",
+            str(env.second_repo),
+            "--suffix",
+            "adapter",
+            "--commit-range",
+            env.second_range,
+        ]
+    )
+
+    assert cmd_review_packet(args) == 0
+    review = (env.output_dir / f"{CARD_ID}-adapter" / "REVIEW.md").read_text(encoding="utf-8")
+    assert "D1 second repo change" in review
+
+
+@pytest.mark.parametrize(
+    "suffix",
+    ["Adapter", "with space", "trailing-", "-leading", "under_score", "", "a/b"],
+)
+def test_malformed_suffix_rejected(env: Env, suffix: str) -> None:
+    config = env.write_config()
+    _valid_card(env)
+
+    with pytest.raises(ReviewPacketError, match="suffix"):
+        build_review_packet(config, CARD_ID, suffix=suffix)
 
 
 def test_repo_override_beats_config_repo(env: Env) -> None:
@@ -333,3 +508,42 @@ def test_repo_path_regular_file_rejected(env: Env) -> None:
 
     with pytest.raises(ReviewPacketError, match="does not exist; pass --repo"):
         build_review_packet(config, CARD_ID, repo=not_a_dir)
+
+
+def test_cli_passes_suffix_through_to_the_output_dir(env: Env) -> None:
+    from boardkit.cli import build_parser, cmd_review_packet
+
+    env.write_config()
+    _valid_card(env)
+    args = build_parser().parse_args(
+        [
+            "--config",
+            str(env.tmp_path / "boardkit.toml"),
+            "review-packet",
+            CARD_ID,
+            "--suffix",
+            "spike",
+        ]
+    )
+
+    assert cmd_review_packet(args) == 0
+    assert (env.output_dir / f"{CARD_ID}-spike" / "REVIEW.md").is_file()
+
+
+def test_cli_reports_a_bad_suffix_as_an_error(env: Env) -> None:
+    from boardkit.cli import build_parser, cmd_review_packet
+
+    env.write_config()
+    _valid_card(env)
+    args = build_parser().parse_args(
+        [
+            "--config",
+            str(env.tmp_path / "boardkit.toml"),
+            "review-packet",
+            CARD_ID,
+            "--suffix",
+            "Not A Slug",
+        ]
+    )
+
+    assert cmd_review_packet(args) == 1

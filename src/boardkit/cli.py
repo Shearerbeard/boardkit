@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from boardkit import __version__
-from boardkit.board import BoardError, build_board
+from boardkit.board import DEFERRED_VIEW, BoardError, build_board, render_canary_key
 from boardkit.config import CONFIG_FILENAME, Config, load_config
 from boardkit.review_packet import ReviewPacketError, build_review_packet
 
@@ -21,6 +21,8 @@ BOARD_DOCS = [
     ("PROCESS.md", Path("docs/board/PROCESS.md")),
     ("MODEL-CLASSES.md", Path("docs/board/MODEL-CLASSES.md")),
     ("REVIEW-TOOLING.md.template", Path("docs/board/REVIEW-TOOLING.md")),
+    # Opt-in only: init writes the sample, never .git/hooks.
+    ("pre-commit.sample", Path("docs/board/pre-commit.sample")),
 ]
 ENTRY_SHIMS = [
     ("AGENTS.md.template", Path("AGENTS.md")),
@@ -58,6 +60,23 @@ def _resolve_config(config_arg: str | None) -> Config:
     return load_config(path)
 
 
+def _view_drift(config: Config, views: dict[str, str]) -> list[str]:
+    """Views on disk that no longer match what the cards render to."""
+    errors: list[str] = []
+    for name, want in views.items():
+        path = config.board.cards_dir / name
+        if not path.exists():
+            errors.append(f"{name}: missing; run `boardkit render` to generate")
+        elif path.read_text(encoding="utf-8") != want:
+            errors.append(f"{name}: drift from frontmatter; regenerate (drags count)")
+    stale_deferred = config.board.cards_dir / DEFERRED_VIEW
+    if DEFERRED_VIEW not in views and stale_deferred.exists():
+        errors.append(
+            f"{DEFERRED_VIEW}: stale; no gate is open-deferred any more, run `boardkit render`"
+        )
+    return errors
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     config = _resolve_config(args.config)
     try:
@@ -65,13 +84,7 @@ def cmd_check(args: argparse.Namespace) -> int:
     except BoardError as exc:
         return _fail(exc.errors)
 
-    errors: list[str] = []
-    for name, want in result.views.items():
-        path = config.board.cards_dir / name
-        if not path.exists():
-            errors.append(f"{name}: missing; run `boardkit render` to generate")
-        elif path.read_text(encoding="utf-8") != want:
-            errors.append(f"{name}: drift from frontmatter; regenerate (drags count)")
+    errors = _view_drift(config, result.views)
     if errors:
         return _fail(errors)
     print(f"OK: {len(result.cards)} cards valid, views current")
@@ -87,7 +100,23 @@ def cmd_render(args: argparse.Namespace) -> int:
 
     for name, content in result.views.items():
         (config.board.cards_dir / name).write_text(content, encoding="utf-8")
-    print(f"OK: {len(result.cards)} cards valid; wrote INDEX.md and board.md")
+    stale_deferred = config.board.cards_dir / DEFERRED_VIEW
+    if DEFERRED_VIEW not in result.views and stale_deferred.exists():
+        stale_deferred.unlink()  # the last deferral was resolved
+    written = ", ".join(sorted(result.views))
+    print(f"OK: {len(result.cards)} cards valid; wrote {written}")
+    return 0
+
+
+def cmd_canary_key(args: argparse.Namespace) -> int:
+    config = _resolve_config(args.config)
+    try:
+        result = build_board(config)
+    except BoardError as exc:
+        return _fail(exc.errors)
+
+    drift = [e.split(":", 1)[0] for e in _view_drift(config, result.views)]
+    print(render_canary_key(result, drift), end="")
     return 0
 
 
@@ -95,7 +124,13 @@ def cmd_review_packet(args: argparse.Namespace) -> int:
     config = _resolve_config(args.config)
     repo = Path(args.repo).resolve() if args.repo is not None else None
     try:
-        outdir = build_review_packet(config, args.card_id, repo=repo)
+        outdir = build_review_packet(
+            config,
+            args.card_id,
+            repo=repo,
+            suffix=args.suffix,
+            commit_range=args.commit_range,
+        )
     except ReviewPacketError as exc:
         return _fail([str(exc)])
 
@@ -171,11 +206,32 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command")
 
     subparsers.add_parser("check", help="validate the board and diff generated views")
-    subparsers.add_parser("render", help="validate the board and write INDEX.md and board.md")
+    subparsers.add_parser("render", help="validate the board and write its generated views")
 
     review = subparsers.add_parser("review-packet", help="build a per-card review packet")
     review.add_argument("card_id", help="card id, for example S2")
     review.add_argument("--repo", default=None, help="worktree holding the card's commits")
+    review.add_argument(
+        "--suffix",
+        default=None,
+        help=(
+            "name the repo this packet covers, for a card spanning more than one "
+            "repo: output goes to <id>-<suffix> (lowercase slug)"
+        ),
+    )
+    review.add_argument(
+        "--commit-range",
+        default=None,
+        help=(
+            "range A..B to diff instead of the card's commit-range frontmatter, "
+            "for the second repo of a card whose work spans more than one"
+        ),
+    )
+
+    subparsers.add_parser(
+        "canary-key",
+        help="print the orientation canary's grading key (markdown)",
+    )
 
     subparsers.add_parser("init", help="scaffold a new board in the current directory")
 
@@ -195,6 +251,7 @@ def main() -> None:
         "check": cmd_check,
         "render": cmd_render,
         "review-packet": cmd_review_packet,
+        "canary-key": cmd_canary_key,
         "init": cmd_init,
     }
     sys.exit(commands[args.command](args))
