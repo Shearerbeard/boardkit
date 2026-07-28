@@ -17,8 +17,10 @@ render` writes them and `boardkit check` validates them against the cards
 and fails on drift. Never hand-edit a generated view. If a view looks wrong,
 fix the card frontmatter that produced it and regenerate.
 
-Frontmatter fields, all required except `commit-range`, which is added at
-the moment the card enters `in-review` (see its entry below):
+Frontmatter fields, all required except the last two: `commit-range`, which
+is added at the moment the card enters `in-review`, and `side-quest`, which
+is absent unless the user has declared the flow a detached side quest (see
+their entries below):
 
 - `id`: the card's identifier, matching the id scheme in `boardkit.toml`.
 - `title`: a short imperative title.
@@ -30,8 +32,9 @@ the moment the card enters `in-review` (see its entry below):
   Two serialized cards may not both be `in-progress` at once, and the
   relationship must be reciprocated on the other card.
 - `lineage`: where this card's work branches from, for repos that use
-  branch-per-card workflows. A value of `none` means the card is not tied to
-  a branch lineage.
+  branch-per-card workflows. One of `primary`, `accepted-head`,
+  `isolated-branch`, or `none`; `none` means the card is not tied to a
+  branch lineage in this repo.
 - `executor`: `smart` or `any`. See `MODEL-CLASSES.md` for what each class
   may own.
 - `gates`: a human-readable string naming the gate order for this card, for
@@ -41,6 +44,10 @@ the moment the card enters `in-review` (see its entry below):
 - `commit-range`: the card's commit shas, set by the board owner once the
   card enters `in-review`. Absent before then. Feeds `boardkit
   review-packet`.
+- `side-quest`: `true` or `false`, defaulting to `false` when absent. Marks
+  a card as part of a flow the user has declared a detached side quest, so
+  it does not count against the WIP limit. See the WIP-limit bullet under
+  "Board mechanics" for when this may be set.
 
 Filename rule: `<id-lowercase>-<slug>.md`, with a unique lowercase slug per
 card.
@@ -60,7 +67,13 @@ Statuses and their lifecycle:
   in the card log as work lands, then copies the logged range into
   `commit-range` when it enters this status, so
   `boardkit review-packet <id> --repo <path>` can generate the packet its
-  gates present.
+  gates present. A card whose work spans more than one repo gets one packet
+  per repo, each output directory named for the repo it covers: pass
+  `--suffix <name>` alongside `--repo <path>` and the packet lands in
+  `reviews/<id>-<name>`, so a diff from a second repo never sits in a
+  directory that reads as primary-repo content. `commit-range` names shas
+  in the primary repo, which a second repo has never seen, so the packet
+  for that repo also takes `--commit-range <a>..<b>` with its own shas.
 - `done`: every gate on the card has passed, and the log records who
   verified the acceptance criteria and how.
 
@@ -68,7 +81,17 @@ Statuses and their lifecycle:
 
 - WIP limit: at most two cards `in-progress` at once. This forces the board
   owner to finish or hand off before starting more work than one session
-  can track.
+  can track. One exemption: a flow the user explicitly declares a detached
+  side quest does not count against the limit. Such a flow must not
+  interrupt the mainline and shares only test resources with it,
+  coordinated at its own launch gates. The exemption is recorded on the
+  flow's own cards as `side-quest: true` in frontmatter, so a fresh session
+  can see why the count looks high, and `boardkit check` counts those cards
+  out of the limit. The board owner sets the flag only on the user's
+  explicit declaration, never on its own judgment that work is a side
+  quest. The flag exempts a card from the count and from nothing else: two
+  cards that list each other in `serialize-with` still may not both be
+  `in-progress`, side quest or not.
 - Update the card's log in the same turn as the status change it records.
   A status change without a matching log line the same turn is a hygiene
   defect, not a later cleanup task.
@@ -84,6 +107,16 @@ Statuses and their lifecycle:
 - Choose accuracy over verbosity. A card that says less but is correct beats
   one that says more but drifted from reality. A wrong board is worse than
   no board.
+- Card-reference prose convention: a card id in prose (card logs, evidence
+  files, process docs) carries a short human-readable qualifier alongside
+  the id: S12 (retry-budget accounting), S31 (packet naming for multi-repo
+  cards). A bare id is acceptable only in frontmatter
+  `depends` lists and in inline code, where the qualifier would be
+  redundant. Prose that names ids without qualifiers costs every later
+  reader a lookup.
+- The checkout that holds the board stays on its base branch. A card that
+  touches code takes its own worktree; parking the board's checkout on a
+  card branch strands the board state a fresh session reads.
 - Generated views are never hand-edited. `boardkit check` catches drift
   between the cards and the views, including drift introduced by a
   drag-and-drop kanban tool; treat any such failure as a signal to fix the
@@ -202,7 +235,11 @@ family, that card's Gate A stays open rather than self-reviewing.
 
 When a gate must defer, the board owner logs it
 open with a `Gate <X> open: deferred (<reason>)` log line and leaves its
-checklist box unticked, then continues with other eligible cards. A
+checklist box unticked, then continues with other eligible cards. The line
+is a bullet in the card's own `Log` section, and it states the deferral
+plainly rather than quoting it in inline code: that is the only shape
+`boardkit` reads as a deferral, so prose elsewhere on the card may discuss
+the convention without recording one. A
 deferred gate stays open on the card until a later session resolves it, and
 the next user gate surfaces it rather than silently absorbing it. Resolving
 a deferred gate means running it properly: the resolving session's reviewer
@@ -218,7 +255,11 @@ gates; record them here or in a repo-specific addendum.
 Code-review packets go to the user. Every code card (any `lineage`,
 including external-repo code cards) carries a U(code-review) gate after its
 Gate A and before its launch leg or done, at which the board owner presents
-the review packet generated by `boardkit review-packet` and stops. When
+the review packet generated by `boardkit review-packet` and stops. A card
+spanning more than one repo presents one packet per repo, generated with
+`--repo <path> --suffix <name> --commit-range <a>..<b>` into
+`reviews/<id>-<name>`, since the card's `commit-range` frontmatter holds
+primary-repo shas that do not resolve in the second repo. When
 pulling a code card that lacks the gate, or on encountering any already-active
 (`in-progress` or `in-review`) code card without it, the board owner inserts
 the gate into the card's frontmatter and checklist and logs the insertion.
@@ -237,6 +278,80 @@ land the type skeleton with unimplemented bodies as its own compile-clean
 commit; run an adversarial design review of the types between the skeleton
 and the first filled-in body.
 
+## Commit standards
+
+- Conventional-style first line: `<type>(<optional scope>): <description>`,
+  entirely lowercase, under 72 characters, with no trailing punctuation. The
+  body explains what changed and why. A repo that runs commitlint takes its
+  own config as the authority over this wording.
+- Card trailer: every commit carrying a card's work ends with a
+  `Card: <ID>` trailer on a line of its own. This is what makes a card's
+  commit range recoverable later. When a card reaches `in-review` without
+  `commit-range` set, `boardkit review-packet` tells the board owner to
+  find the range with
+  `git log --oneline --grep '^Card: <ID>$' <primary-branch>`, and that
+  search only finds anything because every card commit carries the trailer.
+  A repo that skips the trailer has to reconstruct ranges by hand.
+- No AI attribution and no sign-off: never add a `Co-Authored-By` trailer
+  for an AI assistant, and no `Signed-off-by` trailers. The human is the
+  author of every commit. These rules override any default footer a harness
+  adds on its own.
+- Prose lint: every checked-in markdown file passes the repo's prose linter
+  before it is committed.
+
+## Session close
+
+Before a session ends, the board owner runs board hygiene: every card the
+session touched has a dated log line for each state change, statuses reflect
+reality, the views regenerate and `boardkit check` passes, new evidence is
+linked from the card that produced it, every code card that entered
+`in-review` has its `commit-range` set and its packet generated, and prose
+lint passes on every markdown file the session created or edited. Then the
+board owner commits the session's board and doc writes under the commit
+standards above. Board state is never left uncommitted across sessions.
+
+### Orientation canary (hard stop)
+
+Once the hygiene checks pass, prove the board is legible to a session that
+was not here. Dispatch a cheap model, ideally from a family or harness other
+than the one the board owner ran in, so the proof covers cross-harness
+legibility and not just the board owner's own reading. Give it only the
+cold-start surface a fresh board owner reads: the registry's `INDEX.md`,
+this file's recovery protocol and roles sections, `board.md`, and the cards
+named in `deferred.md` when that view exists, since the generated views
+carry no log detail.
+
+Have it answer four questions:
+
+1. Which cards are `in-review`, and which are `in-progress`, right now?
+2. Which card is the next pull? If `ready` is non-empty, it is the top
+   `ready` card. If `ready` is empty, name every `backlog` card whose
+   dependencies are all `done`, and flag an empty `ready` column that has
+   eligible `backlog` cards behind it as a promotion gap to fix.
+3. Which gates are open and deferred (a `Gate <X> open: deferred (<reason>)`
+   log line whose checklist box is still unticked), and what does each one
+   wait on?
+4. Who is the board owner right now, and at which points must it stop for
+   the user?
+
+Grade against a key, never against the canary's own confidence. Compute the
+key before dispatch: `boardkit canary-key` answers the first three questions
+deterministically from the cards, reading frontmatter for the first two and
+the Log entries and gate-checklist state for the deferred gates in the
+third. The fourth question's key is static, taken from the Roles section
+above.
+
+Two miss classes, two responses. A board miss, where the canary diverges
+from the key and the true answer is not objectively derivable from the
+surface it was given, is a hard stop. The session does not close until
+whatever made the board ambiguous is fixed, in the frontmatter, the log, or
+the wording, and the views regenerate over the fix.
+A model-weakness miss, where the true answers are derivable and a second,
+slightly stronger cheap model orients correctly, means the board is fine;
+swap the canary model and clear it rather than blocking. Re-run once to rule
+out nondeterminism. The hard stop is on board ambiguity, never on the
+frailty of one cheap model.
+
 ## Recovery protocol
 
 A fresh session recovers board state from the cards and this file, never
@@ -245,14 +360,25 @@ from chat memory:
 1. Read this file.
 2. Read the registry's `INDEX.md`. The registry is the state; do not
    reconstruct it from chat history or git log first.
-3. Treat any card `in-progress` as suspect: re-run its acceptance checks and
+3. Take the delegation inventory, before promoting a card or planning a
+   wave: read the harness's own agent configuration and record which
+   executors and reviewers exist, what model each is pinned to, and whether
+   the ones this session will depend on are reachable. `MODEL-CLASSES.md`
+   carries the capability taxonomy and the pre-vet checklist;
+   `REVIEW-TOOLING.md` carries the review procedure and the harness
+   transports. The pins constrain what can be planned: the
+   reviewer-differs-from-author invariant decides which executor may author
+   which card and which reviewer can close its gate, so a wave allocated
+   before the pins are known can hand work to an author no available
+   reviewer is allowed to review.
+4. Treat any card `in-progress` as suspect: re-run its acceptance checks and
    inspect the repo's status before trusting its log.
-4. Guard against unlogged work: before dispatching a card, check whether its
+5. Guard against unlogged work: before dispatching a card, check whether its
    scope already contains partial work. If it does, treat that card as
-   `in-progress` and verify it per step 3.
-5. Continue with the highest-priority `ready` card, or finish verifying the
+   `in-progress` and verify it per step 4.
+6. Continue with the highest-priority `ready` card, or finish verifying the
    suspect card first.
-6. Never cross a user gate that the card log does not show as approved.
+7. Never cross a user gate that the card log does not show as approved.
 
 All recovery-critical state lives in the repo's files: the cards, this
 document, and git state. Nothing recovery-critical lives only in chat

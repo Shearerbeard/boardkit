@@ -14,6 +14,33 @@ change; the class definitions below them should rarely need to.
 Examples last updated: 2026-07-18. Bump this date whenever you touch a
 model example.
 
+## Capability taxonomy
+
+Two axes decide who gets a piece of work, and they are independent.
+Class is how much capability a model brings and what it costs; that is
+the axis a card's `executor` field encodes. Family is what a model is
+comparatively good at; that is the axis reviewer selection turns on.
+Model families are not interchangeable: they differ in what they are
+good at, and picking one by price alone routes prose to a code model or
+a diff to a model that reads it as prose.
+
+The routing rule follows the shape of the artifact, not the topic:
+
+- Language-shaped artifacts - plans, prose, specs, architecture
+  documents, product and marketing material - go to the family strongest
+  at natural language. What is being bought there is judgment about
+  whether an argument holds and whether the document says what it means.
+- Code diffs go to a code-specialized reviewer: a family tuned for
+  reading diffs and reasoning about program behavior.
+- The standing adversarial default, and the fallback after a stalled or
+  failed delegation, is a frontier model from a family other than the
+  one that authored the work under review.
+
+This template names no vendors and no model ids, because the families a
+repo has installed differ per repo and drift faster than these rules do.
+Fill in the family-to-model bindings, and the harness transport each one
+is reached through, in `REVIEW-TOOLING.md`.
+
 ## Class taxonomy
 
 Frontier orchestrator class: the strongest available general-purpose
@@ -57,16 +84,30 @@ follows the reviewer-differs-from-author invariant below, not the card's
   wrote any commit in it. This holds regardless of class; a smart-class
   model may not review its own smart-class output, and a frontier model
   may not review its own frontier output.
-- An empty reviewer return is a failed delegation, never a clean pass. A
-  review with no explicit verdict has not run. Zero findings is recorded
-  as an explicit PASS line, distinguishable from a tool that silently
-  returned nothing.
+- The adversarial-review procedure itself is stated once, in
+  `REVIEW-TOOLING.md`: fresh reviewer context, numbered findings each
+  carrying its own disposition, an explicit verdict line, an empty return
+  or a missing verdict read as a failed delegation rather than a pass,
+  and the stall protocol. That procedure names no models and holds
+  whatever families a repo has installed, so this file does not restate
+  it.
 - Gate D, the drift audit, runs on a lower-cost model in the board owner's
   own harness. It samples anchors and claims against the current repo
   state and needs no review skill loaded, so there is no reason to spend
   smart-class or frontier-class budget on it.
 
 ## Reviewer pre-vet checklist
+
+Take this inventory at session start, before planning a wave or
+promoting a card, not at the gate the reviewer serves. Read the
+harness's own agent configuration, record which executors and reviewers
+exist and what model each is pinned to, and confirm reachability for
+anything the plan will depend on. The pins are a constraint on the plan:
+the reviewer-differs-from-author invariant above decides which executor
+may author which card and which reviewer can close its gate, so a wave
+planned without knowing the pins can allocate work that no available
+reviewer is allowed to review. Discovering that at the gate means the
+work is already written by the wrong hand.
 
 Before a wave or gate depends on an external reviewer, the board owner
 pre-vets it:

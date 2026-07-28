@@ -51,8 +51,8 @@ their external commit shas in the Log as work lands.
 - YYYY-MM-DD One-line dated entries, appended in the same turn as the
   state change they record.
 
-<!-- Frontmatter contract (all keys required except commit-range;
-validated by `boardkit check`):
+<!-- Frontmatter contract (all keys required except commit-range and
+side-quest; validated by `boardkit check`):
 id: <prefix><number> or a sentinel id, per boardkit.toml; unique.
 status: backlog | ready | in-progress | in-review | done.
   "ready" requires every depends entry to be done (validated).
@@ -69,5 +69,12 @@ user-gates: list of named user stops, for example [mockup, launch].
 commit-range: A..B shas of the card's commits, set by the board owner
   when the card enters In Review; absent until then. Feeds
   `boardkit review-packet` (in-review lineage cards without it fail
-  `boardkit check`).
+  `boardkit check`). A card spanning two repos generates the second
+  repo's packet with `--repo <path> --suffix <name> --commit-range
+  <a>..<b>`, since these shas exist in the primary repo only.
+side-quest: true | false, absent meaning false. True marks the card as
+  part of a flow the user has declared a detached side quest, which
+  PROCESS.md exempts from the WIP limit. Set it only on the user's
+  explicit declaration. It exempts the card from the WIP count alone:
+  serialize-with still applies.
 File naming: <id-lowercase>-<slug>.md, unique lowercase slugs. -->

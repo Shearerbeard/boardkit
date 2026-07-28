@@ -14,9 +14,12 @@ with what is pinned here, this file wins.
 Every final artifact (a plan, a card, an evidence write-up, an architecture
 decision) gets one adversarial review by a model from a different family
 than its author, before it reaches a user gate. For code, that is the Gate
-A review defined in `PROCESS.md` and `MODEL-CLASSES.md`, which runs in the
-board owner's own harness with its native reviewer under the
-reviewer-differs-from-author invariant. For prose and design artifacts,
+A review defined in `PROCESS.md` and `MODEL-CLASSES.md`. Run it in the
+board owner's own harness when a reviewer there satisfies the
+reviewer-differs-from-author invariant, and reach outside that harness
+when none does: the invariant decides, convenience does not. A harness
+whose only reviewers share the author's family cannot close its own
+Gate A. For prose and design artifacts,
 pick a reviewer from a different family than the author using the
 harness-bindings table below.
 
@@ -36,9 +39,9 @@ example rows show the shape.
 
 | Board owner (harness) | Executor pool | Gate A reviewer | Gate F route | Defers |
 | --- | --- | --- | --- | --- |
-| Claude Code | Claude subagents (`general`, `Explore`) | fresh-context Claude subagent loading the language review skill | a different-family frontier model via its own CLI | nothing |
+| Claude Code | Claude subagents (`general`, `Explore`) | a non-Claude reviewer (a different-family CLI or agent) loading the language review skill, since the executors here author Claude diffs | a different-family frontier model via its own CLI | nothing |
 | OpenCode | small-class agents in-harness | a different-model OpenCode agent loading the language review skill | a different-family frontier model via its own CLI | nothing |
-<!-- | codex | codex subagents | per pre-vet; reviewer-differs-from-author invariant applies unchanged | a Claude Code frontier subagent | wiki/handoff writing, if this repo has one | -->
+<!-- | codex | codex subagents | per pre-vet; reviewer-differs-from-author invariant applies unchanged | a Claude Code frontier subagent | handoff or log writing, if this repo has one | -->
 <!-- codex is a known-working board-owner harness, deferred here only because
      this repo has not wired it yet. Uncomment and fill in once it is. -->
 
@@ -52,16 +55,62 @@ entirely; it ships empty on purpose.
    config lives.
 2. `<tool name>`: same.
 
+Route by what the artifact is judged on. Code review goes to the
+code-specialized reviewers, in the harness where the diff was written. A
+reviewer whose strength is natural language rather than code is reserved for
+the artifacts judged on language: plans, prose, specs, architecture, product,
+and marketing review. It is not the default code reviewer. If such a reviewer
+runs on a metered or capped budget, record that here as a gate: no use
+without explicit user approval in the current session.
+
+Record the split explicitly rather than leaving it to inference: name
+which reviewer takes card and gate reviews, and which takes ad-hoc
+adversarial review and the post-stall fallback. A bare request for a
+second-model review should resolve to one tool by reading this
+section.
+
 ## Transport rule
 
-Prefer CLI invocations over MCP transports for driving another agent
-harness: `opencode run` or `codex exec` rather than an MCP
-tool call into the same harness. MCP transports to agent harnesses have
-been observed hanging past their expected completion time, and returning
-empty results from a server that finished its work correctly on the
-CLI side. Use CLI invocations as the default; treat an MCP path to another
-harness as a fallback that needs its own pre-vet echo test before a wave
-depends on it.
+This rule covers an EXTERNAL harness reaching into a different agent
+harness. Prefer CLI invocations over MCP transports for that:
+`opencode run` or `codex exec` rather than an MCP
+tool call into the same harness. The principle behind the preference is
+recoverability. Prefer a transport that returns a job handle immediately
+and runs the work behind that handle, because the caller can then poll it,
+bound it with a deadline, and reconnect after a client-side failure. A
+transport that completes the work inside the tool call leaves the caller
+nothing to hold. With no deadline the wait is unbounded, and a client that
+gives up has no way back to work the server has not finished. Judge a
+transport on that property rather than on which protocol it speaks. Use CLI invocations as the default; treat a
+work-inside-the-call path to another harness as a fallback that needs its
+own pre-vet echo test before a wave depends on it. If this repo has no
+such transport installed, delete the preceding sentence when filling
+this file in, so a filled-in copy never advertises a path nothing here
+can take.
+
+The rule does not apply within a harness. A board owner running natively
+inside a harness dispatches that harness's own pinned reviewer and
+executor agents through its in-session subagent dispatch, and never
+invokes its own harness's CLI from inside a session: the nested server
+breaks per-session cost capture and the "a review is never launched from
+inside another delegation" invariant. When a subagent cannot read a path
+the review needs - several harnesses reject reads outside the working
+directory - stage the packet (card, spec, diff, prompt) into a `.review/`
+directory inside the working directory and name those staged paths.
+Falling back to a CLI self-invocation is not the remedy. Read the agent
+config for the current model pins before routing either way; agent names
+do not imply model families.
+
+## Stall protocol
+
+Agent CLIs commonly ship without a timeout flag, so the caller owns the
+deadline: wrap every delegated invocation in one (`timeout <seconds> <the
+delegation command>`) and treat the wrapper's exit as the delegation's
+outcome. On a stall, switch tools rather than retrying blind; the same
+prompt through the same stalled tool usually stalls again. An empty
+return, a zero-exit run with no final text, and any run without an explicit
+verdict are each a failed delegation, never a pass. Record the deadline this
+repo uses per tool alongside the invocations above.
 
 ## Reviewer pre-vet
 
@@ -69,6 +118,26 @@ Before a wave or gate depends on any reviewer named above, run the pre-vet
 checklist in `MODEL-CLASSES.md`: reachability, usage headroom, permission
 profile, and model identity. An unvetted, quota-exhausted, or
 under-permissioned reviewer defers per `PROCESS.md`.
+
+## Evidence-receipt canary
+
+Fill this in when this repo has runs whose value depends on captured
+evidence: traces, metrics, transcripts, recordings, anything the analysis
+reads back after the run. Before any expensive run of that kind, a named
+canary command must prove end-to-end receipt in the launch shell: the
+evidence lands, readable, at the place the analysis will later read it from.
+Endpoint reachability is not receipt. A collector that accepts a connection
+can still drop every span it is handed. Where the canary cannot run, the
+card records an explicit user waiver before the run starts, naming what
+evidence the run is risking.
+
+One row per run type. Leave the rows commented out if this repo has no such
+runs; delete the section only once that is durably true.
+
+| Run type | Canary command | Receipt proven at |
+| --- | --- | --- |
+<!-- | benchmark sweep | `<command>` | `<path or query the analysis reads>` | -->
+<!-- | traced session | `<command>` | `<path or query the analysis reads>` | -->
 
 ## Budget etiquette
 
