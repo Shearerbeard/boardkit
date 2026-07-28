@@ -76,6 +76,37 @@ material, stripped before publish).
 | Wiki-handoff writing bound to Claude Code | `docs/redesign/PROCESS.md` ~208-213, 441-443 | Specific to the aura benchmark program. |
 | Vale-on-every-touched-markdown hygiene step | `.claude/skills/board-hygiene/SKILL.md:36` | Repo-specific tooling: the linter choice is repo-specific, and the REVIEW-TOOLING template is where a repo pins its linter. |
 | Bounded-router ossification-risk rule | `docs/redesign/PROCESS.md` ~552-572 | Specific to the aura benchmark program. |
+| Worktree inventory and accepted-head vs primary-head pin discipline | `docs/redesign/PROCESS.md` repo map and branch topology, post-freeze commits `ac8c931`, `18413dd`, `ceed389`, `4d5f7a7`, `c6a0806`, `832cd17` | Live program state, not a rule; the repo map and topology diagram were already stripped in Phase 2. |
+| Writer/reviewer model pins in the harness-bindings prose | `docs/redesign/REVIEW-TOOLING.md` ~105-115, ~240-253, post-freeze commit `9705c5e` | Pins are a per-repo fill-in by design; the durable lesson lives in `MODEL-CLASSES.md` pre-vet. |
+
+## Refresh 2026-07-28 (post-freeze drift)
+
+The Phase 2 extraction froze against terminalbench-aura at `52784c1`
+(2026-07-21). This section dispositions every process rule the source added
+after that point, so the one-rule-one-state invariant holds again. Diff
+window: `git diff 52784c1^..HEAD -- docs/redesign/PROCESS.md
+docs/redesign/REVIEW-TOOLING.md .claude/skills/board-hygiene/SKILL.md
+scripts/cards_index.py scripts/card_review_packet.py`. Line numbers below are
+in the source repo at `832cd17` unless the target column says otherwise.
+
+| Rule | Source | Disposition | Notes |
+|---|---|---|---|
+| Detached-side-quest WIP exemption | `docs/redesign/PROCESS.md:160-165`, `c2e189c` (2026-07-25) | port | A flow the user declares a detached side quest does not count against the WIP limit. It must not interrupt the mainline. It shares only test resources with the mainline, coordinated at its launch gates. The exemption is recorded on the flow's own cards. Target: PROCESS template, "Board mechanics", folded into the WIP-limit bullet. Genericize away the aura instance data (the S54-S60 flow, and notanton/Phoenix/Docker as the shared resources). (Landed in the working tree, 2026-07-28, as the optional `side-quest` frontmatter key the WIP check honors.) |
+| Card-reference prose convention | `docs/redesign/PROCESS.md:170-175`, `be54d3b` (2026-07-26) | port | A card ID in prose (card logs, evidence files, process docs) carries a short human-readable qualifier; a bare ID is acceptable only in frontmatter `depends` lists and in inline code. Target: PROCESS template, "Board mechanics", new bullet after the accuracy-over-verbosity bullet. Rewrite the worked examples against the template's own id scheme, not `S53`/`S56`. (Landed in the working tree, 2026-07-28.) |
+| Per-repo review packets for multi-repo cards | `docs/redesign/PROCESS.md:185-194`, `650caf3` (2026-07-27, user directive on S73) | port | A card whose work spans more than one repo gets one packet per repo, each output directory named for the repo it covers (`reviews/<id>-<suffix>`), so an external-repo diff never sits in a directory that reads as primary-repo content. Targets: PROCESS template, "Card schema", the `in-review` status bullet (currently lines 56-63) and the code-review packet paragraph under "Gates" (currently line 218). The kit must also grow the `--suffix` flag this naming implies; aura states the convention but its script has no flag for it, so the packet dirs are hand-made there. (Landed in the working tree, 2026-07-28, as `--suffix` plus the `--commit-range` override a second repo's shas need.) |
+| Review packet cleans only its own outputs | `scripts/card_review_packet.py:199-209`, `4ef3f50` (2026-07-22) | port | Regenerating a packet used to `rmtree` the output directory, destroying the gate ledgers and reviewer transcripts kept alongside the generated diffs. The fix deletes only the generated files (`NN-*.diff`, `full-range.diff`, `REVIEW.md`) and keeps the directory. Not a template change: `src/boardkit/review_packet.py:176-178` still carries the pre-fix `shutil.rmtree`, so the kit has the same defect. (Landed in the working tree, 2026-07-28: `clean_generated` replaced the `shutil.rmtree` and deletes only this module's own outputs.) |
+| Control checkout stays on the base branch | `docs/redesign/PROCESS.md:56`, `425a9ec` (2026-07-27) | port | The checkout that holds the board never parks on a `card/*` branch; a card that touches code takes its own worktree. A held card branch strands the board state a fresh session reads. The generalizable rule ships; the aura branch and path names do not. Target: PROCESS template, "Board mechanics", new bullet. (Landed in the working tree, 2026-07-28.) |
+| Repo map lists every live worktree | `0151d20`, `ecf0918` (2026-07-26) | deferred | Two hygiene passes found worktrees missing from the map, which is a recurring hygiene defect, not a one-off. The generic form is a hygiene step that reconciles `git worktree list` against whatever worktree map the repo keeps. Deferred to the Phase 3 `board-hygiene` skill; no repo map ships in the kit templates (the Phase 2 row already strips the aura one), so this has no template home today. |
+| Card worktrees cut off the accepted head; primary-head advances | `ac8c931`, `18413dd`, `ceed389`, `4d5f7a7`, `c6a0806`, `832cd17` | dropped | Live worktree inventory and benchmark-baseline pin discipline (which head is the accepted control versus the primary). Program-specific; the repo map and branch topology were already stripped at extraction. Also carried in the "Dropped (program-specific)" ledger. |
+| Writer/reviewer model pin swap | `docs/redesign/REVIEW-TOOLING.md:105-115` and `:240-253`, `9705c5e` (2026-07-27) | dropped | The pins moved (`rust-write` to fireworks glm-5p2, `rust-reviewer` and `python-reviewer` to baseten Kimi-K2.7-Code, `python-write` to baseten GLM-5.2-Fast). Pins are exactly what the REVIEW-TOOLING template leaves as a per-repo fill-in, so a pin swap is never kit drift. The durable lesson under it, that agent names do not imply model families and the agent-definition file is the authority, is already carried by `MODEL-CLASSES.md` in the pre-vet "Model identity" bullet. |
+
+Checked and unchanged in the window, so the Phase 2 dispositions still hold:
+the fix-commit re-review duty (`docs/redesign/PROCESS.md:375-385`, last
+touched `9afcedf`, 2026-07-17) and the executor-fallback three-attempt
+threshold (`:303-310`, last touched `5e55745`, 2026-07-14). Both predate the
+freeze and are already in the PROCESS template at lines 167-172 and 130-131.
+`.claude/skills/board-hygiene/SKILL.md` and `scripts/cards_index.py` have no
+commits in the window at all.
 
 ## Publish gate obligations (Phase 6)
 
