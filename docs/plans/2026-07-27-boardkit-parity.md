@@ -124,9 +124,19 @@
 - Goal: ship the skills plugin PLAN.md Phase 3 names: `board-hygiene`
   (generalized), `delegating-work`, `typed-holes` (thin - body lands via
   Plan 4 stage 2), plus genericized opencode agent defs from snapshots.
-- Changes: new plugin in claude-skills (or boardkit-shipped plugin dir -
-  decide at Gate U; claude-skills gives `bin/check-skills` enforcement and
-  the existing install path). board-hygiene is rewritten against boardkit
+- Gate U decided 2026-08-02: the packaging half of this stage's user gate
+  is settled by a coupling rule. A skill that is useful without the board
+  ships in claude-skills (typed-holes is the precedent); a skill that is
+  meaningless without a boardkit board (board-hygiene, delegating-work)
+  ships in boardkit's own plugin dir with its own marketplace manifest.
+  Install and lint reuse the claude-skills tooling pointed at the boardkit
+  checkout: `install-skills` already supports multiple source repos via
+  per-source manifests, and the frontmatter validator takes a path. The
+  stage's remaining Gate U covers the skill bodies themselves, not the
+  packaging.
+- Changes: new plugin dir in boardkit per the decision above (the
+  claude-skills alternative was considered and rejected for board-bound
+  skills). board-hygiene is rewritten against boardkit
   commands (`boardkit check/render/review-packet/canary-key`) and
   boardkit.toml paths - zero hardcoded aura paths. delegating-work
   supersedes the collaborating-with-* snapshots and encodes Plan 2's
