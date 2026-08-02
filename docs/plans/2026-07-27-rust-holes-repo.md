@@ -1,5 +1,13 @@
 # Plan: typed-holes + layered red-green as a repeatable practice (Goal 4)
 
+**Status: superseded 2026-08-02.** Stage 1 landed as `~/dev/rust-holes`
+(PLAYBOOK, EXTRACTION ledger fully dispositioned; Layer 2 templates tracked
+in that repo's own follow-ups). Stage 2 landed: the `typed-holes` skill
+ships in claude-skills on both install paths. Stage 3's boardkit side
+landed 2026-08-02 (the PROCESS template's type-discipline section names
+the skill as real). Stage 4 stays opportunistic and lives with the wiki
+workstream, not this plan. Kept as the frozen record of the design.
+
 ## Scope
 
 - Core problem: the Rust practice that produced the good autonomous

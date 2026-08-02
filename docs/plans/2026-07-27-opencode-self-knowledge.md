@@ -100,6 +100,14 @@
   standard.
 
 ### Stage 3: skill refresh and versioning
+- Note (2026-08-02): partially covered already. claude-skills'
+  `bin/install-skills` mechanism works and versions skills for the
+  agent-skills harnesses (`bin/check-install` passes), so the "gains a
+  home" half is solved infrastructure; what remains of this stage is the
+  content refresh (drop the stale model matrix, add the native-session
+  section) for whichever skill survives, since
+  `collaborating-with-opencode` has since been retired in favor of an
+  opencode-cli skill.
 - Goal: `collaborating-with-opencode` stops lying and gains a home.
 - Changes: correct the stale agent/model matrix (or better, delete the
   table and keep only the read-the-config rule, which cannot go stale);

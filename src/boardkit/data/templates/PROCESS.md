@@ -11,8 +11,9 @@ Read both before dispatching a card.
 
 ## Card schema
 
-The card registry is one markdown file per card, with YAML frontmatter. Two
-generated views sit alongside it, `INDEX.md` and `board.md`; `boardkit
+The card registry is one markdown file per card, with YAML frontmatter.
+Generated views sit alongside it: `INDEX.md` and `board.md` always, plus
+`deferred.md` whenever any gate is open-deferred; `boardkit
 render` writes them and `boardkit check` validates them against the cards
 and fails on drift. Never hand-edit a generated view. If a view looks wrong,
 fix the card frontmatter that produced it and regenerate.
@@ -269,14 +270,15 @@ the gate into the card's frontmatter and checklist and logs the insertion.
 This board does not describe a type-design discipline in detail. Domain
 type design, the compile-clean skeleton step, and the adversarial
 design-review panel between skeleton and fill ship as the `typed-holes`
-skill. Load that skill when a card's deliverable is new domain types. The
-skill ships in a later phase; until it does, a card whose deliverable is new
-domain types carries the type-discipline rules directly in its dispatch
-brief. In short: design the domain types first, so invalid states are
-unrepresentable and constructors return errors rather than trusting input;
-land the type skeleton with unimplemented bodies as its own compile-clean
-commit; run an adversarial design review of the types between the skeleton
-and the first filled-in body.
+skill, which installs for both Claude Code and agent-skills harnesses. Load
+it by name when a card's deliverable is new domain types. Where the skill
+is not installed, a card whose deliverable is new domain types carries the
+type-discipline rules directly in its dispatch brief. In short: design the
+domain types first, so invalid states are unrepresentable and constructors
+return errors rather than trusting input; land the type skeleton with
+unimplemented bodies as its own compile-clean commit; run an adversarial
+design review of the types between the skeleton and the first filled-in
+body.
 
 ## Commit standards
 
@@ -310,6 +312,38 @@ lint passes on every markdown file the session created or edited. Then the
 board owner commits the session's board and doc writes under the commit
 standards above. Board state is never left uncommitted across sessions.
 
+### Wave close: documentation bus test
+
+A wave that wrote or changed documentation (a README, process docs,
+templates, onboarding files) closes with a documentation bus test, as a
+defined step, not an ad-hoc audit the user has to ask for. The test asks
+whether two cold readers could pick the repo up if the maintainer
+disappeared: a human contributor who knows the domain but not this project,
+and a fresh agent session with zero prior context.
+
+The method, where the `docs-bustest` skill is installed, is that skill;
+load it by name. Where it is not, apply the same method directly:
+
+- Score the entry docs pass/fail across six areas: orient (one-line
+  purpose, quick start, structure, architecture), operate (setup, build
+  and test commands, config surface, deploy path where one applies),
+  decide (decision log, constraints, changelog), contribute (workflow,
+  tests, CI, quality commands), agent discoverability (agent entry file
+  present and current, handoff docs not stale, one canonical roadmap,
+  links resolve, no facts restated across audience files), and content
+  quality (no stale claims, no undefined jargon, dated).
+- One fact, one place: when a human doc and an agent doc need the same
+  fact, the public doc states it and the agent doc references it.
+  Duplicated facts drift apart; a fact stated in two places with two
+  values is a blocking finding.
+- Report findings by severity: P1 (docs contradict code, a required step
+  is missing, or one fact carries two values), P2 (info exists but is
+  hard to find, outdated, or scattered), P3 (polish).
+
+P1 findings are fixed, or logged as explicit divergences on the board,
+before the wave's user gate is presented. The report is filed as evidence
+the board links, like any other gate output.
+
 ### Orientation canary (hard stop)
 
 Once the hygiene checks pass, prove the board is legible to a session that
@@ -341,6 +375,12 @@ the Log entries and gate-checklist state for the deferred gates in the
 third. The fourth question's key is static, taken from the Roles section
 above.
 
+The canary is evidence, not just a ritual: file the computed key, the
+canary's verbatim answers, and the graded verdict as an evidence record the
+board links (an evidence file, or the closing handoff). A canary that ran
+but left no key, answers, or grade on record has not run for audit
+purposes; the next session cannot distinguish it from a skipped one.
+
 Two miss classes, two responses. A board miss, where the canary diverges
 from the key and the true answer is not objectively derivable from the
 surface it was given, is a hard stop. The session does not close until
@@ -351,6 +391,18 @@ slightly stronger cheap model orients correctly, means the board is fine;
 swap the canary model and clear it rather than blocking. Re-run once to rule
 out nondeterminism. The hard stop is on board ambiguity, never on the
 frailty of one cheap model.
+
+## Process feedback
+
+Friction with the board process itself, a rule that fought the work, a gate
+that misfired, a template claim that turned out wrong, is signal for the
+kit, not just for this repo. Record it as it happens in this repo's own
+friction log (a retro scratchpad or the closing handoff), and route the
+kit-relevant items to the boardkit checkout's `FEEDBACK.md` inbox
+(`${BOARDKIT_HOME:-../boardkit}/FEEDBACK.md`), which states its own entry
+format. Append an entry there; never edit the kit's templates or code from
+a consumer repo. A maintainer session drains the inbox into the kit's
+plans.
 
 ## Recovery protocol
 

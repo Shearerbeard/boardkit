@@ -14,8 +14,15 @@ file first.
 3. `docs/board/MODEL-CLASSES.md`, for which class of model may own which
    card, and the invariants that govern review.
 4. `boardkit.toml` at the repo root, for where the cards directory lives.
-5. Run `boardkit check`. boardkit is a Python CLI: run it as
-   `uvx boardkit check`, or install it once with `uv tool install boardkit`.
+5. Run `boardkit check`. boardkit is a Python CLI that is not published to
+   a package index; it runs from a local checkout. Set `BOARDKIT_HOME` to
+   that checkout's path (the default assumes it sits next to this repo) and
+   run:
+
+   ```sh
+   uv run --project "${BOARDKIT_HOME:-../boardkit}" boardkit check
+   ```
+
    It validates the card registry and confirms the
    generated views (`INDEX.md`, `board.md`) are current. A clean run means
    the board state you are about to read is trustworthy; a failing run

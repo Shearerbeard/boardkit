@@ -53,6 +53,13 @@
   (2026-07-27, S73), fix-commit re-review duty wording, executor-fallback
   three-attempt threshold. Disposition each in `EXTRACTION.md`; port the
   general ones into the PROCESS template in the same commit.
+- Evidence fold-in (2026-08-02): the chore-lottery bootstrap wave is the
+  first live consumer exercise of `boardkit init` and the board lifecycle.
+  Its kit-relevant findings are triaged in `FEEDBACK.md` (wave-close docs
+  bus test, landed in the PROCESS template 2026-08-02; card read-back
+  duty; per-gate restatement of deterministic checklist steps). The
+  extraction refresh dispositions those inbox entries alongside the aura
+  diff instead of treating aura as the only source.
 - Gates: S → A
 - [ ] Gate S: load skill `gate-probes`; `uv run pytest -q`; re-run the
       audit re-grep tripwire from the remediation wave; `vale` on touched
