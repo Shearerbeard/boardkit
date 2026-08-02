@@ -132,3 +132,22 @@ restate the load per gate (the shape boardkit's plan files already use)
 fired reliably; prose that states it once did not. Candidate fix: the
 PROCESS Gates section notes that per-gate checklists restate their
 deterministic steps rather than referring to an earlier statement.
+
+## 2026-08-02 boardkit-home-export
+
+```yaml
+date: 2026-08-02
+harness: claude-code
+agent: claude-fable-5
+workstreams: [boardkit]
+repo: terminalbench-aura (upstream-wave session)
+source: claude-skills feedback/2026-08-02-claude-code-upstream-wave/process-feedback.md
+```
+
+The AGENTS template's bootstrap line only works with an exported
+BOARDKIT_HOME or the default `../boardkit` layout: a same-line
+environment prefix (`BOARDKIT_HOME=... uv run ... "${BOARDKIT_HOME:-../boardkit}"`)
+expands the parameter before the assignment lands, so the command
+silently targets the default path. Found while smoke-testing the
+2026-08-02 template change. Candidate fix: one sentence in the AGENTS
+template noting the variable must be exported.
