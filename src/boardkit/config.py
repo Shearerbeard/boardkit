@@ -15,7 +15,13 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-from boardkit.contract import CONTRACT_VERSION, ContractConfig, parse_contract, require_keys
+from boardkit.contract import (
+    CONTRACT_VERSION,
+    ContractConfig,
+    parse_contract,
+    require_keys,
+    require_table,
+)
 
 CONFIG_FILENAME = "boardkit.toml"
 
@@ -80,7 +86,7 @@ def load_config(path: Path | None) -> Config:
     if missing_top:
         raise ValueError(f"{config_path}: missing required section(s): {sorted(missing_top)}")
 
-    board_data = data["board"]
+    board_data = require_table("board", data["board"])
     require_keys("board", board_data, BOARD_KEYS)
     if not isinstance(board_data["cards_dir"], str) or not board_data["cards_dir"]:
         raise ValueError("[board]: cards_dir must be a non-empty string path")
@@ -91,7 +97,7 @@ def load_config(path: Path | None) -> Config:
     ):
         raise ValueError("[board]: sentinel_ids must be a list of strings")
 
-    review_data = data["review"]
+    review_data = require_table("review", data["review"])
     require_keys("review", review_data, REVIEW_KEYS)
     for key in ("repo", "output_dir"):
         if not isinstance(review_data[key], str) or not review_data[key]:

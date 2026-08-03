@@ -58,6 +58,19 @@ def test_valid_config_resolves_paths_relative_to_config_root(tmp_path: Path) -> 
     assert config.review.output_dir == (tmp_path / "reviews").resolve()
 
 
+@pytest.mark.parametrize("section", ["board", "review"])
+def test_a_section_written_as_a_scalar_is_a_config_error(tmp_path: Path, section: str) -> None:
+    """`board = "cards"` is a plausible typo; it must read as a config error
+    rather than an AttributeError from inside the key checker."""
+    body = config_text().split(f"[{section}]", 1)[1].split("\n[", 1)[0]
+    # the scalar goes above every table header, or TOML reads it as a key of
+    # whichever table precedes it rather than as the top-level section
+    without_section = config_text().replace(f"[{section}]{body}\n", "")
+    config_path = _write(tmp_path / "boardkit.toml", f'{section} = "nope"\n\n{without_section}')
+    with pytest.raises(ValueError, match=rf"\[{section}\]: must be a table"):
+        load_config(config_path)
+
+
 def test_non_string_path_values_are_config_errors(tmp_path: Path) -> None:
     bad = _write(
         tmp_path / "boardkit.toml",

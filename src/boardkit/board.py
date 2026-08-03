@@ -475,6 +475,23 @@ def render_canary_key(result: BoardResult, drift: list[str]) -> str:
     return "\n".join(lines)
 
 
+def view_drift(config: Config, views: dict[str, str]) -> list[str]:
+    """Views on disk that no longer match what the cards render to."""
+    errors: list[str] = []
+    for name, want in views.items():
+        path = config.board.cards_dir / name
+        if not path.exists():
+            errors.append(f"{name}: missing; run `boardkit render` to generate")
+        elif path.read_text(encoding="utf-8") != want:
+            errors.append(f"{name}: drift from frontmatter; regenerate (drags count)")
+    stale_deferred = config.board.cards_dir / DEFERRED_VIEW
+    if DEFERRED_VIEW not in views and stale_deferred.exists():
+        errors.append(
+            f"{DEFERRED_VIEW}: stale; no gate is open-deferred any more, run `boardkit render`"
+        )
+    return errors
+
+
 def build_board(config: Config) -> BoardResult:
     """Validate every card in config.board.cards_dir and render its views.
 

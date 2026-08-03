@@ -66,6 +66,13 @@ BOARD_DOCS = (
     # Opt-in only: init writes the sample, never .git/hooks.
     ("pre-commit.sample", Path("docs/board/pre-commit.sample")),
 )
+# Init writes these only when absent, so a consumer's own entry file survives
+# scaffolding — which is also why their stamp is a warning, not an error.
+ENTRY_SHIMS = (
+    ("AGENTS.md.template", Path("AGENTS.md")),
+    ("CLAUDE.md.template", Path("CLAUDE.md")),
+    ("GEMINI.md.template", Path("GEMINI.md")),
+)
 
 
 @dataclass(frozen=True)
@@ -82,6 +89,13 @@ class ContractConfig:
     version: int
     routes: dict[str, Route]
     roles: dict[str, tuple[str, ...]]
+
+
+def require_table(section_name: str, value: object) -> dict:
+    """A section written as a scalar is a config error, not a crash."""
+    if not isinstance(value, dict):
+        raise ValueError(f"[{section_name}]: must be a table, not {type(value).__name__}")
+    return value
 
 
 def require_keys(section_name: str, data: dict, allowed: set[str]) -> None:
@@ -110,6 +124,7 @@ def read_stamp(text: str) -> int | None:
 
 
 def _parse_version(contract: dict) -> int:
+    require_table("contract", contract)
     require_keys("contract", contract, CONTRACT_KEYS)
     version = contract["version"]
     if not isinstance(version, int) or isinstance(version, bool):
@@ -130,6 +145,7 @@ def _parse_route(name: str, data: dict) -> Route:
             "(letters, digits, and single hyphens)"
         )
     section = f"routes.{name}"
+    require_table(section, data)
     require_keys(section, data, ROUTE_KEYS)
     for key in ("adapter", "pin_source"):
         if not isinstance(data[key], str) or not data[key]:
@@ -150,6 +166,7 @@ def _parse_route(name: str, data: dict) -> Route:
 
 
 def _parse_roles(roles: dict, declared: set[str]) -> dict[str, tuple[str, ...]]:
+    require_table("roles", roles)
     unknown = roles.keys() - set(REQUIRED_ROLES)
     if unknown:
         raise ValueError(f"[roles]: unknown role(s): {sorted(unknown)}")
@@ -160,6 +177,7 @@ def _parse_roles(roles: dict, declared: set[str]) -> dict[str, tuple[str, ...]]:
     parsed: dict[str, tuple[str, ...]] = {}
     for role, data in roles.items():
         section = f"roles.{role}"
+        require_table(section, data)
         require_keys(section, data, ROLE_KEYS)
         names = data["routes"]
         if not isinstance(names, list) or not all(isinstance(n, str) for n in names):
@@ -180,6 +198,7 @@ def parse_contract(contract: dict, routes: dict, roles: dict) -> ContractConfig:
     the declared sequence is preserved rather than sorted.
     """
     version = _parse_version(contract)
+    require_table("routes", routes)
     parsed_routes = {name: _parse_route(name, data) for name, data in routes.items()}
     parsed_roles = _parse_roles(roles, set(parsed_routes))
     return ContractConfig(version=version, routes=parsed_routes, roles=parsed_roles)

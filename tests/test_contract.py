@@ -185,6 +185,37 @@ def test_preflight_is_frozen_into_a_tuple() -> None:
     assert contract.routes["primary"].preflight == ("harness --version",)
 
 
+@pytest.mark.parametrize("scalar", [7, "primary", ["primary"], True])
+def test_a_contract_section_written_as_a_scalar_is_a_config_error(scalar: object) -> None:
+    """A scalar where a table belongs used to reach `.keys()` and raise
+    AttributeError, which reads as a boardkit bug rather than a config typo."""
+    with pytest.raises(ValueError, match="must be a table"):
+        parse_contract(scalar, {"primary": _route()}, _roles())
+
+    with pytest.raises(ValueError, match=r"\[routes\]: must be a table"):
+        parse_contract(CONTRACT, scalar, _roles())
+
+    with pytest.raises(ValueError, match=r"\[roles\]: must be a table"):
+        parse_contract(CONTRACT, {"primary": _route()}, scalar)
+
+
+def test_a_route_written_as_a_scalar_is_a_config_error() -> None:
+    with pytest.raises(ValueError, match=r"\[routes.primary\]: must be a table"):
+        parse_contract(CONTRACT, {"primary": "test-harness"}, _roles())
+
+
+def test_a_role_written_as_a_scalar_is_a_config_error() -> None:
+    roles = _roles()
+    roles["canary"] = ["primary"]
+    with pytest.raises(ValueError, match=r"\[roles.canary\]: must be a table"):
+        parse_contract(CONTRACT, {"primary": _route()}, roles)
+
+
+def test_the_table_error_names_the_type_it_found() -> None:
+    with pytest.raises(ValueError, match="not str"):
+        parse_contract(CONTRACT, {"primary": "test-harness"}, _roles())
+
+
 def test_placeholders_finds_angle_bracket_tokens() -> None:
     assert placeholders("<harness-name>") == ["<harness-name>"]
     assert placeholders("<a> and <b>") == ["<a>", "<b>"]

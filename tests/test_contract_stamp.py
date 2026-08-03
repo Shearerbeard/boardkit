@@ -10,8 +10,14 @@ from __future__ import annotations
 
 import pytest
 
-from boardkit.cli import ENTRY_SHIMS
-from boardkit.contract import BOARD_DOCS, CONTRACT_VERSION, DATA_DIR, TEMPLATES_DIR, read_stamp
+from boardkit.contract import (
+    BOARD_DOCS,
+    CONTRACT_VERSION,
+    DATA_DIR,
+    ENTRY_SHIMS,
+    TEMPLATES_DIR,
+    read_stamp,
+)
 
 CARD_TEMPLATE = DATA_DIR / "_template.md"
 STAMPED_TEMPLATES = [name for name, _dest in (*BOARD_DOCS, *ENTRY_SHIMS)]

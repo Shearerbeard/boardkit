@@ -17,7 +17,7 @@ from boardkit import __version__
 from boardkit.cli import build_parser, main
 
 PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
-SUBCOMMANDS = {"check", "render", "review-packet", "canary-key", "init"}
+SUBCOMMANDS = {"check", "render", "doctor", "review-packet", "canary-key", "init"}
 
 
 def _subparsers(parser: argparse.ArgumentParser) -> dict[str, argparse.ArgumentParser]:
