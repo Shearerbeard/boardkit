@@ -76,6 +76,15 @@ assignment prefix expands the fallback default while the command is being
 built, before the assignment lands, so the run targets the wrong checkout
 and either fails oddly or succeeds against the wrong kit.
 
+**Resuming a dead or interrupted session is a different procedure.** This
+checklist tidies a session that ran; it does not recover one that did not
+finish. Cold start belongs to the recovery protocol in the repo's process
+document, which owns those steps. Three markers tell you that you are in
+it. The repo's files are the state, not the chat transcript. Any active
+card counts as suspect until someone re-runs its acceptance checks. And a
+user gate the card log does not record as approved stays uncrossed. Run
+that protocol first, then come back here.
+
 ## The hygiene checklist
 
 Work these in order. Each one is a duty of the board owner, and none of
@@ -95,23 +104,31 @@ them is a later cleanup task.
    acceptance check yourself first. Blocked or partial work stays at
    `status: in-progress` with a log line naming the blocker. Choose
    accuracy over volume.
-3. **Read every card back after editing it.** After any multi-step edit
+3. **The session respected the board mechanics its process document
+   binds.** That document owns those rules, so check them there rather
+   than from memory: the cap on how many cards may sit at
+   `status: in-progress` at once and the terms of any side-quest
+   exemption the user declared, the card-reference convention that a card
+   id in prose carries a human-readable qualifier, and the rule that the
+   checkout holding the board stays on its base branch. Each one is a
+   defect at close, not a later cleanup.
+4. **Read every card back after editing it.** After any multi-step edit
    sequence over a card, scripted edits, a stream editor, or a render
    pass, read the file back from disk before committing and before
    presenting any gate over it. An edit that reports success can still
    fail to persist, and when it does so silently the loss surfaces only
    after a gate was approved over stale text. The tick you show the user
    is the one you re-read, not the one you believe you wrote.
-4. **Regenerate and validate the views.** Run `boardkit render`, then
+5. **Regenerate and validate the views.** Run `boardkit render`, then
    `boardkit check`. A check failure on a generated view means the card is
    wrong, not the view: fix the card frontmatter that produced it and
    regenerate. Views are never hand-edited. A drag-and-drop kanban tool
    editing a board view is the common source of this failure, and the fix
    is the same.
-5. **New evidence is linked from the card that produced it.** Review
+6. **New evidence is linked from the card that produced it.** Review
    output, canary records, benchmark results, and audit reports are
    findable from the card or they are lost.
-6. **Every code card that reached review this session carries its commit
+7. **Every code card that reached review this session carries its commit
    range and its packet.** Set the card's commit-range frontmatter field,
    then generate the packet with `boardkit review-packet <id>`. For an
    external-repo card, pass `--repo <path>`, and for a card spanning more
@@ -119,35 +136,50 @@ them is a later cleanup task.
    that repo's own `--commit-range <a>..<b>`, so a second repo's diff
    never lands in a directory that reads as primary-repo content. A code
    card at `status: in-review` without a packet is not in review.
-7. **Prose lint passes on every markdown file this session created or
+8. **Prose lint passes on every markdown file this session created or
    edited.** Use the linter the repo's own review-tooling document names
    in its tools fill-in. Do not assume a particular linter; the fill-in is
    what binds one.
-8. **Reconcile the worktree map, where the repo keeps one.** If the
+9. **Reconcile the worktree map, where the repo keeps one.** If the
    session created, moved, or removed a worktree or branch, check the
    repo map in its process document against `git worktree list` on each
-   listed repo, then update the map or log the divergence on the card.
+   listed repo. A worktree may sit on a per-card fan-out branch, which is
+   fine; what must hold is that the primary branch the map names exists
+   and tips at the commit the map documents. Then update both the table
+   and the topology diagram beside it, or log the divergence on the card.
    Doctor's `worktrees.stray` warning catches job worktrees a delegation
    left behind; remove those with `git worktree remove` before close.
-9. **Sweep the deferred gates.** Boardkit renders a deferred view whenever
-   any gate is open-deferred; read it when it exists. Cross-check it with
-   the canonical shape, a `Gate <X> open: deferred (<reason>)` bullet in a
-   card's own log section:
+10. **Sweep the deferred gates.** Boardkit renders a deferred view
+    whenever any gate is open-deferred; read it when it exists.
+    Cross-check it with the canonical shape, a
+    `Gate <X> open: deferred (<reason>)` bullet in a card's own log
+    section:
 
-   ```sh
-   grep -rn 'open: deferred' <cards-dir>/*.md
-   ```
+    ```sh
+    grep -rn 'open: deferred' <cards-dir>/*.md
+    ```
 
-   Open each hit and keep it only if that gate's checklist box is still
-   unticked; a later tick means the deferral was resolved. Every surviving
-   deferral is surfaced at the next user gate rather than quietly absorbed
-   there.
-10. **Run the orientation canary**, below. It is a hard stop.
-11. **Commit the session's board and doc writes.** Once the canary clears,
-    commit under the repo's commit standards: a conventional lowercase
-    first line, a card trailer naming the card, and no AI attribution or
-    sign-off trailers, because the human is the author. The board owner
-    owns git. Board state is never left uncommitted across sessions.
+    Open each hit and keep it only if that gate's checklist box is still
+    unticked; a later tick means the deferral was resolved. Every
+    surviving deferral is surfaced at the next user gate rather than
+    quietly absorbed there.
+11. **Run the documentation bus test when the wave touched
+    documentation.** A wave that wrote or changed a README, process docs,
+    templates, or onboarding files closes with this as a defined step,
+    not an audit the user has to ask for. Where the `docs-bustest` skill
+    is installed, load it by name. Where it is not, the repo's process
+    document carries the method inline: the six scoring areas, the
+    one-fact-one-place rule, and the P1/P2/P3 severities. Either way, P1
+    findings are fixed or logged as explicit divergences on the board
+    before the wave's user gate is presented, and the report is filed as
+    evidence the board links.
+12. **Run the orientation canary**, below. It is a hard stop.
+13. **Commit the session's board and doc writes.** Once the canary
+    clears, commit under the repo's commit standards: a conventional
+    lowercase first line, a card trailer naming the card, and no AI
+    attribution or sign-off trailers, because the human is the author.
+    The board owner owns git. Board state is never left uncommitted
+    across sessions.
 
 ## Orientation canary (hard stop)
 

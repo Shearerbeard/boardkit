@@ -57,6 +57,40 @@ installed; never route from the documents alone. On a board session
 `board-hygiene` has already run this as its first step, and one run per
 session is enough.
 
+## Take the delegation inventory at session start
+
+Resolution answers which transport serves a role. It does not answer
+whether that transport can be reached today, and it runs at dispatch time,
+which is too late to shape a wave. Take the inventory before planning a
+wave or promoting a card, not at the gate the reviewer serves.
+
+Read the harness's own agent configuration and record which executors and
+reviewers exist and what model each is pinned to. Then, for every external
+reviewer the plan will lean on, run the pre-vet checklist the repo's
+model-classes document defines:
+
+- **Reachability and auth**: the binary, server, or API answers right now,
+  rather than merely being configured.
+- **Usage headroom**: budget or quota is left for this review. An
+  exhausted cap found mid-gate is worse than one found before dispatch.
+- **Permission profile**: the reviewer can read the material it is being
+  asked to review. A reviewer whose allowlist blocks the diff it was sent
+  is a recorded failure, not a hypothetical one.
+- **Model identity**: the configured model is what the agent or persona
+  name implies. Names drift out of sync with the pin underneath them, so
+  check the harness's agent-definition file rather than the label.
+
+The pins constrain the plan. Under the reviewer-differs-from-author
+invariant, they settle which executor may author a given card and which
+reviewer may close its gate. So a wave allocated before the pins are known
+can hand work to an author that no available reviewer is allowed to
+review, and that surfaces only once the work is already written by the
+wrong hand. An unvetted, quota-exhausted, or under-permissioned reviewer
+counts as unreachable, and its gate defers.
+
+Dispatch-time resolution complements this inventory; it does not replace
+it.
+
 ## Route mechanically, not by reading prose
 
 The prose tables in the repo's review-tooling and model-classes documents
@@ -126,7 +160,10 @@ vocabulary of a dispatch; no model name belongs here or in any brief.
 - **frontier-review**: the wave-scope adversarial review at Gate F, over
   an accumulated diff, before a wave-level user gate.
 - **drift-audit**: the Gate D pass that checks living documents' claims and
-  code anchors against the current repo and board state.
+  code anchors against the current repo and board state. It runs on a
+  lower-cost model inside the board owner's own harness and loads no
+  review skill, so there is no reason for it to spend smart-class or
+  frontier-class budget.
 - **canary**: the cheap cross-family orientation check `board-hygiene`
   runs before a session closes.
 
@@ -142,6 +179,16 @@ hardcoded tool. Whatever the board's own `roles.prose-review` routes list
 declares is the roster. Its first entry is the primary; the rest are the
 fallback chain, in declared order. That ordering is itself contract, which
 is why reordering it moves the contract digest.
+
+The customary shipping arrangement, for a repo that has not decided
+otherwise: the Antigravity transport is the primary, driven by the child
+skill `collaborating-with-antigravity`, because that lane handles human
+language more naturally than the families tuned for diffs, and these
+artifacts are judged on exactly that. Behind it come the frontier
+alternates the repo's harness-bindings table records, the codex transport
+among them. That is a customary chain and nothing more: where the repo's
+own `roles.prose-review` declaration differs from this paragraph, the
+declaration wins, and no model name belongs in either.
 
 A session whose primary is unapproved or unreachable takes the next route
 in the chain instead of stalling, and logs the switch on the card. Four
@@ -159,10 +206,16 @@ because it is the lane most often written down as a tool name.
 Some transports are metered and gated. When a resolution's route points at
 the Antigravity transport, its skill line names
 `collaborating-with-antigravity`, and that child owns the ordered
-preflight: an explicit per-session spend approval recorded in the session,
-and then a health probe run before the session's first dispatch rather
-than after a failure. Load the child and follow its steps; they are not
-repeated here.
+preflight, both steps before the session's **first** dispatch and in this
+order:
+
+1. An explicit per-session spend approval, recorded in the session.
+2. The `agy_doctor` probe, run before the first dispatch rather than after
+   a failure. Its report names the agy version, the auth state, whether
+   the fallback CLI is present, and the session-store path.
+
+Load the child and follow its steps. It owns running the probe and reading
+the report; they are not repeated here.
 
 What this router states is the interface. **The adapter must report ready
 before the first dispatch. Otherwise take the declared fallback route, or
@@ -267,6 +320,13 @@ say in the card log which document you routed from.
 
 These bind every review dispatch, whatever the transport.
 
+- **Every final artifact gets one adversarial review before its user
+  gate**, by a model from a family other than its author's. A plan, a
+  card, an evidence write-up, and a decision record all count, not code
+  alone. There is no artifact class that reaches a user gate unreviewed.
+- **The reviewer starts with fresh context.** No implementation context
+  from the authoring session comes along: a reviewer that already holds
+  the author's reasoning is checking its own work with extra steps.
 - **An empty return is a failed delegation, never a pass.** So is a
   zero-exit run with no final text, and so is any run without an explicit
   verdict. A review with no verdict has not run.
@@ -304,8 +364,14 @@ These bind every review dispatch, whatever the transport.
 
 ## Budget etiquette
 
-Use the cheapest class that can do the job correctly. Escalate on failure
-rather than by default. A metered language-review transport stays reserved
-for language-shaped judgment: never a deterministic shell proxy for
-something a shell command answers exactly, and never a workaround for
-another reviewer's permission failure.
+Use the cheapest class that can do the job correctly, and escalate only on
+failure rather than by default. The ladder has rungs: a search task a
+small explorer-class model failed goes to a smart-class model next, not
+straight to frontier on the first miss. Frontier-class calls stay reserved
+for board ownership and for the wave-scope Gate F review, where the
+reviewer-differs-from-author invariant requires that class.
+
+A metered language-review transport stays reserved for language-shaped
+judgment: never a deterministic shell proxy for something a shell command
+answers exactly, and never a workaround for another reviewer's permission
+failure.
