@@ -16,9 +16,15 @@ surface, so this kit never executes them.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # a type-only import: config imports this module, never the reverse
+    from boardkit.config import Config
 
 CONTRACT_VERSION = 1
 SUPPORTED_CONTRACT_VERSIONS = frozenset({1})
@@ -40,6 +46,7 @@ ROLE_KEYS = {"routes"}
 
 ROUTE_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 PLACEHOLDER_RE = re.compile(r"<[^<>\n]+>")
+HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*$", re.MULTILINE)
 # Shipped docs carry the stamp in whatever comment syntax their format has:
 # an HTML comment in markdown, a `#` line in the hook sample.
 STAMP_RE = re.compile(r"boardkit-contract: v(\d+)")
@@ -89,6 +96,25 @@ class ContractConfig:
     version: int
     routes: dict[str, Route]
     roles: dict[str, tuple[str, ...]]
+
+
+@dataclass(frozen=True)
+class Resolution:
+    """One role resolved to the transport that serves it.
+
+    `position` is (index, of) for the route chosen — always the first, because
+    boardkit fails closed rather than silently walking past a broken route.
+    `fallbacks` are printed so the caller can walk them deliberately.
+    """
+
+    role: str
+    route: Route
+    fallbacks: tuple[Route, ...]
+    position: tuple[int, int]
+
+
+class ContractError(Exception):
+    """A role could not be resolved to a usable transport."""
 
 
 def require_table(section_name: str, value: object) -> dict:
@@ -202,3 +228,193 @@ def parse_contract(contract: dict, routes: dict, roles: dict) -> ContractConfig:
     parsed_routes = {name: _parse_route(name, data) for name, data in routes.items()}
     parsed_roles = _parse_roles(roles, set(parsed_routes))
     return ContractConfig(version=version, routes=parsed_routes, roles=parsed_roles)
+
+
+def read_text_or_none(path: Path) -> str | None:
+    """File contents, or None when it cannot be read. For diagnostics only."""
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+
+def slugify(heading: str) -> str:
+    """A markdown heading as its anchor, the way GitHub and Obsidian form it."""
+    kept = re.sub(r"[^\w\s-]", "", heading.strip().lower())
+    return re.sub(r"[\s_]+", "-", kept).strip("-")
+
+
+def sections(text: str) -> dict[str, str]:
+    """Every markdown heading mapped to its body.
+
+    A section runs to the next heading of the same or higher level, so a
+    consumer who fills a section in by adding subsections still compares as
+    filled. The single walk here is what every section helper projects from.
+    """
+    matches = list(HEADING_RE.finditer(text))
+    found: dict[str, str] = {}
+    for index, match in enumerate(matches):
+        level = len(match.group(1))
+        end = len(text)
+        for later in matches[index + 1 :]:
+            if len(later.group(1)) <= level:
+                end = later.start()
+                break
+        found.setdefault(match.group(2), text[match.end() : end])
+    return found
+
+
+def route_placeholders(route: Route) -> list[str]:
+    """Placeholder tokens still sitting in a route's values."""
+    return [
+        token
+        for value in (route.adapter, route.skill, route.pin_source, *route.preflight)
+        for token in placeholders(value)
+    ]
+
+
+def pin_source_problem(route: Route, root: Path) -> str | None:
+    """Why a route's `pin_source` does not resolve in this repo, or None.
+
+    A pin source that points nowhere is worse than none at all: dispatch
+    follows it expecting live model pins and finds a 404.
+    """
+    path_part, _, anchor = route.pin_source.partition("#")
+    target = root / path_part
+    if not target.is_file():
+        return f"pin_source path `{path_part}` does not exist"
+    if not anchor:
+        return None
+    text = read_text_or_none(target)
+    if text is None:
+        return f"pin_source file `{path_part}` could not be read"
+    if anchor.lower() not in {slugify(heading) for heading in sections(text)}:
+        return f"pin_source anchor `#{anchor}` matches no heading in `{path_part}`"
+    return None
+
+
+def missing_pin_sources(contract: ContractConfig, root: Path) -> list[tuple[str, str]]:
+    """(route, reason) for every `pin_source` that does not resolve in the repo."""
+    return [
+        (name, problem)
+        for name, route in contract.routes.items()
+        if (problem := pin_source_problem(route, root)) is not None
+    ]
+
+
+def canonical_contract(contract: ContractConfig) -> str:
+    """The contract tables as stable text, independent of how the TOML was laid out.
+
+    Table keys are sorted so reordering `[routes.*]` in the file does not read
+    as a change. Route order *inside* a role is not sorted: that sequence is
+    the fallback order, so reordering it genuinely changes the contract.
+    """
+    lines = [f"version={contract.version}"]
+    for name in sorted(contract.routes):
+        route = contract.routes[name]
+        lines.append(
+            f"route:{name}\tadapter={route.adapter}\tskill={route.skill}\t"
+            f"pin_source={route.pin_source}\tpreflight={'|'.join(route.preflight)}"
+        )
+    for role in sorted(contract.roles):
+        lines.append(f"role:{role}\troutes={','.join(contract.roles[role])}")
+    return "\n".join(lines) + "\n"
+
+
+def contract_digest(config: Config) -> str:
+    """A short fingerprint of everything a dispatch depends on.
+
+    Covers the contract version, the consumer's three contract docs, and the
+    contract tables. Only repo-relative paths are hashed, so a clone in another
+    directory digests identically — the digest identifies the contract, not
+    the machine. A brief whose digest differs from doctor's is stale.
+    """
+    digest = hashlib.sha256()
+    digest.update(f"boardkit-contract:v{CONTRACT_VERSION}\n".encode())
+    for _template, dest in CONTRACT_DOCS:
+        path = config.root / dest
+        data = path.read_bytes() if path.is_file() else b""
+        # length-prefixed so two docs cannot concatenate into a third's bytes
+        digest.update(f"{dest.as_posix()}:{len(data)}\n".encode())
+        digest.update(data)
+    digest.update(canonical_contract(config.contract).encode())
+    return digest.hexdigest()[:12]
+
+
+def resolve_role(config: Config, role: str) -> Resolution:
+    """Resolve one role to the transport that serves it, or fail closed.
+
+    Deliberately lazy: only the named role and its first route are validated.
+    A board whose `canary` route is half-written must still dispatch its
+    executor, or one unfinished binding blocks every gate on the board.
+    """
+    contract = config.contract
+    if role not in contract.roles:
+        raise ContractError(f"unknown role '{role}'; this board declares {sorted(contract.roles)}")
+
+    names = contract.roles[role]
+    route = contract.routes[names[0]]
+
+    unfilled = route_placeholders(route)
+    if unfilled:
+        raise ContractError(
+            f"role '{role}' resolves to route '{route.name}', which is still a template: "
+            f"{', '.join(unfilled)}. Fill it in before dispatching."
+        )
+
+    problem = pin_source_problem(route, config.root)
+    if problem is not None:
+        raise ContractError(
+            f"role '{role}' resolves to route '{route.name}', whose {problem}. "
+            "A pin source that points nowhere cannot be read at dispatch time."
+        )
+
+    return Resolution(
+        role=role,
+        route=route,
+        fallbacks=tuple(contract.routes[name] for name in names[1:]),
+        position=(1, len(names)),
+    )
+
+
+def render_resolution_text(resolution: Resolution) -> str:
+    """The resolution as flat `key: value` lines, one line per value."""
+    route = resolution.route
+    index, total = resolution.position
+    lines = [
+        f"role: {resolution.role}",
+        f"route: {route.name} ({index} of {total})",
+        f"adapter: {route.adapter}",
+        f"skill: {route.skill}"
+        if route.skill
+        else "skill: none (this transport loads no child skill)",
+        f"pin source: {route.pin_source}",
+    ]
+    lines.extend(f"preflight: {command}" for command in route.preflight)
+    if not route.preflight:
+        lines.append("preflight: none")
+    lines.extend(f"fallback: {fallback.name}" for fallback in resolution.fallbacks)
+    if not resolution.fallbacks:
+        lines.append("fallback: none")
+    return "\n".join(lines) + "\n"
+
+
+def render_resolution_json(resolution: Resolution) -> str:
+    index, total = resolution.position
+    payload = {
+        "role": resolution.role,
+        "route": _route_payload(resolution.route),
+        "position": {"index": index, "of": total},
+        "fallbacks": [_route_payload(route) for route in resolution.fallbacks],
+    }
+    return json.dumps(payload, indent=2) + "\n"
+
+
+def _route_payload(route: Route) -> dict:
+    return {
+        "name": route.name,
+        "adapter": route.adapter,
+        "skill": route.skill,
+        "pin_source": route.pin_source,
+        "preflight": list(route.preflight),
+    }

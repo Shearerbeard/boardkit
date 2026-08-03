@@ -12,14 +12,18 @@ import re
 from pathlib import Path
 
 from boardkit.board import LINEAGES, SIDE_QUEST_KEY, STATUSES, WIP_LIMIT
+from boardkit.brief import (
+    DECISION_AUTHORITY_ANCHOR,
+    DISPATCH_BRIEF_ANCHOR,
+    GATE_A_ROUTING_ANCHOR,
+    bullet_at,
+    gate_bullets,
+    paragraph_at,
+    section,
+)
 
 TEMPLATE = (
-    Path(__file__).resolve().parents[1]
-    / "src"
-    / "boardkit"
-    / "data"
-    / "templates"
-    / "PROCESS.md"
+    Path(__file__).resolve().parents[1] / "src" / "boardkit" / "data" / "templates" / "PROCESS.md"
 )
 NUMBER_WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
 
@@ -99,6 +103,40 @@ def test_session_close_states_the_card_read_back_duty() -> None:
     assert "read the card file back" in section
     assert "before committing" in section
     assert "before presenting any gate" in section
+
+
+def test_the_template_carries_every_anchor_the_brief_extracts() -> None:
+    """`dispatch-brief` quotes these clauses rather than restating them, so
+    the shipped template must carry each anchor exactly as the brief spells
+    it. Rewording one here breaks brief generation for every consumer."""
+    text = _template_text()
+
+    for anchor in (DISPATCH_BRIEF_ANCHOR, DECISION_AUTHORITY_ANCHOR):
+        assert f"\n{anchor}" in text, f"the brief's anchor '{anchor}' is gone"
+        assert paragraph_at(text, anchor, TEMPLATE).startswith(anchor)
+
+
+def test_every_gate_the_brief_can_quote_has_a_bullet() -> None:
+    """The brief quotes one Gates bullet per declared gate token; each gate
+    a card may declare needs a bullet in the shipped bullet shape."""
+    quoted = gate_bullets(_template_text(), ("S", "A", "M", "D", "F", "U"))
+
+    assert len(quoted) == 6
+    for bullet in quoted:
+        assert bullet.startswith("- Gate ")
+    # the last bullet must stop at the Deferrals subsection, not absorb it
+    assert "Deferrals" not in quoted[-1]
+
+
+def test_the_model_classes_template_carries_the_gate_a_routing_rule() -> None:
+    """Gate A prints both roles and quotes this rule for choosing; it lives in
+    MODEL-CLASSES because routing is delegation policy, not board mechanics."""
+    text = (TEMPLATE.parent / "MODEL-CLASSES.md").read_text(encoding="utf-8")
+    invariants = section(text, "Invariants", TEMPLATE)
+
+    bullet = bullet_at(invariants, GATE_A_ROUTING_ANCHOR, TEMPLATE)
+    assert "code-review" in bullet
+    assert "prose-review" in bullet
 
 
 def test_dispatch_brief_names_the_role_and_pin_source_not_a_model() -> None:

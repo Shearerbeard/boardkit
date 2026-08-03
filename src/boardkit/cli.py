@@ -15,8 +15,19 @@ from boardkit.board import (
     render_canary_key,
     view_drift,
 )
+from boardkit.brief import BriefError, build_brief
 from boardkit.config import CONFIG_FILENAME, Config, load_config
-from boardkit.contract import BOARD_DOCS, DATA_DIR, ENTRY_SHIMS, TEMPLATES_DIR
+from boardkit.contract import (
+    BOARD_DOCS,
+    DATA_DIR,
+    ENTRY_SHIMS,
+    REQUIRED_ROLES,
+    TEMPLATES_DIR,
+    ContractError,
+    render_resolution_json,
+    render_resolution_text,
+    resolve_role,
+)
 from boardkit.doctor import render_json, render_text, run_doctor
 from boardkit.review_packet import ReviewPacketError, build_review_packet
 
@@ -140,6 +151,31 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     return 1 if report.errors else 0
 
 
+def cmd_resolve_route(args: argparse.Namespace) -> int:
+    config = _resolve_config(args.config)
+    try:
+        resolution = resolve_role(config, args.role)
+    except ContractError as exc:
+        return _fail([str(exc)])
+
+    print(
+        render_resolution_json(resolution) if args.json else render_resolution_text(resolution),
+        end="",
+    )
+    return 0
+
+
+def cmd_dispatch_brief(args: argparse.Namespace) -> int:
+    config = _resolve_config(args.config)
+    try:
+        brief = build_brief(config, args.card_id)
+    except (BoardError, BriefError) as exc:
+        return _fail(exc.errors if isinstance(exc, BoardError) else [str(exc)])
+
+    print(brief, end="")
+    return 0
+
+
 def cmd_review_packet(args: argparse.Namespace) -> int:
     config = _resolve_config(args.config)
     repo = Path(args.repo).resolve() if args.repo is not None else None
@@ -241,6 +277,19 @@ def build_parser() -> argparse.ArgumentParser:
     doctor.add_argument(
         "--json", action="store_true", help="emit the report as JSON with stable check ids"
     )
+
+    resolve = subparsers.add_parser(
+        "resolve-route", help="print the transport that serves one delegation role"
+    )
+    resolve.set_defaults(handler=cmd_resolve_route)
+    resolve.add_argument("role", help=f"one of: {', '.join(REQUIRED_ROLES)}")
+    resolve.add_argument("--json", action="store_true", help="emit the resolution as JSON")
+
+    brief = subparsers.add_parser(
+        "dispatch-brief", help="generate one card's dispatch brief (markdown, on stdout)"
+    )
+    brief.set_defaults(handler=cmd_dispatch_brief)
+    brief.add_argument("card_id", help="card id, for example S2")
 
     review = subparsers.add_parser("review-packet", help="build a per-card review packet")
     review.set_defaults(handler=cmd_review_packet)

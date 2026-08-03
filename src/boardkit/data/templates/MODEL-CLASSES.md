@@ -93,6 +93,11 @@ follows the reviewer-differs-from-author invariant below, not the card's
   and the stall protocol. That procedure names no models and holds
   whatever families a repo has installed, so this file does not restate
   it.
+- Gate A routing follows what the artifact is judged on: a code diff goes
+  to the `code-review` role, a plan, spec, or prose artifact goes to the
+  `prose-review` role. A card carries no field recording which kind it
+  produced, so the board owner decides at the gate; a dispatch brief prints
+  both routes rather than guessing on the board owner's behalf.
 - Gate D, the drift audit, runs on a lower-cost model in the board owner's
   own harness. It samples anchors and claims against the current repo
   state and needs no review skill loaded, so there is no reason to spend

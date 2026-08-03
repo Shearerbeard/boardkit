@@ -43,8 +43,13 @@ from boardkit.contract import (
     SUPPORTED_CONTRACT_VERSIONS,
     TEMPLATES_DIR,
     ContractConfig,
+    contract_digest,
+    missing_pin_sources,
     placeholders,
     read_stamp,
+    read_text_or_none,
+    route_placeholders,
+    sections,
 )
 
 CONTRACT_DOC_DESTS = dict(CONTRACT_DOCS)
@@ -59,6 +64,8 @@ REQUIRED_FILL_SECTIONS = ("Tools, in order of preference", "Harness bindings")
 BOARD_SKILLS = ("board-hygiene", "delegating-work")
 SKILL_METADATA_KEY = "boardkit-contract"
 SKILL_SEARCH_PATTERNS = (
+    "{repo}/.claude/skills/{name}/SKILL.md",
+    "~/.claude/skills/{name}/SKILL.md",
     "~/.agents/skills/{name}/SKILL.md",
     "~/.claude/plugins/**/skills/{name}/SKILL.md",
 )
@@ -120,6 +127,7 @@ class Skip:
 class DoctorReport:
     config_path: Path | None
     contract_version: int | None
+    digest: str | None
     findings: tuple[Finding, ...]
     skipped: tuple[Skip, ...]
     passed: tuple[str, ...]
@@ -131,32 +139,6 @@ class DoctorReport:
     @property
     def warnings(self) -> tuple[Finding, ...]:
         return tuple(f for f in self.findings if f.severity is Severity.WARN)
-
-
-def slugify(heading: str) -> str:
-    """A markdown heading as its anchor, the way GitHub and Obsidian form it."""
-    kept = re.sub(r"[^\w\s-]", "", heading.strip().lower())
-    return re.sub(r"[\s_]+", "-", kept).strip("-")
-
-
-def sections(text: str) -> dict[str, str]:
-    """Every markdown heading mapped to its body.
-
-    A section runs to the next heading of the same or higher level, so a
-    consumer who fills a section in by adding subsections still compares as
-    filled. The single walk here is what the section helpers project from.
-    """
-    matches = list(HEADING_RE.finditer(text))
-    found: dict[str, str] = {}
-    for index, match in enumerate(matches):
-        level = len(match.group(1))
-        end = len(text)
-        for later in matches[index + 1 :]:
-            if len(later.group(1)) <= level:
-                end = later.start()
-                break
-        found.setdefault(match.group(2), text[match.end() : end])
-    return found
 
 
 def _normalize(text: str) -> str:
@@ -207,40 +189,10 @@ def unfilled_routes(contract: ContractConfig) -> dict[str, list[str]]:
     """Route name -> the placeholder tokens still sitting in its values."""
     found = {}
     for name, route in contract.routes.items():
-        tokens = [
-            token
-            for value in (route.adapter, route.skill, route.pin_source, *route.preflight)
-            for token in placeholders(value)
-        ]
+        tokens = route_placeholders(route)
         if tokens:
             found[name] = tokens
     return found
-
-
-def missing_pin_sources(contract: ContractConfig, root: Path) -> list[tuple[str, str]]:
-    """(route, reason) for every `pin_source` that does not resolve in the repo.
-
-    A pin source that points nowhere is worse than none at all: dispatch
-    follows it expecting live model pins and finds a 404.
-    """
-    problems = []
-    for name, route in contract.routes.items():
-        path_part, _, anchor = route.pin_source.partition("#")
-        target = root / path_part
-        if not target.is_file():
-            problems.append((name, f"pin_source path `{path_part}` does not exist"))
-            continue
-        if not anchor:
-            continue
-        text = _read_text(target)
-        if text is None:
-            problems.append((name, f"pin_source file `{path_part}` could not be read"))
-            continue
-        if anchor.lower() not in {slugify(h) for h in sections(text)}:
-            problems.append(
-                (name, f"pin_source anchor `#{anchor}` matches no heading in `{path_part}`")
-            )
-    return problems
 
 
 def stray_job_worktrees(porcelain: str) -> list[str]:
@@ -286,9 +238,15 @@ def boardkit_home_finding(env: str | None, install_root: Path, repo_root: Path) 
     )
 
 
-def skill_paths(name: str, home: Path) -> list[Path]:
-    """Every place a board-bound skill may be installed, in search order."""
+def skill_paths(name: str, home: Path, repo_root: Path) -> list[Path]:
+    """Every place a board-bound skill may be installed, in search order.
+
+    Project scope comes first: a repo that ships its own copy of a board skill
+    is pinning that copy deliberately, and a user-level install must not mask it.
+    """
     return [
+        repo_root / ".claude" / "skills" / name / "SKILL.md",
+        home / ".claude" / "skills" / name / "SKILL.md",
         home / ".agents" / "skills" / name / "SKILL.md",
         *sorted((home / ".claude" / "plugins").glob(f"**/skills/{name}/SKILL.md")),
     ]
@@ -306,13 +264,6 @@ def skill_contract_version(text: str) -> int | None:
     metadata = data.get("metadata") if isinstance(data, dict) else None
     declared = metadata.get(SKILL_METADATA_KEY) if isinstance(metadata, dict) else None
     return declared if isinstance(declared, int) and not isinstance(declared, bool) else None
-
-
-def _read_text(path: Path) -> str | None:
-    try:
-        return path.read_text(encoding="utf-8")
-    except OSError:
-        return None
 
 
 def _git_text(cwd: Path, *args: str) -> str | None:
@@ -360,11 +311,14 @@ class _Checks:
             if check not in self.recorded():
                 self.skip(check, reason)
 
-    def report(self, config_path: Path | None, version: int | None) -> DoctorReport:
+    def report(
+        self, config_path: Path | None, version: int | None, digest: str | None = None
+    ) -> DoctorReport:
         order = {check: index for index, check in enumerate(ALL_CHECKS)}
         return DoctorReport(
             config_path=config_path,
             contract_version=version,
+            digest=digest,
             findings=tuple(sorted(self.findings, key=lambda f: order[f.check])),
             skipped=tuple(sorted(self.skipped, key=lambda s: order[s.check])),
             passed=tuple(sorted(self.passed, key=lambda c: order[c])),
@@ -472,7 +426,7 @@ def _check_docs_present(checks: _Checks, root: Path) -> list[Path]:
 def _check_docs_stamped(checks: _Checks, root: Path, version: int) -> None:
     problems = []
     for _name, dest in CONTRACT_DOCS:
-        text = _read_text(root / dest)
+        text = read_text_or_none(root / dest)
         if text is None:
             continue  # docs.present already named it
         stamp = read_stamp(text)
@@ -490,11 +444,11 @@ def _check_docs_stamped(checks: _Checks, root: Path, version: int) -> None:
     checks.ok("contract.docs-stamped")
 
 
-def _check_skills(checks: _Checks, home: Path, version: int) -> None:
+def _check_skills(checks: _Checks, home: Path, repo_root: Path, version: int) -> None:
     installed: dict[str, Path] = {}
     absent = []
     for name in BOARD_SKILLS:
-        found = next((p for p in skill_paths(name, home) if p.is_file()), None)
+        found = next((p for p in skill_paths(name, home, repo_root) if p.is_file()), None)
         if found is None:
             absent.append(name)
         else:
@@ -502,7 +456,9 @@ def _check_skills(checks: _Checks, home: Path, version: int) -> None:
 
     if absent:
         searched = "; ".join(
-            pattern.format(name=name) for name in absent for pattern in SKILL_SEARCH_PATTERNS
+            pattern.format(name=name, repo=repo_root)
+            for name in absent
+            for pattern in SKILL_SEARCH_PATTERNS
         )
         checks.warn(
             "skills.installed",
@@ -519,7 +475,7 @@ def _check_skills(checks: _Checks, home: Path, version: int) -> None:
         return
     problems = []
     for name, path in sorted(installed.items()):
-        text = _read_text(path)
+        text = read_text_or_none(path)
         declared = skill_contract_version(text) if text is not None else None
         if declared is None:
             problems.append(f"{name} ({path}) declares no `metadata.{SKILL_METADATA_KEY}`")
@@ -537,8 +493,8 @@ def _check_skills(checks: _Checks, home: Path, version: int) -> None:
 
 def _check_review_tooling(checks: _Checks, root: Path) -> None:
     dest = CONTRACT_DOC_DESTS[REVIEW_TOOLING_TEMPLATE]
-    current = _read_text(root / dest)
-    shipped = _read_text(TEMPLATES_DIR / REVIEW_TOOLING_TEMPLATE)
+    current = read_text_or_none(root / dest)
+    shipped = read_text_or_none(TEMPLATES_DIR / REVIEW_TOOLING_TEMPLATE)
     if current is None or shipped is None:
         reason = f"{dest} is not readable; see docs.present"
         checks.skip("review-tooling.filled", reason)
@@ -640,7 +596,7 @@ def _check_worktrees(checks: _Checks, cwd: Path) -> None:
 
 def _check_agents_stamp(checks: _Checks, root: Path, version: int) -> None:
     dest = ENTRY_SHIM_DESTS[AGENTS_TEMPLATE]
-    text = _read_text(root / dest)
+    text = read_text_or_none(root / dest)
     if text is None:
         checks.warn(
             "entry.agents-stamp",
@@ -661,9 +617,14 @@ def _check_agents_stamp(checks: _Checks, root: Path, version: int) -> None:
     checks.ok("entry.agents-stamp")
 
 
-def run_doctor(config_arg: str | None, cwd: Path) -> DoctorReport:
-    """Diagnose the whole installation. Reports failures; never raises them."""
+def run_doctor(config_arg: str | None, cwd: Path, home: Path | None = None) -> DoctorReport:
+    """Diagnose the whole installation. Reports failures; never raises them.
+
+    `home` is a parameter so the skills quadrant is testable end to end; it
+    defaults to the real home directory, which is what the CLI passes.
+    """
     checks = _Checks()
+    home = Path.home() if home is None else home
 
     config_path = _check_config_present(checks, config_arg, cwd)
     if config_path is None:
@@ -681,7 +642,7 @@ def run_doctor(config_arg: str | None, cwd: Path) -> DoctorReport:
     root = config.root
     _check_docs_present(checks, root)
     _check_docs_stamped(checks, root, version)
-    _check_skills(checks, Path.home(), version)
+    _check_skills(checks, home, root, version)
     _check_review_tooling(checks, root)
     _check_roles_filled(checks, config)
     _check_pin_sources(checks, config)
@@ -695,7 +656,7 @@ def run_doctor(config_arg: str | None, cwd: Path) -> DoctorReport:
     _check_agents_stamp(checks, root, version)
 
     checks.skip_remaining("not reached")
-    return checks.report(config_path, version)
+    return checks.report(config_path, version, contract_digest(config))
 
 
 def render_text(report: DoctorReport) -> str:
@@ -706,6 +667,8 @@ def render_text(report: DoctorReport) -> str:
     ]
     if report.contract_version is not None:
         lines.append(f"contract: v{report.contract_version}")
+    if report.digest is not None:
+        lines.append(f"digest: {report.digest}")
     lines.append("")
     for finding in report.findings:
         lines.append(f"{finding.severity.upper()}: {finding.check}: {finding.message}")
@@ -727,6 +690,7 @@ def render_json(report: DoctorReport) -> str:
     payload = {
         "config_path": str(report.config_path) if report.config_path is not None else None,
         "contract_version": report.contract_version,
+        "digest": report.digest,
         "ok": not report.errors,
         "findings": [
             {

@@ -25,19 +25,21 @@ from boardkit.contract import (
     CONTRACT_VERSION,
     JOB_WORKTREE_GLOB,
     TEMPLATES_DIR,
+    missing_pin_sources,
+    sections,
+    slugify,
 )
 from boardkit.doctor import (
+    BOARD_SKILLS,
     REQUIRED_FILL_SECTIONS,
+    SKILL_METADATA_KEY,
     Severity,
     boardkit_home_finding,
-    missing_pin_sources,
     render_json,
     render_text,
     run_doctor,
     section_placeholders,
-    sections,
     skill_contract_version,
-    slugify,
     stray_job_worktrees,
     unfilled_routes,
     unfilled_sections,
@@ -300,6 +302,73 @@ def test_an_unstamped_entry_file_is_a_warning_not_an_error(tmp_path: Path) -> No
 
     assert report.errors == ()
     assert "entry.agents-stamp" in _checks(report, Severity.WARN)
+
+
+def _install_skill(root: Path, name: str, declared: int | None) -> Path:
+    path = root / ".claude" / "skills" / name / "SKILL.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    metadata = "" if declared is None else f"metadata:\n  {SKILL_METADATA_KEY}: {declared}\n"
+    path.write_text(f"---\nname: {name}\n{metadata}---\n\nbody\n", encoding="utf-8")
+    return path
+
+
+def test_installed_skills_declaring_the_contract_pass_both_checks(tmp_path: Path) -> None:
+    root = _filled_board(tmp_path)
+    for name in BOARD_SKILLS:
+        _install_skill(root, name, CONTRACT_VERSION)
+
+    report = run_doctor(str(root / "boardkit.toml"), root, home=tmp_path / "nonexistent-home")
+
+    assert report.errors == ()
+    assert "skills.installed" in report.passed
+    assert "contract.skills-declared" in report.passed
+
+
+def test_a_project_scoped_skill_counts_as_installed(tmp_path: Path) -> None:
+    """The live consumer keeps board-hygiene in the repo, not the home dir; a
+    search that misses project scope warns about a skill that is right there."""
+    root = _filled_board(tmp_path)
+    _install_skill(root, "board-hygiene", CONTRACT_VERSION)
+
+    report = run_doctor(str(root / "boardkit.toml"), root, home=tmp_path / "nonexistent-home")
+
+    warning = next(f for f in report.findings if f.check == "skills.installed")
+    assert "board-hygiene" not in warning.message.split("(searched")[0]
+    assert "delegating-work" in warning.message
+
+
+def test_an_installed_skill_without_the_declaration_is_an_error(tmp_path: Path) -> None:
+    root = _filled_board(tmp_path)
+    for name in BOARD_SKILLS:
+        _install_skill(root, name, None)
+
+    report = run_doctor(str(root / "boardkit.toml"), root, home=tmp_path / "nonexistent-home")
+
+    assert "contract.skills-declared" in _checks(report, Severity.ERROR)
+    assert SKILL_METADATA_KEY in "".join(f.message for f in report.findings)
+
+
+def test_an_installed_skill_declaring_another_version_is_an_error(tmp_path: Path) -> None:
+    root = _filled_board(tmp_path)
+    for name in BOARD_SKILLS:
+        _install_skill(root, name, CONTRACT_VERSION + 8)
+
+    report = run_doctor(str(root / "boardkit.toml"), root, home=tmp_path / "nonexistent-home")
+
+    finding = next(f for f in report.findings if f.check == "contract.skills-declared")
+    assert finding.severity is Severity.ERROR
+    assert f"v{CONTRACT_VERSION + 8}" in finding.message
+
+
+def test_the_searched_paths_are_listed_when_a_skill_is_absent(tmp_path: Path) -> None:
+    root = _filled_board(tmp_path)
+
+    report = run_doctor(str(root / "boardkit.toml"), root, home=tmp_path / "nonexistent-home")
+    warning = next(f for f in report.findings if f.check == "skills.installed")
+
+    assert str(root) in warning.message  # project scope names the real repo path
+    for fragment in (".claude/skills", ".agents/skills", ".claude/plugins"):
+        assert fragment in warning.message
 
 
 def test_drifted_views_are_an_error(golden_board: Path) -> None:
