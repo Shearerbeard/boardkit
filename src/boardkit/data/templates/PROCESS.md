@@ -1,5 +1,7 @@
 # Process
 
+<!-- boardkit-contract: v1 -->
+
 This file states how work on this board is tracked, delegated, verified, and
 recovered. It is stable: it changes only when the rules change, not when the
 work changes. The work itself lives in the card registry (see `boardkit.toml`
@@ -157,6 +159,14 @@ report instead"), and the expected report format: what changed as
 file:line, acceptance-check output verbatim, open questions, and anything
 discovered but not fixed.
 
+A brief names the role it dispatches and the pin source where that role's
+live model pins are read. It never names a model id. Models resolve from
+harness configuration at dispatch time, so an id written into a brief is a
+copy that starts going stale immediately, and a stale one can invert the
+reviewer-differs-from-author invariant by naming the very model that
+authored the diff. Where the brief needs to say which model ran, it says
+so after the fact, in the cost ledger.
+
 Decision authority stays with the board owner. When a card allows an
 either-or outcome, the subagent reports the evidence and stops; the board
 owner decides and writes the log entry.
@@ -311,6 +321,15 @@ linked from the card that produced it, every code card that entered
 lint passes on every markdown file the session created or edited. Then the
 board owner commits the session's board and doc writes under the commit
 standards above. Board state is never left uncommitted across sessions.
+
+Read a card back after editing it. After any multi-step edit sequence over
+a card - scripted edits, `sed`, a render pass - read the card file back
+from disk before committing and before presenting any gate over it. An
+edit that reports success can still fail to persist; when that happens
+silently, the loss surfaces only after a gate has been approved over stale
+state, and the board has to be reconstructed from git history. The tick
+you are about to show the user is the one you re-read, not the one you
+believe you wrote.
 
 ### Wave close: documentation bus test
 

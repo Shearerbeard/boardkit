@@ -1,5 +1,7 @@
 # Model classes
 
+<!-- boardkit-contract: v1 -->
+
 This is the delegation policy: which class of model runs which kind of
 board work, and the invariants that hold regardless of which vendor or
 harness is in play. Classes are the stable unit here. Named models drift
@@ -127,6 +129,12 @@ pre-vets it:
   or persona name implies. Agent names drift out of sync with the model
   pinned underneath them, so check the harness's own agent-definition file
   rather than trusting the name.
+- No model ids downstream: a recipe, card, brief, or doc that names a
+  specific model id is a drift hazard. Ids outlive their accuracy, and a
+  followed-literally recipe naming yesterday's reviewer can invert the
+  reviewer-differs-from-author invariant once that id becomes the writer's
+  pin. Docs record the role and the pin source to read it from; the cost
+  ledger records the models actually used.
 
 An unvetted, quota-exhausted, or under-permissioned reviewer counts as
 unreachable. The gate defers per the Deferrals rule in `PROCESS.md`, and

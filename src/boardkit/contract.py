@@ -40,13 +40,22 @@ ROLE_KEYS = {"routes"}
 
 ROUTE_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 PLACEHOLDER_RE = re.compile(r"<[^<>\n]+>")
+# Shipped docs carry the stamp in whatever comment syntax their format has:
+# an HTML comment in markdown, a `#` line in the hook sample.
+STAMP_RE = re.compile(r"boardkit-contract: v(\d+)")
+
+# The env var the entry shims tell a fresh agent to export, and the worktree
+# path a delegation harness leaves behind. Both are named in shipped prose
+# and read back by the diagnostics, so they live here rather than in either.
+BOARDKIT_HOME_VAR = "BOARDKIT_HOME"
+JOB_WORKTREE_GLOB = ".agy-mcp/worktrees/job-*"
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 TEMPLATES_DIR = DATA_DIR / "templates"
 
 # (template filename, destination relative to the repo root). The contract
-# docs are the subset that carries a version stamp, so a kit and a consumer
-# repo can be compared; the pre-commit sample is shipped but not stamped.
+# docs are the subset a consumer repo is compared against doc by doc; the
+# pre-commit sample carries a stamp too, but it is a hook, not policy.
 CONTRACT_DOCS = (
     ("PROCESS.md", Path("docs/board/PROCESS.md")),
     ("MODEL-CLASSES.md", Path("docs/board/MODEL-CLASSES.md")),
@@ -88,6 +97,16 @@ def require_keys(section_name: str, data: dict, allowed: set[str]) -> None:
 def placeholders(text: str) -> list[str]:
     """Angle-bracket tokens a scaffolded template ships and a filled one does not."""
     return PLACEHOLDER_RE.findall(text)
+
+
+def read_stamp(text: str) -> int | None:
+    """The contract version a shipped doc declares, or None if it declares none.
+
+    An unstamped doc is not a v0 doc — it is a doc from before stamping, or
+    one a consumer wrote themselves, and the caller decides which.
+    """
+    match = STAMP_RE.search(text)
+    return int(match.group(1)) if match else None
 
 
 def _parse_version(contract: dict) -> int:

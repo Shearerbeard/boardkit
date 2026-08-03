@@ -1,5 +1,7 @@
 # Review and delegation tooling for this repo
 
+<!-- boardkit-contract: v1 -->
+
 This file is a per-project fill-in, not a generic doc. It pins the actual
 tools and harness bindings this repo uses for review and delegation, so a
 board owner does not have to rediscover tool mechanics every session. Cards
@@ -100,6 +102,23 @@ directory inside the working directory and name those staged paths.
 Falling back to a CLI self-invocation is not the remedy. Read the agent
 config for the current model pins before routing either way; agent names
 do not imply model families.
+
+A metered language-review harness is reserved for language-shaped review:
+judgment about a plan, a diff, or prose. It is never a deterministic shell
+proxy - anything a shell command answers exactly, run in a shell - and
+never a workaround for another reviewer's permission failure. A permission
+failure produces a locally staged packet, per the paragraph above. Work
+that only reads asks for no write mode and no worktree.
+
+Cap repeated dispatch attempts on one unit of work at three, matching the
+executor-fallback rule in `PROCESS.md`. Past three, the approach changes,
+not the attempt count: stage the packet, switch transports, or defer the
+gate. Session close accounts for every worktree a delegation created:
+list them, and remove the strays (`.agy-mcp/worktrees/job-*` and whatever
+your own transports leave behind) with `git worktree remove`. A retry loop
+that burns a weekly budget, returns no verdict, and leaves a dozen
+registered worktrees behind is the recorded failure these three rules
+exist to prevent.
 
 ## Stall protocol
 

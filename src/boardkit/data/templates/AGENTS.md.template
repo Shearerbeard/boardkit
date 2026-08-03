@@ -1,5 +1,7 @@
 # Agent instructions
 
+<!-- boardkit-contract: v1 -->
+
 This file is the canonical agent entry point for this repo, for every
 harness. OpenCode reads it natively. Claude Code and Gemini sessions reach
 it through a one-line shim (`CLAUDE.md`, `GEMINI.md`) that says to read this
@@ -20,8 +22,17 @@ file first.
    run:
 
    ```sh
+   export BOARDKIT_HOME=/path/to/boardkit
    uv run --project "${BOARDKIT_HOME:-../boardkit}" boardkit check
    ```
+
+   `BOARDKIT_HOME` must be exported on its own line, before the `uv run`
+   line. A same-line prefix - `BOARDKIT_HOME=/path/to/boardkit uv run
+   --project "${BOARDKIT_HOME:-../boardkit}" ...` - expands
+   `${BOARDKIT_HOME:-../boardkit}` while building the command, before the
+   assignment lands, so the run silently targets the default path instead
+   of the one you named. It then either fails on a directory that is not
+   there or, worse, succeeds against the wrong checkout.
 
    It validates the card registry and confirms the
    generated views (`INDEX.md`, `board.md`) are current. A clean run means
