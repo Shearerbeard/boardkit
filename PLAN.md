@@ -16,8 +16,9 @@ wave-close cost duty, living-contract anchor/doc-sync duties, external-repo
 sha duties, recovery-state-in-files, standalone prose review ledger), records
 every deliberate drop in EXTRACTION.md's new "Dropped (program-specific)"
 table, notes the orientation-canary hard-stop mandate on the board-hygiene
-row for Phase 3, and adds direct tests for `review_packet.py` (suite 22 ->
-37). Each stage passed Gate A; a codex (GPT-5.6-sol) wave review FAILed with
+row for Phase 3, and adds direct tests for `review_packet.py`. The suite is
+the count of record; run `uv run pytest -q` rather than trusting a number
+written here. Each stage passed Gate A; a codex (GPT-5.6-sol) wave review FAILed with
 6 findings, all fixed in dec0775 and re-reviewed to PASS. The open Gate U
 below now covers these commits too.
 
@@ -86,7 +87,7 @@ Standing rules for every phase:
 | 0 | Scaffold, EXTRACTION.md, snapshots of unversioned flow assets | S, A | done (commit 89a07ae) |
 | 1 | `boardkit` CLI: check/render/review-packet/init, boardkit.toml, golden test vs a Phase 1 snapshot of the aura board | S, A | done |
 | 2 | Process docs: PROCESS.md, MODEL-CLASSES.md, REVIEW-TOOLING template, AGENTS/CLAUDE shims | S, A, **U** | done (Gate U approved 2026-07-21) |
-| 3 | Skills plugin: typed-holes (new), board-hygiene (generalized), delegating-work (CLI-first rewrite); opencode agent defs | S, A | pending |
+| 3 | Skills plugin: typed-holes (new), board-hygiene (generalized), delegating-work (CLI-first rewrite); opencode agent defs | S, A | scaffold landed (manifests only, 2026-08-03); skill bodies pending |
 | 4 | `boardkit init` full bootstrap: plugin install, claude-skills sibling detect, agent-def placement; temp-HOME install test | S, A, M | pending |
 | 5 | Dogfood: one card through the full lifecycle in a scratch repo, Claude Code leg + attended OpenCode leg | S, A, M, **T** | pending |
 | 6 | Public polish (README bus test plus the personal-data sweep and humanizer pass), then publish | S, A, **U** | pending |
@@ -94,6 +95,13 @@ Standing rules for every phase:
 U = user review gate (stop and present). T = user testing gate with a full
 handout (setup commands, expected observations in order, failure signatures,
 revert steps).
+
+Phase 3's plugin scaffold landed on 2026-08-03 as manifests only:
+`.claude-plugin/marketplace.json` (marketplace `boardkit`, distinct from the
+personal `my-skills`) and `plugins/board/.claude-plugin/plugin.json`. No skill
+bodies ship yet, so `install-skills` against this repo exits 1 and a test pins
+that empty state. Writing the three skill bodies is tracked as its own card on
+the consuming board, not here.
 
 Phase 2's user gate reviews Phases 1 and 2 together: the CLI/config interface
 plus the process docs, the generic/specific split only the author can judge.

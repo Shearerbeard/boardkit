@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "boardkit",
+  "description": "Board-bound skills for a boardkit card registry",
+  "owner": {
+    "name": "Mike Shearer",
+    "email": "shearerbeard@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "board",
+      "description": "Board hygiene and delegation skills bound to the boardkit contract",
+      "source": "./plugins/board"
+    }
+  ]
+}

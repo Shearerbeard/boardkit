@@ -247,3 +247,31 @@ for the maintainer session.
   job; preflight is printed, never run.
 - The typed-Card seam and `review_packet.py`'s duplicated parser are
   out of scope (separately gated plan).
+
+### Recorded limits (2026-08-03, post-build)
+
+Found while building, kept rather than fixed. Each one is a deliberate
+stopping point with its trigger for revisiting recorded.
+
+- A gate qualifier in a card's `gates` string is parsed and then
+  ignored. `gate_tokens` reduces `U(code-review)` to `U`, and `GATE_ROLES`
+  binds routes for `A`, `F`, and `D` only, so `S`, `M`, and `U` pull no
+  route into a brief. So a qualifier that names a role looks like it
+  selects one and does not. Revisit if board owners start relying on the
+  parenthetical to mean something.
+- The digest covers contract content, not config layout. Reordering
+  `[routes.*]` blocks in `boardkit.toml` leaves the digest unchanged,
+  because `canonical_contract` sorts table keys; reordering the route
+  names inside one role's `routes` list does change it: that sequence is
+  the fallback order, which is contract. The asymmetry is intended and
+  worth knowing before reading a digest diff.
+- `dispatch-brief` prints an unresolvable reviewer route in place, as
+  `UNRESOLVED`, rather than refusing to generate. The executor still
+  needs dispatching, and a broken reviewer binding is exactly what the
+  board owner should see printed. `doctor`'s `roles.filled` is the check
+  that fails on it; the brief is not a second gate.
+
+All six engine stages are complete: contract schema and plumbing;
+stamps and the inbox template fixes; `boardkit doctor`; `resolve-route`;
+`dispatch-brief`; and this stage, init polish, manifests, docs, and the
+inbox drain.

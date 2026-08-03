@@ -24,6 +24,34 @@ form any repository can adopt:
 You can run the board from Claude Code or OpenCode. Codex support is a named
 deferral, not an omission (see `EXTRACTION.md`).
 
+## Diagnostics and routing
+
+A board declares a delegation contract in `boardkit.toml`: one `[routes.*]`
+table per transport you can dispatch to, and one `[roles.*]` table per
+required role (executor, code review, prose review, frontier review, drift
+audit, canary). Three commands read it.
+
+- `boardkit doctor` diagnoses the whole installation from cold and reports
+  every check by a stable id, with `--json` for tooling.
+- `boardkit resolve-route <role>` answers which transport serves one role,
+  and fails rather than guessing when that route is unfilled.
+- `boardkit dispatch-brief <card-id>` generates a card's brief: the card
+  verbatim, its reference links, the resolved routes, and the process clauses
+  quoted from your own docs rather than restated.
+
+Every shipped doc carries a stamp (`<!-- boardkit-contract: v1 -->`) naming
+the contract version it was written against, and `boardkit.toml` declares the
+same version under `[contract]`. Doctor compares them, so a kit that has
+moved ahead of a repo says so instead of behaving strangely.
+
+`check` and `doctor` answer different questions. `check` is board validity:
+are the cards well-formed and the generated views current? It is what the
+pre-commit hook runs. `doctor` is installation readiness: is this repo wired
+up to actually dispatch work? A freshly scaffolded repo passes `check` and
+fails `doctor`, by design - `boardkit init` writes placeholders instead of
+pretending a transport is configured, and doctor names each one still to
+fill in.
+
 The language skills the flow's writers and reviewers load (rust-*, python-*,
 docs-*) are not part of this kit; they install alongside it from
 [claude-skills](https://github.com/Shearerbeard/claude-skills).

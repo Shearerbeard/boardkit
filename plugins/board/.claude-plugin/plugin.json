@@ -1,0 +1,8 @@
+{
+  "name": "board",
+  "description": "Board hygiene and delegation skills bound to the boardkit contract",
+  "version": "0.1.0",
+  "author": {
+    "name": "Mike Shearer"
+  }
+}

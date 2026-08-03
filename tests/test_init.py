@@ -1,13 +1,17 @@
 from pathlib import Path
 
+import pytest
+
 from boardkit.board import build_board
-from boardkit.cli import cmd_check, cmd_init, cmd_render
+from boardkit.cli import cmd_check, cmd_doctor, cmd_init, cmd_render
 from boardkit.config import CONFIG_FILENAME, load_config
+from boardkit.contract import CONTRACT_VERSION
 
 
 class _Args:
-    def __init__(self, config: str | None = None) -> None:
+    def __init__(self, config: str | None = None, json: bool = False) -> None:
         self.config = config
+        self.json = json
 
 
 def test_init_scaffolds_config_and_template(tmp_path: Path) -> None:
@@ -56,6 +60,37 @@ def test_fresh_board_with_zero_cards_is_valid(tmp_path: Path) -> None:
     # init must leave a board that checks clean with no intervening render
     assert cmd_check(_Args(config=str(config_path))) == 0
     assert cmd_render(_Args(config=str(config_path))) == 0
+
+
+def test_init_prints_the_stamp_and_points_at_doctor(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The operator has to know which contract their board speaks, and what is
+    left before it can dispatch; neither is discoverable from a clean exit."""
+    assert cmd_init(_Args(config=str(tmp_path / CONFIG_FILENAME))) == 0
+
+    out = capsys.readouterr().out
+    assert f"Stamped at delegation contract v{CONTRACT_VERSION}." in out
+    assert "NEXT:" in out
+    assert "boardkit.toml" in out
+    assert "docs/board/REVIEW-TOOLING.md" in out
+    assert "`boardkit doctor`" in out
+
+
+def test_a_fresh_board_passes_check_and_fails_doctor(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The split, by design: `check` is board validity, doctor is installation
+    readiness. init scaffolds placeholders rather than lying about them, so a
+    fresh board is valid and not yet dispatchable."""
+    config_path = tmp_path / CONFIG_FILENAME
+    assert cmd_init(_Args(config=str(config_path))) == 0
+    capsys.readouterr()
+
+    assert cmd_check(_Args(config=str(config_path))) == 0
+    assert cmd_doctor(_Args(config=str(config_path))) == 1
+
+    assert "roles.filled" in capsys.readouterr().out
 
 
 def test_init_installs_review_packet_gitignore(tmp_path: Path) -> None:

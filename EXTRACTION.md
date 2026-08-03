@@ -28,6 +28,7 @@ material, stripped before publish).
 | `boardkit.toml` schema | none | author | cards dir, id prefix + sentinel, review repo path, statuses. |
 | Card template + frontmatter contract | `docs/redesign/cards/_template.md` | port | Schema is already generic: id, title, status, depends, serialize-with, lineage, executor, gates, user-gates, commit-range. |
 | NOT extracted: `scripts/loc_measure.py` | - | dropped | Aura-crate-specific LOC bucketing; not board machinery. |
+| Delegation contract + `boardkit doctor` / `resolve-route` / `dispatch-brief` | none (source: the 2026-08-03 topology review findings F1, F2, F3, F5, F9) | author | Net-new capability, no counterpart in the source repo. `[contract]`/`[routes]`/`[roles]` in `boardkit.toml` make routing mechanically resolvable instead of four prose hops; `doctor` covers the installation-state matrix `check` was never meant to; `dispatch-brief` generates the brief PROCESS.md describes, quoting its clauses instead of restating them. Design: `docs/plans/2026-08-03-topology-hardening.md`. |
 
 ## Process documents (Phase 2)
 
@@ -47,6 +48,7 @@ material, stripped before publish).
 | `board-hygiene` skill | `.claude/skills/board-hygiene/SKILL.md` (terminalbench-aura) | port | Generic steps kept (frontmatter-is-truth, log-in-same-turn, view regen, orientation canary); repo-specific steps (repo-map sync) become config-driven hooks. The Phase-3 port needs the skill steps plus the source PROCESS.md-level cold-start orientation-canary mandate ("a miss is a hard stop", source PROCESS.md ~230-238). The kit PROCESS.md leaves that mandate out for now, pending Phase 3. |
 | `delegating-work` skill | snapshots/user-skills/* + `REVIEW-TOOLING.md` transport guidance | author | CLI-first rewrite: `opencode run` / `codex exec` over MCP. Sources: REVIEW-TOOLING.md transport rule (MCP `opencode_fire`/`opencode_run` observed hanging, stale embedded build returning empty text) and the author's direct report that Claude Code struggles juggling OpenCode over MCP. Supersedes collaborating-with-opencode and collaborating-with-antigravity for board work. |
 | Plugin marketplace layout + frontmatter validator | claude-skills `.claude-plugin/`, `bin/_check-frontmatter.py`, `bin/install-skills`, `bin/check-install` | port | Same mechanism: Claude Code marketplace + flat copy to `~/.agents/skills/` for OpenCode, manifest-based pruning, temp-`$HOME` install test. |
+| Plugin marketplace scaffold (`.claude-plugin/marketplace.json`, `plugins/board/`) | none (shape follows claude-skills) | author | Landed 2026-08-03, manifests only: a marketplace named `boardkit` declaring one `board` plugin, and that plugin's manifest. The name must differ from the personal marketplace's `my-skills` or the per-source install manifests cross-prune. No skill bodies ship - a skill that says nothing is worse than an absent one, because absence is detectable. `test_plugin_manifest.py` pins the empty state and the skill-bodies card deletes that test. |
 
 ## Harness adapters (Phases 3-4)
 

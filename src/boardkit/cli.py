@@ -19,6 +19,7 @@ from boardkit.brief import BriefError, build_brief
 from boardkit.config import CONFIG_FILENAME, Config, load_config
 from boardkit.contract import (
     BOARD_DOCS,
+    CONTRACT_VERSION,
     DATA_DIR,
     ENTRY_SHIMS,
     REQUIRED_ROLES,
@@ -244,11 +245,18 @@ def cmd_init(args: argparse.Namespace) -> int:
         (config.board.cards_dir / name).write_text(content, encoding="utf-8")
 
     print(f"OK: scaffolded {config_path}, {cards_dir}, and docs/board; `boardkit check` is clean")
+    print(f"Stamped at delegation contract v{CONTRACT_VERSION}.")
     for dest in skipped:
         print(
             f"NOTE: {dest} already exists; left untouched. Merge the boardkit entry "
             f"points from {TEMPLATES_DIR} yourself."
         )
+    # init scaffolds placeholders rather than lying, so the board is not yet
+    # dispatchable; say what is left instead of leaving that to be discovered.
+    print(
+        "NEXT: fill the [routes.*] tables in boardkit.toml and the fill-in sections "
+        "of docs/board/REVIEW-TOOLING.md, then run `boardkit doctor`."
+    )
     return 0
 
 
