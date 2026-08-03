@@ -151,3 +151,29 @@ expands the parameter before the assignment lands, so the command
 silently targets the default path. Found while smoke-testing the
 2026-08-02 template change. Candidate fix: one sentence in the AGENTS
 template noting the variable must be exported.
+
+## 2026-08-03 agy-shell-proxy-routing
+
+```yaml
+date: 2026-08-03
+harness: opencode
+agent: kimi-for-coding/k3
+workstreams: [boardkit, chore-lottery, agy-mcp]
+repo: chore-lottery
+source: claude-skills feedback/2026-08-03-opencode-agy-routing-burn/process-feedback.md
+```
+
+A chore-lottery Gate A retry treated Agy as a deterministic shell proxy
+after the pinned reviewer could not run `git show`. Repeated Agy jobs tried
+to retrieve the same three commit diffs, several using `execute` mode,
+`allow_write: true`, and auto-worktrees for read-only output. The jobs
+consumed constrained weekly budget, produced no Gate A verdict, and left
+twelve registered `.agy-mcp` worktrees behind. Kit relevance: the review
+transport rules say to stage packets when a reviewer cannot read a path,
+but they do not explicitly forbid using a metered language-review harness
+to fetch deterministic command output or bypass reviewer permissions.
+Candidate fix: add a hard routing rule to the review tooling template.
+It should reserve Agy for budget-approved language-shaped review and
+exclude deterministic shell work or code review. Permission failure
+should produce a locally staged packet. The same rule should cap repeated
+attempts and make session close account for delegated worktrees.
