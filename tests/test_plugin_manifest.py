@@ -1,9 +1,11 @@
-"""The plugin scaffold ships manifests and nothing else.
+"""The plugin manifests stay valid and consistent with each other.
 
-A skill body that says nothing is worse than an absent one, because absence
-is detectable and emptiness is not. So this wave lands the two manifests and
-stops, and these tests pin both halves of that: the manifests are valid and
-consistent, and the plugin is provably still empty.
+Claude Code discovers this plugin through two JSON files, and a mistake in
+either surfaces at install time on someone else's machine with an error that
+names neither. These tests keep that failure here instead.
+
+The empty-plugin test that used to live here was deleted with the skill
+bodies it was waiting on.
 """
 
 from __future__ import annotations
@@ -13,7 +15,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MARKETPLACE = REPO_ROOT / ".claude-plugin" / "marketplace.json"
-PLUGINS_DIR = REPO_ROOT / "plugins"
 
 # The personal skills marketplace. Claude Code keeps one install manifest per
 # source, keyed by marketplace name, so two marketplaces sharing a name prune
@@ -58,12 +59,3 @@ def test_each_plugin_manifest_names_its_own_directory() -> None:
         assert data["name"] == manifest.parent.parent.name
         assert data["version"]
         assert data["author"]["name"]
-
-
-def test_plugin_ships_no_skills_yet() -> None:
-    """Pins the recorded empty state: the scaffold is manifests only, so
-    `install-skills` against this repo exits 1 until bodies land.
-
-    The card that writes the skill bodies deletes this test.
-    """
-    assert list(PLUGINS_DIR.glob("*/skills/*/SKILL.md")) == []

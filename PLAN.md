@@ -98,10 +98,12 @@ revert steps).
 
 Phase 3's plugin scaffold landed on 2026-08-03 as manifests only:
 `.claude-plugin/marketplace.json` (marketplace `boardkit`, distinct from the
-personal `my-skills`) and `plugins/board/.claude-plugin/plugin.json`. No skill
-bodies ship yet, so `install-skills` against this repo exits 1 and a test pins
-that empty state. Writing the three skill bodies is tracked as its own card on
-the consuming board, not here.
+personal `my-skills`) and `plugins/board/.claude-plugin/plugin.json`. The
+`board-hygiene` and `delegating-work` bodies landed 2026-08-03 (tracked on the
+consuming board), so `install-skills` now deploys both from this repo
+alongside a personal marketplace without cross-pruning; the interim
+empty-state pin test is gone. `typed-holes` ships from claude-skills per the
+packaging coupling rule.
 
 Phase 2's user gate reviews Phases 1 and 2 together: the CLI/config interface
 plus the process docs, the generic/specific split only the author can judge.

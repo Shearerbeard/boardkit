@@ -239,8 +239,10 @@ for the maintainer session.
 
 - Old kit + new config fails loudly on unknown sections; that is the
   v1 skew guard, on purpose.
-- `install-skills` exits 1 against this repo until the board-bound
-  skill bodies land; pinned by test.
+- `install-skills` exited 1 against this repo until the board-bound
+  skill bodies landed (pinned by a test while true); resolved
+  2026-08-03 when `board-hygiene` and `delegating-work` shipped and
+  the pin test was deleted.
 - Gate A code-vs-prose selection stays board-owner judgment; briefs
   print both routes.
 - Whether a route is actually reachable stays the pre-vet checklist's
