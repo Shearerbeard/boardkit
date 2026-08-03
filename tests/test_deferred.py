@@ -12,21 +12,11 @@ two views it always did.
 from pathlib import Path
 
 import pytest
+from conftest import config_text
 
 from boardkit.board import DEFERRED_VIEW, BoardError, build_board, deferred_gates
 from boardkit.cli import cmd_check, cmd_render
 from boardkit.config import load_config
-
-CONFIG_TEXT = """
-[board]
-cards_dir = "cards"
-id_prefix = "S"
-sentinel_ids = ["MILESTONE"]
-
-[review]
-repo = "."
-output_dir = "reviews"
-"""
 
 CARD = """---
 id: {id}
@@ -85,7 +75,7 @@ def _write_card(
 def board(tmp_path: Path) -> Path:
     (tmp_path / "cards").mkdir()
     config_path = tmp_path / "boardkit.toml"
-    config_path.write_text(CONFIG_TEXT, encoding="utf-8")
+    config_path.write_text(config_text(), encoding="utf-8")
     return config_path
 
 

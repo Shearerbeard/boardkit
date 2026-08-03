@@ -1,9 +1,12 @@
 """Load and validate boardkit.toml.
 
-The config file anchors two things: where the card registry lives (and
-its id scheme) and where review packets read/write. All keys are
-required; unknown keys are a hard error rather than silently ignored,
-so a typo in the config never falls back to a stale default.
+The config file anchors three things: where the card registry lives (and
+its id scheme), where review packets read/write, and which transport
+serves each delegation role. All keys are required; unknown keys are a
+hard error rather than silently ignored, so a typo in the config never
+falls back to a stale default. The same strictness is the version skew
+guard: an old kit reading a new config fails loudly on the sections it
+does not know.
 """
 
 from __future__ import annotations
@@ -12,9 +15,11 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
+from boardkit.contract import CONTRACT_VERSION, ContractConfig, parse_contract, require_keys
+
 CONFIG_FILENAME = "boardkit.toml"
 
-TOP_LEVEL_SECTIONS = {"board", "review"}
+TOP_LEVEL_SECTIONS = {"board", "review", "contract", "routes", "roles"}
 BOARD_KEYS = {"cards_dir", "id_prefix", "sentinel_ids"}
 REVIEW_KEYS = {"repo", "output_dir"}
 
@@ -37,6 +42,7 @@ class Config:
     root: Path
     board: BoardConfig
     review: ReviewConfig
+    contract: ContractConfig
 
 
 def find_config(start: Path) -> Path:
@@ -50,15 +56,6 @@ def find_config(start: Path) -> Path:
     )
 
 
-def _require_keys(section_name: str, data: dict, allowed: set[str]) -> None:
-    missing = allowed - data.keys()
-    if missing:
-        raise ValueError(f"[{section_name}]: missing required key(s): {sorted(missing)}")
-    unknown = data.keys() - allowed
-    if unknown:
-        raise ValueError(f"[{section_name}]: unknown key(s): {sorted(unknown)}")
-
-
 def load_config(path: Path | None) -> Config:
     config_path = path if path is not None else find_config(Path.cwd())
     if not config_path.is_file():
@@ -70,12 +67,21 @@ def load_config(path: Path | None) -> Config:
     unknown_top = data.keys() - TOP_LEVEL_SECTIONS
     if unknown_top:
         raise ValueError(f"{config_path}: unknown top-level key(s): {sorted(unknown_top)}")
+    # A board written before the contract landed is a migration, not a typo,
+    # so it gets named as one ahead of the generic missing-section error.
+    if "contract" not in data:
+        raise ValueError(
+            f"{config_path}: no [contract] section; this config predates delegation "
+            f"contract v{CONTRACT_VERSION}. Add [contract], [routes.<name>], and a "
+            "[roles.<name>] table per required role, then run `boardkit doctor` to "
+            "check the result."
+        )
     missing_top = TOP_LEVEL_SECTIONS - data.keys()
     if missing_top:
         raise ValueError(f"{config_path}: missing required section(s): {sorted(missing_top)}")
 
     board_data = data["board"]
-    _require_keys("board", board_data, BOARD_KEYS)
+    require_keys("board", board_data, BOARD_KEYS)
     if not isinstance(board_data["cards_dir"], str) or not board_data["cards_dir"]:
         raise ValueError("[board]: cards_dir must be a non-empty string path")
     if not isinstance(board_data["id_prefix"], str) or not board_data["id_prefix"]:
@@ -86,7 +92,7 @@ def load_config(path: Path | None) -> Config:
         raise ValueError("[board]: sentinel_ids must be a list of strings")
 
     review_data = data["review"]
-    _require_keys("review", review_data, REVIEW_KEYS)
+    require_keys("review", review_data, REVIEW_KEYS)
     for key in ("repo", "output_dir"):
         if not isinstance(review_data[key], str) or not review_data[key]:
             raise ValueError(f"[review]: {key} must be a non-empty string path")
@@ -101,4 +107,5 @@ def load_config(path: Path | None) -> Config:
         repo=(root / review_data["repo"]).resolve(),
         output_dir=(root / review_data["output_dir"]).resolve(),
     )
-    return Config(root=root, board=board, review=review)
+    contract = parse_contract(data["contract"], data["routes"], data["roles"])
+    return Config(root=root, board=board, review=review, contract=contract)

@@ -10,20 +10,11 @@ from pathlib import Path
 from boardkit import __version__
 from boardkit.board import DEFERRED_VIEW, BoardError, build_board, render_canary_key
 from boardkit.config import CONFIG_FILENAME, Config, load_config
+from boardkit.contract import BOARD_DOCS, DATA_DIR, TEMPLATES_DIR
 from boardkit.review_packet import ReviewPacketError, build_review_packet
 
-DATA_DIR = Path(__file__).resolve().parent / "data"
 TEMPLATE_SOURCE = DATA_DIR / "_template.md"
-TEMPLATES_DIR = DATA_DIR / "templates"
 
-# (template filename, destination relative to the repo root)
-BOARD_DOCS = [
-    ("PROCESS.md", Path("docs/board/PROCESS.md")),
-    ("MODEL-CLASSES.md", Path("docs/board/MODEL-CLASSES.md")),
-    ("REVIEW-TOOLING.md.template", Path("docs/board/REVIEW-TOOLING.md")),
-    # Opt-in only: init writes the sample, never .git/hooks.
-    ("pre-commit.sample", Path("docs/board/pre-commit.sample")),
-]
 ENTRY_SHIMS = [
     ("AGENTS.md.template", Path("AGENTS.md")),
     ("CLAUDE.md.template", Path("CLAUDE.md")),
@@ -46,6 +37,45 @@ sentinel_ids = ["MILESTONE"]
 repo = "."
 # Directory (relative to this file) review packets are written to.
 output_dir = "docs/board/reviews"
+
+# The delegation contract: which transport serves each role. Scaffolded with
+# placeholders — fill them in, then run `boardkit doctor`.
+[contract]
+version = 1
+
+# One [routes.<name>] table per transport you can dispatch to. Names are
+# lowercase slugs.
+[routes.primary]
+# The harness this transport reaches.
+adapter = "<harness-name>"
+# Child skill this transport loads; "" means none.
+skill = ""
+# Where live model pins are read at dispatch time. A pointer, never a pin:
+# model ids go stale, so the contract records where to look them up.
+pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"
+# Commands that prove the transport is reachable. boardkit prints preflight;
+# it never runs it — the caller runs them.
+preflight = []
+
+# One [roles.<name>] table per required role. `routes` is the ordered
+# fallback list; every name must be declared above.
+[roles.executor]
+routes = ["primary"]
+
+[roles.code-review]
+routes = ["primary"]
+
+[roles.prose-review]
+routes = ["primary"]
+
+[roles.frontier-review]
+routes = ["primary"]
+
+[roles.drift-audit]
+routes = ["primary"]
+
+[roles.canary]
+routes = ["primary"]
 """
 
 
@@ -203,12 +233,19 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=f"path to {CONFIG_FILENAME} (default: walk up from cwd)",
     )
+    parser.add_argument("--version", action="version", version=f"boardkit {__version__}")
     subparsers = parser.add_subparsers(dest="command")
 
-    subparsers.add_parser("check", help="validate the board and diff generated views")
-    subparsers.add_parser("render", help="validate the board and write its generated views")
+    check = subparsers.add_parser("check", help="validate the board and diff generated views")
+    check.set_defaults(handler=cmd_check)
+
+    render = subparsers.add_parser(
+        "render", help="validate the board and write its generated views"
+    )
+    render.set_defaults(handler=cmd_render)
 
     review = subparsers.add_parser("review-packet", help="build a per-card review packet")
+    review.set_defaults(handler=cmd_review_packet)
     review.add_argument("card_id", help="card id, for example S2")
     review.add_argument("--repo", default=None, help="worktree holding the card's commits")
     review.add_argument(
@@ -228,12 +265,14 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
-    subparsers.add_parser(
+    canary_key = subparsers.add_parser(
         "canary-key",
         help="print the orientation canary's grading key (markdown)",
     )
+    canary_key.set_defaults(handler=cmd_canary_key)
 
-    subparsers.add_parser("init", help="scaffold a new board in the current directory")
+    init = subparsers.add_parser("init", help="scaffold a new board in the current directory")
+    init.set_defaults(handler=cmd_init)
 
     return parser
 
@@ -247,11 +286,4 @@ def main() -> None:
         parser.print_help()
         return
 
-    commands = {
-        "check": cmd_check,
-        "render": cmd_render,
-        "review-packet": cmd_review_packet,
-        "canary-key": cmd_canary_key,
-        "init": cmd_init,
-    }
-    sys.exit(commands[args.command](args))
+    sys.exit(args.handler(args))

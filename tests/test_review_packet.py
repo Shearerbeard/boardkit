@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
+from conftest import config_text
 
 from boardkit.config import Config, load_config
 from boardkit.review_packet import (
@@ -84,17 +85,7 @@ class Env:
 
     def write_config(self, repo_rel: str = "repo") -> Config:
         config_path = self.tmp_path / "boardkit.toml"
-        config_path.write_text(
-            "[board]\n"
-            'cards_dir = "cards"\n'
-            'id_prefix = "S"\n'
-            'sentinel_ids = ["MILESTONE"]\n'
-            "\n"
-            "[review]\n"
-            f'repo = "{repo_rel}"\n'
-            'output_dir = "reviews"\n',
-            encoding="utf-8",
-        )
+        config_path.write_text(config_text(repo=repo_rel), encoding="utf-8")
         return load_config(config_path)
 
 

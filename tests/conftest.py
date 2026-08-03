@@ -6,16 +6,67 @@ import pytest
 GOLDEN_DIR = Path(__file__).parent / "golden"
 GOLDEN_CARDS_DIR = GOLDEN_DIR / "aura-cards"
 
-CONFIG_TEMPLATE = """\
+# The delegation contract every test board declares. Filled in with real
+# values (no angle-bracket placeholders) so boards under test load the way a
+# migrated repo's does, not the way a freshly scaffolded one does.
+CONTRACT_BLOCK = """\
+[contract]
+version = 1
+
+[routes.primary]
+adapter = "test-harness"
+skill = ""
+pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"
+preflight = []
+
+[roles.executor]
+routes = ["primary"]
+
+[roles.code-review]
+routes = ["primary"]
+
+[roles.prose-review]
+routes = ["primary"]
+
+[roles.frontier-review]
+routes = ["primary"]
+
+[roles.drift-audit]
+routes = ["primary"]
+
+[roles.canary]
+routes = ["primary"]
+"""
+
+CONFIG_TEMPLATE = (
+    """\
 [board]
 cards_dir = "{cards_dir}"
-id_prefix = "S"
+id_prefix = "{id_prefix}"
 sentinel_ids = ["MILESTONE"]
 
 [review]
-repo = "."
+repo = "{repo}"
 output_dir = "{output_dir}"
+
 """
+    + CONTRACT_BLOCK
+)
+
+
+def config_text(
+    cards_dir: str = "cards",
+    output_dir: str = "reviews",
+    repo: str = ".",
+    id_prefix: str = "S",
+) -> str:
+    """A complete, valid boardkit.toml — the one config schema the tests share."""
+    return CONFIG_TEMPLATE.format(
+        cards_dir=cards_dir,
+        output_dir=output_dir,
+        repo=repo,
+        id_prefix=id_prefix,
+    )
 
 
 @pytest.fixture
@@ -35,7 +86,5 @@ def golden_board(tmp_path: Path) -> Path:
         else:
             shutil.copyfile(entry, dest)
     config_path = tmp_path / "boardkit.toml"
-    config_path.write_text(
-        CONFIG_TEMPLATE.format(cards_dir="cards", output_dir="reviews"), encoding="utf-8"
-    )
+    config_path.write_text(config_text(), encoding="utf-8")
     return config_path

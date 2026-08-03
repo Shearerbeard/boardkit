@@ -1,6 +1,14 @@
+"""Tests for boardkit.config.
+
+The valid-config cases use the shared `config_text` helper so the schema
+lives in one place; the malformation cases mutate that helper's output, so
+each test says exactly which one thing it broke.
+"""
+
 from pathlib import Path
 
 import pytest
+from conftest import config_text
 
 from boardkit.config import load_config
 
@@ -13,15 +21,7 @@ def _write(path: Path, text: str) -> Path:
 def test_missing_required_key_raises(tmp_path: Path) -> None:
     config_path = _write(
         tmp_path / "boardkit.toml",
-        """
-        [board]
-        cards_dir = "cards"
-        id_prefix = "S"
-
-        [review]
-        repo = "."
-        output_dir = "reviews"
-        """,
+        config_text().replace('sentinel_ids = ["MILESTONE"]\n', ""),
     )
     with pytest.raises(ValueError, match="missing required key"):
         load_config(config_path)
@@ -30,17 +30,7 @@ def test_missing_required_key_raises(tmp_path: Path) -> None:
 def test_unknown_key_raises(tmp_path: Path) -> None:
     config_path = _write(
         tmp_path / "boardkit.toml",
-        """
-        [board]
-        cards_dir = "cards"
-        id_prefix = "S"
-        sentinel_ids = ["MILESTONE"]
-        unexpected = "nope"
-
-        [review]
-        repo = "."
-        output_dir = "reviews"
-        """,
+        config_text().replace('id_prefix = "S"', 'id_prefix = "S"\nunexpected = "nope"'),
     )
     with pytest.raises(ValueError, match="unknown key"):
         load_config(config_path)
@@ -49,19 +39,7 @@ def test_unknown_key_raises(tmp_path: Path) -> None:
 def test_unknown_top_level_section_raises(tmp_path: Path) -> None:
     config_path = _write(
         tmp_path / "boardkit.toml",
-        """
-        [board]
-        cards_dir = "cards"
-        id_prefix = "S"
-        sentinel_ids = ["MILESTONE"]
-
-        [review]
-        repo = "."
-        output_dir = "reviews"
-
-        [extra]
-        foo = "bar"
-        """,
+        config_text() + '\n[extra]\nfoo = "bar"\n',
     )
     with pytest.raises(ValueError, match="unknown top-level key"):
         load_config(config_path)
@@ -73,19 +51,7 @@ def test_missing_config_file_raises(tmp_path: Path) -> None:
 
 
 def test_valid_config_resolves_paths_relative_to_config_root(tmp_path: Path) -> None:
-    config_path = _write(
-        tmp_path / "boardkit.toml",
-        """
-        [board]
-        cards_dir = "cards"
-        id_prefix = "S"
-        sentinel_ids = ["MILESTONE"]
-
-        [review]
-        repo = "."
-        output_dir = "reviews"
-        """,
-    )
+    config_path = _write(tmp_path / "boardkit.toml", config_text())
     config = load_config(config_path)
     assert config.board.cards_dir == (tmp_path / "cards").resolve()
     assert config.review.repo == tmp_path.resolve()
@@ -93,11 +59,9 @@ def test_valid_config_resolves_paths_relative_to_config_root(tmp_path: Path) -> 
 
 
 def test_non_string_path_values_are_config_errors(tmp_path: Path) -> None:
-    bad = tmp_path / "boardkit.toml"
-    bad.write_text(
-        '[board]\ncards_dir = 7\nid_prefix = "S"\nsentinel_ids = []\n'
-        '[review]\nrepo = "."\noutput_dir = "reviews"\n',
-        encoding="utf-8",
+    bad = _write(
+        tmp_path / "boardkit.toml",
+        config_text().replace('cards_dir = "cards"', "cards_dir = 7"),
     )
     with pytest.raises(ValueError, match="cards_dir"):
         load_config(bad)

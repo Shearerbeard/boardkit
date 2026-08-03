@@ -1,20 +1,10 @@
 from pathlib import Path
 
 import pytest
+from conftest import config_text
 
 from boardkit.board import BoardError, build_board
 from boardkit.config import load_config
-
-CONFIG_TEXT = """
-[board]
-cards_dir = "cards"
-id_prefix = "S"
-sentinel_ids = ["MILESTONE"]
-
-[review]
-repo = "."
-output_dir = "reviews"
-"""
 
 CARD_FRONTMATTER = """---
 id: {id}
@@ -47,7 +37,7 @@ def _write_card(cards_dir: Path, filename: str, **fields) -> None:
 def test_ready_with_unfinished_dependency_fails(tmp_path: Path) -> None:
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
-    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
 
     _write_card(cards_dir, "s1-base.md", id="S1", title="Base", status="backlog", depends="[]")
     _write_card(
@@ -69,7 +59,7 @@ def test_ready_with_unfinished_dependency_fails(tmp_path: Path) -> None:
 def test_dependency_cycle_detected(tmp_path: Path) -> None:
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
-    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
 
     _write_card(cards_dir, "s1-a.md", id="S1", title="A", status="backlog", depends="[S2]")
     _write_card(cards_dir, "s2-b.md", id="S2", title="B", status="backlog", depends="[S1]")
@@ -87,7 +77,7 @@ def test_regex_metacharacters_in_id_scheme_are_literal(tmp_path: Path) -> None:
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
     (tmp_path / "boardkit.toml").write_text(
-        CONFIG_TEXT.replace('id_prefix = "S"', 'id_prefix = "S."'), encoding="utf-8"
+        config_text(id_prefix="S."), encoding="utf-8"
     )
     config = load_config(tmp_path / "boardkit.toml")
 
@@ -101,7 +91,7 @@ def test_regex_metacharacters_in_id_scheme_are_literal(tmp_path: Path) -> None:
 def test_wip_limit_enforced(tmp_path: Path) -> None:
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
-    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     for n in (1, 2, 3):
         _write_card(
             cards_dir, f"s{n}-c{n}.md", id=f"S{n}", title=f"C{n}", status="in-progress"
@@ -119,7 +109,7 @@ def test_side_quest_card_does_not_count_toward_wip(tmp_path: Path) -> None:
     quest is exempt from the WIP limit, so its cards do not count."""
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
-    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     for n in (1, 2):
         _write_card(
             cards_dir, f"s{n}-c{n}.md", id=f"S{n}", title=f"C{n}", status="in-progress"
@@ -145,7 +135,7 @@ def test_side_quest_cards_still_count_once_they_exceed_the_limit_themselves(
     disable the limit for the mainline cards that remain."""
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
-    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     for n in (1, 2, 3):
         _write_card(
             cards_dir, f"s{n}-c{n}.md", id=f"S{n}", title=f"C{n}", status="in-progress"
@@ -170,7 +160,7 @@ def test_side_quest_cards_still_count_once_they_exceed_the_limit_themselves(
 def test_side_quest_must_be_a_boolean(tmp_path: Path) -> None:
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
-    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     _write_card(
         cards_dir,
         "s1-a.md",
@@ -191,7 +181,7 @@ def test_side_quest_card_still_obeys_the_serialize_mutex(tmp_path: Path) -> None
     about shared files, so two serialized cards still may not run together."""
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
-    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     _write_card(
         cards_dir, "s1-a.md", id="S1", title="A", status="in-progress",
         serialize_with="[S2]",
@@ -210,7 +200,7 @@ def test_side_quest_card_still_obeys_the_serialize_mutex(tmp_path: Path) -> None
 def test_serialized_cards_may_not_both_be_in_progress(tmp_path: Path) -> None:
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
-    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     _write_card(
         cards_dir, "s1-a.md", id="S1", title="A", status="in-progress",
         serialize_with="[S2]",
@@ -231,7 +221,7 @@ def test_serialized_cards_may_not_both_be_in_progress(tmp_path: Path) -> None:
 def test_in_review_lineage_card_requires_commit_range(tmp_path: Path) -> None:
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
-    (tmp_path / "boardkit.toml").write_text(CONFIG_TEXT, encoding="utf-8")
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     _write_card(
         cards_dir, "s1-a.md", id="S1", title="A", status="in-review",
         lineage="accepted-head",

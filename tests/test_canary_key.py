@@ -14,19 +14,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from conftest import config_text
 
 from boardkit.cli import cmd_canary_key, cmd_render
-
-CONFIG_TEXT = """
-[board]
-cards_dir = "cards"
-id_prefix = "S"
-sentinel_ids = ["MILESTONE"]
-
-[review]
-repo = "."
-output_dir = "reviews"
-"""
 
 CARD = """---
 id: {id}
@@ -85,7 +75,7 @@ def _write(
 def board(tmp_path: Path) -> Path:
     (tmp_path / "cards").mkdir()
     config_path = tmp_path / "boardkit.toml"
-    config_path.write_text(CONFIG_TEXT, encoding="utf-8")
+    config_path.write_text(config_text(), encoding="utf-8")
     return config_path
 
 
