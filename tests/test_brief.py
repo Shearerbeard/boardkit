@@ -294,6 +294,65 @@ def test_the_digest_changes_when_a_role_reorders_its_fallbacks(tmp_path: Path) -
     assert contract_digest(load_config(config_path)) != first
 
 
+def test_the_digest_separates_contracts_that_differ_only_by_a_delimiter(
+    tmp_path: Path,
+) -> None:
+    """Route values are free strings, so a delimiter-joined serialization can
+    collide: `preflight = ["a|b"]` and `["a", "b"]` are different contracts
+    that a `|`-join renders identically. The digest must tell them apart."""
+    config_path = _board(tmp_path)
+    original = config_path.read_text(encoding="utf-8")
+
+    config_path.write_text(original.replace("preflight = []", 'preflight = ["a|b"]'), "utf-8")
+    joined = contract_digest(load_config(config_path))
+
+    config_path.write_text(original.replace("preflight = []", 'preflight = ["a", "b"]'), "utf-8")
+    split = contract_digest(load_config(config_path))
+
+    assert joined != split
+
+
+def test_the_digest_separates_a_value_that_impersonates_a_field_separator(
+    tmp_path: Path,
+) -> None:
+    """A forward guard, not a historical failure: this particular pair did not
+    collide under the old delimiter join. It pins the general property, that a
+    route value cannot forge the serialization's own structure."""
+    config_path = _board(tmp_path)
+    original = config_path.read_text(encoding="utf-8")
+
+    config_path.write_text(
+        original.replace('adapter = "test-harness"', 'adapter = "a\\tskill=b"'), "utf-8"
+    )
+    injected = contract_digest(load_config(config_path))
+
+    config_path.write_text(original.replace('adapter = "test-harness"', 'adapter = "a"'), "utf-8")
+    plain = contract_digest(load_config(config_path))
+
+    assert injected != plain
+
+
+def test_the_digest_ignores_the_order_routes_are_declared_in(tmp_path: Path) -> None:
+    """Table order is layout, not contract; only a role's fallback list is."""
+    config_path = _board(tmp_path)
+    second = (
+        '[routes.secondary]\nadapter = "second"\nskill = ""\n'
+        'pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"\npreflight = []\n'
+    )
+    original = config_path.read_text(encoding="utf-8")
+    head, _, tail = original.partition("[routes.primary]")
+    primary, _, roles = tail.partition("[roles.executor]")
+
+    primary_first = f"{head}[routes.primary]{primary}{second}\n[roles.executor]{roles}"
+    secondary_first = f"{head}{second}\n[routes.primary]{primary}[roles.executor]{roles}"
+
+    config_path.write_text(primary_first, "utf-8")
+    first_order = contract_digest(load_config(config_path))
+    config_path.write_text(secondary_first, "utf-8")
+
+    assert contract_digest(load_config(config_path)) == first_order
+
+
 def test_the_digest_is_independent_of_where_the_repo_lives(tmp_path: Path) -> None:
     """A clone must digest identically, or every clone reads as stale."""
     first = tmp_path / "first"

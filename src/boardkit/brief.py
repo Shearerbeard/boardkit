@@ -158,7 +158,9 @@ def reference_links(body: str) -> list[str]:
     return list(found)
 
 
-def _role_resolutions(config: Config, tokens: tuple[str, ...]) -> list[tuple[str, Resolution]]:
+def _role_resolutions(
+    config: Config, tokens: tuple[str, ...]
+) -> list[tuple[str, Resolution | ContractError]]:
     """(label, resolution) for the executor plus every gate-bound role.
 
     A role that cannot resolve is reported in place rather than aborting the

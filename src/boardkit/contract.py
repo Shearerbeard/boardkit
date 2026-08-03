@@ -305,20 +305,29 @@ def missing_pin_sources(contract: ContractConfig, root: Path) -> list[tuple[str,
 def canonical_contract(contract: ContractConfig) -> str:
     """The contract tables as stable text, independent of how the TOML was laid out.
 
-    Table keys are sorted so reordering `[routes.*]` in the file does not read
-    as a change. Route order *inside* a role is not sorted: that sequence is
-    the fallback order, so reordering it genuinely changes the contract.
+    Serialized as JSON rather than joined by delimiters: route values are free
+    strings, so any separator can appear inside one. A `|`-joined preflight
+    cannot tell `["a|b"]` from `["a", "b"]`, which is a digest collision
+    between two genuinely different contracts. JSON escapes its own delimiters.
+
+    `sort_keys` makes table order irrelevant, so reordering `[routes.*]` in the
+    file does not read as a change. Arrays keep their order, which is what
+    makes a role's fallback sequence significant.
     """
-    lines = [f"version={contract.version}"]
-    for name in sorted(contract.routes):
-        route = contract.routes[name]
-        lines.append(
-            f"route:{name}\tadapter={route.adapter}\tskill={route.skill}\t"
-            f"pin_source={route.pin_source}\tpreflight={'|'.join(route.preflight)}"
-        )
-    for role in sorted(contract.roles):
-        lines.append(f"role:{role}\troutes={','.join(contract.roles[role])}")
-    return "\n".join(lines) + "\n"
+    payload = {
+        "version": contract.version,
+        "routes": {
+            name: {
+                "adapter": route.adapter,
+                "skill": route.skill,
+                "pin_source": route.pin_source,
+                "preflight": list(route.preflight),
+            }
+            for name, route in contract.routes.items()
+        },
+        "roles": {role: list(names) for role, names in contract.roles.items()},
+    }
+    return json.dumps(payload, sort_keys=True, ensure_ascii=True, separators=(",", ":")) + "\n"
 
 
 def contract_digest(config: Config) -> str:
