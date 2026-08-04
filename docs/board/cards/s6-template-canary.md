@@ -59,3 +59,6 @@ direct
 ## Log
 
 - 2026-08-04 Authored from the snapshot-surfaces audit (gaps 1, 2, 4).
+- 2026-08-04 Held in backlog by choice, not by dependency: the plan
+  sequences stage 5 after stage 1 because both move template text the
+  golden briefs would pin (see serialize-with). Promote once S1 lands.
