@@ -12,6 +12,7 @@ from boardkit.board import (
     DEFERRED_VIEW,
     BoardError,
     build_board,
+    phantom_deferrals,
     render_canary_key,
     view_drift,
 )
@@ -113,6 +114,8 @@ def cmd_check(args: argparse.Namespace) -> int:
     errors = view_drift(config, result.views)
     if errors:
         return _fail(errors)
+    for warning in phantom_deferrals(result.cards):
+        print(f"WARN {warning}")
     print(f"OK: {len(result.cards)} cards valid, views current")
     return 0
 

@@ -65,6 +65,12 @@ LINK_RE = re.compile(r"\[[^\]]*\]\(([^)#\s]+)(?:#[^)]*)?\)")
 GATE_TOKEN = r"[A-Z](?:\s*\([^)]*\))?"
 DEFERRED_RE = re.compile(rf"Gate\s+({GATE_TOKEN})\s+open:\s*deferred\s*\(([^)]*)\)")
 CHECKBOX_RE = re.compile(rf"^\s*[-*]\s*\[([ xX])\]\s*(Gate\s+{GATE_TOKEN})")
+# A pass log line, for the phantom-deferral warning only: a deferral is
+# still cleared by the checklist tick alone, but a pass line landing after
+# the deferral with the box left unticked is the shape sessions misread as
+# a clear, so `boardkit check` calls it out. Logs in the wild write
+# `Gate A PASS`, `Gate A passed`, and `Gate A: PASS`; all three count.
+PASSED_RE = re.compile(rf"Gate\s+({GATE_TOKEN})\s*:?\s+(?i:pass(?:ed)?)\b")
 
 # The deferral sweep reads the card's Log section only, and only its bullet
 # entries: a card that documents the convention in its Scope or Notes prose
@@ -330,6 +336,45 @@ def deferred_gates(cards: list[dict]) -> list[DeferredGate]:
                     )
                 )
     return entries
+
+
+def phantom_deferrals(cards: list[dict]) -> list[str]:
+    """Warnings for open deferrals whose gate later logged a pass anyway.
+
+    Clearing a deferral keys on the checklist tick, never on a pass log
+    line, so a card can log `Gate A passed` after its deferral and still
+    hold the gate open. That shape reads as ritual rather than rule (the
+    session believes it cleared the gate), so `boardkit check` warns on it.
+    Phase-scoped interim passes do not fire this: with no prior deferral on
+    the gate, a pass line over an unticked box is the documented interim
+    shape, not a phantom.
+    """
+    open_by_card: dict[str, set[str]] = {}
+    for entry in deferred_gates(cards):
+        open_by_card.setdefault(entry.card_id, set()).add(gate_key(entry.gate))
+    warnings: list[str] = []
+    for card in cards:
+        open_keys = open_by_card.get(card["id"], set())
+        if not open_keys:
+            continue
+        last_deferral: dict[str, int] = {}
+        last_pass: dict[str, tuple[int, str]] = {}
+        for index, entry in enumerate(log_entries(card["_body"])):
+            for match in DEFERRED_RE.finditer(entry):
+                last_deferral[gate_key(match.group(1))] = index
+            for match in PASSED_RE.finditer(entry):
+                gate = " ".join(match.group(1).split())
+                last_pass[gate_key(match.group(1))] = (index, gate)
+        for key, (index, gate) in sorted(last_pass.items()):
+            if key in open_keys and last_deferral.get(key, index + 1) < index:
+                warnings.append(
+                    f"{card['_file']}: Gate {gate} logged as passed after its"
+                    " deferral, but its checklist box is unticked, so the"
+                    " deferral is still open. Tick the box if the gate passed"
+                    " over the card's full scope, or leave it and the deferral"
+                    " stands."
+                )
+    return warnings
 
 
 def render_deferred(entries: list[DeferredGate]) -> str:

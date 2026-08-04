@@ -369,3 +369,93 @@ def test_stale_deferred_view_on_disk_does_not_legitimize_the_link(board: Path) -
         build_board(load_config(board))
 
     assert any("stale generated view" in e for e in exc.value.errors)
+
+
+def test_phantom_deferral_warns_but_does_not_fail_check(
+    board: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A pass logged after a deferral with the box unticked is the shape a
+    session misreads as a clear; check warns and still exits 0, because the
+    tick is the clearing rule and the warning is the nudge toward it."""
+    cards_dir = board.parent / "cards"
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        checklist="- [ ] Gate A: fresh-agent review.",
+        log=(
+            "- 2026-07-27 Gate A open: deferred (reviewer unvetted).\n"
+            "- 2026-07-28 Gate A PASS, zero findings."
+        ),
+    )
+    assert cmd_render(_Args(config=str(board))) == 0
+
+    assert cmd_check(_Args(config=str(board))) == 0
+    out = capsys.readouterr().out
+    assert "WARN" in out
+    assert "Gate A" in out
+    assert "unticked" in out
+
+
+def test_interim_pass_without_a_deferral_is_not_a_phantom(
+    board: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A phase-scoped interim pass logs a pass line over a deliberately
+    unticked box with no deferral in sight; that documented shape must not
+    trip the warning."""
+    cards_dir = board.parent / "cards"
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        checklist="- [ ] Gate A: fresh-agent review.",
+        log="- 2026-07-28 Gate A PASS over phase 1 scope only; box stays unticked.",
+    )
+    assert cmd_render(_Args(config=str(board))) == 0
+
+    assert cmd_check(_Args(config=str(board))) == 0
+    assert "WARN" not in capsys.readouterr().out
+
+
+def test_pass_before_a_later_deferral_is_not_a_phantom(
+    board: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A gate that passed once and was then re-deferred is honestly open;
+    the warning is only for a pass that lands after the deferral."""
+    cards_dir = board.parent / "cards"
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        checklist="- [ ] Gate A: fresh-agent review.",
+        log=(
+            "- 2026-07-27 Gate A PASS over phase 1 scope.\n"
+            "- 2026-07-28 Gate A open: deferred (fix commit extends the range)."
+        ),
+    )
+    assert cmd_render(_Args(config=str(board))) == 0
+
+    assert cmd_check(_Args(config=str(board))) == 0
+    assert "WARN" not in capsys.readouterr().out
+
+
+def test_ticked_box_silences_the_phantom_warning(
+    board: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Once the box is ticked the deferral is closed for real; nothing is
+    phantom about it and check stays quiet."""
+    cards_dir = board.parent / "cards"
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        checklist="- [x] Gate A: fresh-agent review.",
+        log=(
+            "- 2026-07-27 Gate A open: deferred (reviewer unvetted).\n"
+            "- 2026-07-28 Gate A PASS; box ticked."
+        ),
+    )
+    assert cmd_render(_Args(config=str(board))) == 0
+
+    assert cmd_check(_Args(config=str(board))) == 0
+    assert "WARN" not in capsys.readouterr().out

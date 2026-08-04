@@ -260,7 +260,15 @@ checklist box unticked, then continues with other eligible cards. The line
 is a bullet in the card's own `Log` section, and it states the deferral
 plainly rather than quoting it in inline code: that is the only shape
 `boardkit` reads as a deferral, so prose elsewhere on the card may discuss
-the convention without recording one. A
+the convention without recording one.
+
+The log line records the deferral; the checklist tick is what clears it.
+`boardkit` holds a deferred gate open until the gate's checklist box is
+ticked, so a later `Gate <X> passed` log line on its own does not close
+the deferral, and `boardkit check` warns when it finds that shape: a pass
+logged after a deferral with the box still unticked. Tick the box in the
+same turn the log records the resolving pass, per the board mechanics
+above. A
 deferred gate stays open on the card until a later session resolves it, and
 the next user gate surfaces it rather than silently absorbing it. Resolving
 a deferred gate means running it properly: the resolving session's reviewer
