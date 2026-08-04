@@ -349,4 +349,10 @@ def main() -> None:
         parser.print_help()
         return
 
-    sys.exit(args.handler(args))
+    try:
+        sys.exit(args.handler(args))
+    except ValueError as exc:
+        # Config and contract load errors (including the v1 migration
+        # refusal) are user-facing refusals, not crashes: one ERROR line,
+        # exit 1, no traceback burying the remedy.
+        sys.exit(_fail([str(exc)]))

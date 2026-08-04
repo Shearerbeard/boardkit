@@ -36,21 +36,3 @@ apparent. Ground it in a real session; do not assert from memory.
 
 ## Entries
 
-## v1 migration error presents as a raw traceback
-
-```yaml
-date: 2026-08-04
-harness: claude-code
-agent: claude-fable-5
-workstreams: [boardkit]
-repo: chore-lottery
-source: maintainer session, entry-point canary
-```
-
-Running `boardkit check` against a v1 consumer config raises the
-migration ValueError uncaught, so the consumer sees a Python traceback
-with the remedy buried at the bottom instead of the clean `ERROR:` line
-every other refusal uses. The message content is right; the
-presentation is the defect. `cmd_check` (and any command that loads
-config) should catch config-load ValueErrors and print them through the
-normal error path with exit 1.

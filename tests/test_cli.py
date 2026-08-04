@@ -73,3 +73,36 @@ def test_bare_invocation_prints_version_and_help(
     assert "usage: boardkit" in out
     for name in SUBCOMMANDS:
         assert name in out
+
+
+def test_v1_config_refusal_is_one_clean_error_line(tmp_path, monkeypatch, capsys):
+    """A v1 consumer running any command gets the migration remedy as an
+    ERROR line with exit 1, never a traceback (2026-08-04 inbox entry)."""
+    (tmp_path / "boardkit.toml").write_text(
+        '[board]\ncards_dir = "cards"\nid_prefix = "S"\nsentinel_ids = []\n'
+        '[review]\nrepo = "."\noutput_dir = "reviews"\n'
+        '[contract]\nversion = 1\n'
+        '[routes.primary]\nadapter = "x"\nskill = ""\n'
+        'pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"\npreflight = []\n'
+        + "".join(
+            f'[roles.{r}]\nroutes = ["primary"]\n'
+            for r in (
+                "executor",
+                "code-review",
+                "prose-review",
+                "frontier-review",
+                "drift-audit",
+                "canary",
+            )
+        )
+    )
+    (tmp_path / "cards").mkdir()
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("sys.argv", ["boardkit", "check"])
+    with pytest.raises(SystemExit) as excinfo:
+        main()
+    assert excinfo.value.code == 1
+    err = capsys.readouterr().err
+    assert err.startswith("ERROR: ")
+    assert "version 1 predates transport staging contracts" in err
+    assert "Traceback" not in err
