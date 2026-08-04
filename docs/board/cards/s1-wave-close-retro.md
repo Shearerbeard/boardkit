@@ -3,7 +3,7 @@ id: S1
 title: Wave-close retro with snapshots and driver input
 status: ready
 depends: []
-serialize-with: [S6]
+serialize-with: [S6, S9]
 lineage: primary
 executor: any
 gates: "S -> A -> U"

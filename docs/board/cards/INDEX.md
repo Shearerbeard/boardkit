@@ -15,3 +15,5 @@ Delegation protocol).
 | [S5](s5-gate-t-native-opencode.md) | Run the never-run Gate T on native opencode routing | ready | - | any | M -> T |
 | [S6](s6-template-canary.md) | Template baseline digest, template-diff, and golden briefs | backlog | - | smart | S -> A |
 | [S7](s7-transport-wrapper-spike.md) | Thin transport wrapper spike with a canary harness | backlog | S2 | smart | S -> A -> U |
+| [S8](s8-board-root-portability.md) | Board-root portability and checkout-independent references | ready | - | smart | S -> A |
+| [S9](s9-model-class-freshness.md) | Session-model classification and example freshness | ready | - | any | S -> A |

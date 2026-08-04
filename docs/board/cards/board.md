@@ -15,6 +15,10 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A. Executor: any.
 - [ ] **S5** [Run the never-run Gate T on native opencode routing](s5-gate-t-native-opencode.md)
 	Depends: none. Gates: M -> T. Executor: any.
+- [ ] **S8** [Board-root portability and checkout-independent references](s8-board-root-portability.md)
+	Depends: none. Gates: S -> A. Executor: smart.
+- [ ] **S9** [Session-model classification and example freshness](s9-model-class-freshness.md)
+	Depends: none. Gates: S -> A. Executor: any.
 
 ## In Progress
 
