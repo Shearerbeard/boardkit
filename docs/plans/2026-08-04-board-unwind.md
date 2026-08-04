@@ -78,6 +78,14 @@ reviewer-differs-from-author. Fable authors nothing per-card.
 - Goal: the 13 open cards on webhook-surface and 271-hitl-park-reify
   each end as absorbed (moved to the board that owns the work) or
   killed (log line with reason), boards then archived.
+- Target correction (from the disposition workflow, 2026-08-04): the
+  absorb target is NOT terminalbench-aura - every verifier flagged the
+  domain mismatch. Both satellites hold aura-orchestration-mode work
+  (HITL webhook surface, park-reify), so the absorptions land on one
+  consolidated aura-orchestration-mode board at contract v2, replacing
+  the two satellites and their dead [review].repo worktree paths. That
+  keeps the census at one board per workstream family: terminalbench,
+  aura-orchestration-mode, chore-lottery, boardkit.
 - Fan-out: the disposition workflow (dossier -> adversarial verify,
   Sonnet) drafts the table; canary 2 is built into it.
 - Gates: S -> A -> U
