@@ -21,7 +21,8 @@ AGENTS.md fix shipped.
 
 ## Scope
 
-No repo edits. One live native opencode session driven by the user,
+No repo edits. One live native opencode session driven by the user in
+~/dev/chore-lottery (venue set by user ruling 2026-08-04),
 plus a transcript excerpt saved as evidence next to this card.
 
 ## Deliverable
