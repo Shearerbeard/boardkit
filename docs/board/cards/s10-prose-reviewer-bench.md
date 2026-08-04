@@ -130,3 +130,7 @@ direct
 - 2026-08-04 Capture automated: claude-skills ships `prose-corpus`
   (workflow plugin 1.2.0, claude-skills 27a50c7), which snapshots
   pre-rewrite drafts into the inbox and sunsets at this card's close.
+- 2026-08-04 User ruling on non-Claude coverage: opencode sessions get
+  the capture duty through the kit's shipped process docs, not a
+  dotfiles edit; latency accepted. Executor duty: add the capture line
+  where consumers sync it, coordinating with S1's template touch.
