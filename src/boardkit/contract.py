@@ -176,7 +176,7 @@ def _parse_version(contract: dict) -> int:
             # v1 -> v2 is a migration, not a typo: name the exact edit.
             raise ValueError(
                 "[contract]: version 1 predates transport staging contracts. "
-                "Add `staging = \"working-dir\"` or `staging = \"repo-native\"` "
+                'Add `staging = "working-dir"` or `staging = "repo-native"` '
                 "to every [routes.<name>] table (which read contract the "
                 "transport honors), set [contract] version = 2, then run "
                 "`boardkit doctor` to check the result."
@@ -210,11 +210,15 @@ def _parse_route(name: str, data: dict) -> Route:
     staging = data["staging"]
     if not isinstance(staging, str) or not staging:
         raise ValueError(f"[{section}]: staging must be a non-empty string")
-    # A scaffolded placeholder parses (doctor reports it as unfilled); any
-    # other value outside the known contracts is a config error.
-    if staging not in STAGING_CONTRACTS and not placeholders(staging):
+    # A value that IS a placeholder parses (doctor reports it as unfilled,
+    # resolve_role refuses to dispatch it). Anything else outside the known
+    # contracts is a config error - including a real value with trailing
+    # junk, which must not slip through as "unfilled".
+    if staging not in STAGING_CONTRACTS and not PLACEHOLDER_RE.fullmatch(staging):
         known = ", ".join(sorted(STAGING_CONTRACTS))
-        raise ValueError(f"[{section}]: staging must be one of: {known}")
+        raise ValueError(
+            f"[{section}]: staging must be one of: {known} (or a scaffold placeholder)"
+        )
     return Route(
         name=name,
         adapter=data["adapter"],

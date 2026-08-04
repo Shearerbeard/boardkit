@@ -269,7 +269,10 @@ ticked, so a later `Gate <X> passed` log line on its own does not close
 the deferral, and `boardkit check` warns when it finds that shape: a pass
 logged after a deferral with the box still unticked. Tick the box in the
 same turn the log records the resolving pass, per the board mechanics
-above. A
+above. Log a pass with the verdict directly after the gate name -
+`Gate A passed` or `Gate A PASS` - since that is the shape the warning
+reads; a wording that puts other words between the gate and its verdict
+is not legible to it. A
 deferred gate stays open on the card until a later session resolves it, and
 the next user gate surfaces it rather than silently absorbing it. Resolving
 a deferred gate means running it properly: the resolving session's reviewer

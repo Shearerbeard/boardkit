@@ -221,3 +221,28 @@ def test_placeholders_finds_angle_bracket_tokens() -> None:
     assert placeholders("<harness-name>") == ["<harness-name>"]
     assert placeholders("<a> and <b>") == ["<a>", "<b>"]
     assert placeholders("test-harness") == []
+
+
+def test_staging_with_trailing_junk_is_rejected_not_unfilled() -> None:
+    """`working-dir <typo>` contains a placeholder token but is not a pure
+    placeholder; letting it parse would hide a typo'd real value behind the
+    unfilled-template diagnosis."""
+    with pytest.raises(ValueError, match="staging must be one of"):
+        parse_contract(CONTRACT, {"primary": _route(staging="working-dir <typo>")}, _roles())
+
+
+def test_staging_contract_wording_is_pinned() -> None:
+    """The contract prose is consumer-facing output; the renderer tests
+    interpolate it, so this literal pin is what actually freezes it."""
+    from boardkit.contract import STAGING_CONTRACTS
+
+    assert STAGING_CONTRACTS == {
+        "working-dir": (
+            "stage the packet into the transport's working directory and name the"
+            " staged paths; reads outside the working directory are refused"
+        ),
+        "repo-native": (
+            "run with cwd at the repo under review and name repo-native paths;"
+            " a packet staged outside a trusted git repo stalls silently"
+        ),
+    }

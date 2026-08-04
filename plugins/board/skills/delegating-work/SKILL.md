@@ -112,9 +112,17 @@ route: opencode-reviewer (1 of 2)
 adapter: opencode
 skill: opencode-cli
 pin source: docs/board/REVIEW-TOOLING.md#harness-bindings
+staging: working-dir (stage the packet into the transport's working directory and name the staged paths; reads outside the working directory are refused)
 preflight: opencode --version
 fallback: codex-cli
 ```
+
+The `staging` line is the transport's read contract, and the dispatch
+honors it before anything else: `working-dir` stages the packet into the
+transport's working directory and names the staged paths; `repo-native`
+runs with cwd at the repo under review and names repo-native paths. The
+two contracts are opposites and both fail as silence when crossed, which
+is why the resolution prints the rule with the route.
 
 Add `--json` for the same content as a parseable object. A transport that
 loads no child skill says so explicitly, as
@@ -269,8 +277,8 @@ schema:
   resolved. The brief prints paths rather than summaries of what is at
   them, so the executor reads the source.
 - **Routes**: the executor plus every role the card's declared gates pull
-  in, each with its adapter, child skill, pin source, preflight, and
-  fallbacks. A role that cannot resolve prints in place as unresolved
+  in, each with its adapter, child skill, pin source, staging contract,
+  preflight, and fallbacks. A role that cannot resolve prints in place as unresolved
   rather than aborting the brief, because a broken reviewer binding is
   exactly what the board owner should see.
 - **Contract clauses**, quoted out of the repo's own process and

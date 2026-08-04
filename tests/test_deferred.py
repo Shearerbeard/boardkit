@@ -459,3 +459,85 @@ def test_ticked_box_silences_the_phantom_warning(
 
     assert cmd_check(_Args(config=str(board))) == 0
     assert "WARN" not in capsys.readouterr().out
+
+
+def test_pass_on_a_continuation_line_of_the_deferral_bullet_is_a_phantom(
+    board: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Log bullets flatten before matching, so a pass written on the
+    deferral's own continuation lines still lands after the deferral text
+    and must warn like any later entry would."""
+    cards_dir = board.parent / "cards"
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        checklist="- [ ] Gate A: fresh-agent review.",
+        log=(
+            "- 2026-07-27 Gate A open: deferred (reviewer unvetted);\n"
+            "  revisited later the same day: Gate A PASS, zero findings."
+        ),
+    )
+    assert cmd_render(_Args(config=str(board))) == 0
+
+    assert cmd_check(_Args(config=str(board))) == 0
+    assert "WARN" in capsys.readouterr().out
+
+
+def test_pass_phrase_inside_the_deferral_reason_is_not_a_verdict(
+    board: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A deferral whose parenthesized reason mentions a pass is one record,
+    not two; the mention must not read as a later verdict."""
+    cards_dir = board.parent / "cards"
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        checklist="- [ ] Gate A: fresh-agent review.",
+        log="- 2026-07-27 Gate A open: deferred (Gate A passed, but on stale scope).",
+    )
+    assert cmd_render(_Args(config=str(board))) == 0
+
+    assert cmd_check(_Args(config=str(board))) == 0
+    assert "WARN" not in capsys.readouterr().out
+
+
+def test_transitive_and_compound_pass_wordings_are_not_verdicts(
+    board: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`Gate A passed the packet to the reviewer` and `Gate A pass criteria
+    recorded` describe activity, not a verdict; neither may warn."""
+    cards_dir = board.parent / "cards"
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        checklist="- [ ] Gate A: fresh-agent review.",
+        log=(
+            "- 2026-07-27 Gate A open: deferred (reviewer unvetted).\n"
+            "- 2026-07-28 Gate A passed the packet to the reviewer.\n"
+            "- 2026-07-28 Gate A pass criteria recorded in the spec."
+        ),
+    )
+    assert cmd_render(_Args(config=str(board))) == 0
+
+    assert cmd_check(_Args(config=str(board))) == 0
+    assert "WARN" not in capsys.readouterr().out
+
+
+def test_colon_pass_with_no_space_is_a_verdict(
+    board: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    cards_dir = board.parent / "cards"
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        checklist="- [ ] Gate A: fresh-agent review.",
+        log=("- 2026-07-27 Gate A open: deferred (reviewer unvetted).\n- 2026-07-28 Gate A:PASS."),
+    )
+    assert cmd_render(_Args(config=str(board))) == 0
+
+    assert cmd_check(_Args(config=str(board))) == 0
+    assert "WARN" in capsys.readouterr().out

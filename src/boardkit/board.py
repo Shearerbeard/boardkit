@@ -68,9 +68,16 @@ CHECKBOX_RE = re.compile(rf"^\s*[-*]\s*\[([ xX])\]\s*(Gate\s+{GATE_TOKEN})")
 # A pass log line, for the phantom-deferral warning only: a deferral is
 # still cleared by the checklist tick alone, but a pass line landing after
 # the deferral with the box left unticked is the shape sessions misread as
-# a clear, so `boardkit check` calls it out. Logs in the wild write
-# `Gate A PASS`, `Gate A passed`, and `Gate A: PASS`; all three count.
-PASSED_RE = re.compile(rf"Gate\s+({GATE_TOKEN})\s*:?\s+(?i:pass(?:ed)?)\b")
+# a clear, so `boardkit check` calls it out. The legible shapes are the
+# verdict right after the gate name - `Gate A passed`, `Gate A PASS`,
+# `Gate A: PASS` - ended by punctuation, a parenthetical, or the entry;
+# the lookahead keeps transitive uses (`Gate A passed the packet`) and
+# compounds (`pass criteria`) from reading as verdicts. Wordings that put
+# other words between the gate and the verdict are not legible; the
+# PROCESS template names the canonical shape so log writers stay legible.
+PASSED_RE = re.compile(
+    rf"Gate\s+({GATE_TOKEN})(?:\s*:\s*|\s+)(?i:pass(?:ed)?)(?=\s*(?:[.,;:!)(]|$))"
+)
 
 # The deferral sweep reads the card's Log section only, and only its bullet
 # entries: a card that documents the convention in its Scope or Notes prose
@@ -145,8 +152,7 @@ def parse_card(path: Path, id_re: re.Pattern[str], errors: list[str]) -> dict | 
             errors.append(f"{path.name}: '{listy}' must be a list")
     if SIDE_QUEST_KEY in meta and not isinstance(meta[SIDE_QUEST_KEY], bool):
         errors.append(
-            f"{path.name}: '{SIDE_QUEST_KEY}' must be true or false, "
-            f"got {meta[SIDE_QUEST_KEY]!r}"
+            f"{path.name}: '{SIDE_QUEST_KEY}' must be true or false, got {meta[SIDE_QUEST_KEY]!r}"
         )
     meta["_file"] = path.name
     meta["_body"] = text[end + 5 :]
@@ -214,8 +220,7 @@ def check_dag(cards: dict[str, dict], errors: list[str]) -> None:
                 and card["id"] < ref  # report each pair once
             ):
                 errors.append(
-                    f"{card['_file']}: serialized cards {card['id']} and {ref} "
-                    "are both in-progress"
+                    f"{card['_file']}: serialized cards {card['id']} and {ref} are both in-progress"
                 )
         if (
             card["status"] == "in-review"
@@ -223,8 +228,7 @@ def check_dag(cards: dict[str, dict], errors: list[str]) -> None:
             and not card.get("commit-range")
         ):
             errors.append(
-                f"{card['_file']}: in-review with lineage {card['lineage']} "
-                "but no commit-range set"
+                f"{card['_file']}: in-review with lineage {card['lineage']} but no commit-range set"
             )
 
     state: dict[str, int] = {}
@@ -357,16 +361,25 @@ def phantom_deferrals(cards: list[dict]) -> list[str]:
         open_keys = open_by_card.get(card["id"], set())
         if not open_keys:
             continue
-        last_deferral: dict[str, int] = {}
-        last_pass: dict[str, tuple[int, str]] = {}
+        # Positions are (entry index, character offset), so a pass on a
+        # continuation line of the deferral's own bullet still lands after
+        # it, while a pass phrase inside the deferral's own text (say, in
+        # its parenthesized reason) is not a verdict and never counts.
+        last_deferral: dict[str, tuple[int, int]] = {}
+        last_pass: dict[str, tuple[tuple[int, int], str]] = {}
         for index, entry in enumerate(log_entries(card["_body"])):
+            deferral_spans = []
             for match in DEFERRED_RE.finditer(entry):
-                last_deferral[gate_key(match.group(1))] = index
+                last_deferral[gate_key(match.group(1))] = (index, match.end())
+                deferral_spans.append(match.span())
             for match in PASSED_RE.finditer(entry):
+                if any(start <= match.start() < end for start, end in deferral_spans):
+                    continue
                 gate = " ".join(match.group(1).split())
-                last_pass[gate_key(match.group(1))] = (index, gate)
-        for key, (index, gate) in sorted(last_pass.items()):
-            if key in open_keys and last_deferral.get(key, index + 1) < index:
+                last_pass[gate_key(match.group(1))] = ((index, match.start()), gate)
+        for key, (position, gate) in sorted(last_pass.items()):
+            deferred_at = last_deferral.get(key)
+            if key in open_keys and deferred_at is not None and deferred_at <= position:
                 warnings.append(
                     f"{card['_file']}: Gate {gate} logged as passed after its"
                     " deferral, but its checklist box is unticked, so the"
