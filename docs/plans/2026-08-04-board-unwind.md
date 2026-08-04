@@ -68,9 +68,11 @@ reviewer-differs-from-author. Fable authors nothing per-card.
 - Goal: `-s59` and `-s73` lose their `docs/redesign/cards/` copies;
   the repos and code branches stay.
 - Gates: S -> U
-- [ ] Gate S: stage 1 tags present; proof re-run green on the day of
-  deletion.
-- [ ] Gate U: deletion is destructive; the user says go, per copy.
+- [x] Gate S: stage 1 tags present; proof re-run green on the day of
+  deletion (2026-08-04, both clones zero unique files).
+- [x] Gate U: user approved 2026-08-04 ("fix cloned deletion"); deleted
+  in commits 56156cc (-s59) and 3dfdd19 (-s73), rollback via the
+  board-unwind-2026-08-04 tags.
 - Done when: neither clone has a cards directory; a one-line note in
   each repo's README or commit message points at the survivor.
 
