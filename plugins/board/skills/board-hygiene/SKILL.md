@@ -12,7 +12,7 @@ description: |
   skill carries no repo-specific paths. Pair with `delegating-work` for the
   dispatches the checklist needs.
 metadata:
-  boardkit-contract: 1
+  boardkit-contract: 2
 ---
 
 # Board hygiene

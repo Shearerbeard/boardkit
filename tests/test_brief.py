@@ -28,7 +28,7 @@ from boardkit.brief import (
     reference_links,
 )
 from boardkit.config import load_config
-from boardkit.contract import CONTRACT_DOCS, TEMPLATES_DIR, contract_digest
+from boardkit.contract import CONTRACT_DOCS, STAGING_CONTRACTS, TEMPLATES_DIR, contract_digest
 
 CARD = """\
 ---
@@ -79,7 +79,7 @@ def test_header_names_every_source_the_brief_drew_from(tmp_path: Path) -> None:
 
     assert "# Dispatch brief: S1 — Build the widget" in text
     assert "- card: `docs/board/cards/s1-widget.md`" in text
-    assert "- contract: v1" in text
+    assert "- contract: v2" in text
     assert "`boardkit.toml`" in text
     for _template, dest in CONTRACT_DOCS:
         assert f"`{dest.as_posix()}`" in text
@@ -192,7 +192,7 @@ def test_the_whole_output_is_pinned(tmp_path: Path) -> None:
         f"# Dispatch brief: S1 — Build the widget\n"
         f"\n"
         f"- card: `docs/board/cards/s1-widget.md`\n"
-        f"- contract: v1\n"
+        f"- contract: v2\n"
         f"- digest: `{digest}`\n"
         f"- sources: `boardkit.toml`, `docs/board/PROCESS.md`, "
         f"`docs/board/MODEL-CLASSES.md`, `docs/board/REVIEW-TOOLING.md`\n"
@@ -217,16 +217,19 @@ def test_the_whole_output_is_pinned(tmp_path: Path) -> None:
         f"  - adapter: `test-harness`\n"
         f"  - skill: none (this transport loads no child skill)\n"
         f"  - pin source: `docs/board/REVIEW-TOOLING.md#harness-bindings`\n"
+        f"  - staging: `working-dir` - {STAGING_CONTRACTS['working-dir']}\n"
         f"  - preflight: none\n"
         f"- **code-review** -> `primary`\n"
         f"  - adapter: `test-harness`\n"
         f"  - skill: none (this transport loads no child skill)\n"
         f"  - pin source: `docs/board/REVIEW-TOOLING.md#harness-bindings`\n"
+        f"  - staging: `working-dir` - {STAGING_CONTRACTS['working-dir']}\n"
         f"  - preflight: none\n"
         f"- **prose-review** -> `primary`\n"
         f"  - adapter: `test-harness`\n"
         f"  - skill: none (this transport loads no child skill)\n"
         f"  - pin source: `docs/board/REVIEW-TOOLING.md#harness-bindings`\n"
+        f"  - staging: `working-dir` - {STAGING_CONTRACTS['working-dir']}\n"
         f"  - preflight: none\n"
         f"\n"
         f"> - {GATE_A_ROUTING_ANCHOR}: a code diff goes\n"
@@ -274,7 +277,8 @@ def test_the_digest_changes_when_a_role_reorders_its_fallbacks(tmp_path: Path) -
     text = text.replace(
         "[routes.primary]",
         '[routes.secondary]\nadapter = "second"\nskill = ""\n'
-        'pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"\npreflight = []\n\n'
+        'pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"\npreflight = []\n'
+        'staging = "working-dir"\n\n'
         "[routes.primary]",
         1,
     )
@@ -338,6 +342,7 @@ def test_the_digest_ignores_the_order_routes_are_declared_in(tmp_path: Path) -> 
     second = (
         '[routes.secondary]\nadapter = "second"\nskill = ""\n'
         'pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"\npreflight = []\n'
+        'staging = "working-dir"\n'
     )
     original = config_path.read_text(encoding="utf-8")
     head, _, tail = original.partition("[routes.primary]")
@@ -435,7 +440,8 @@ def test_an_unresolvable_reviewer_prints_in_place(tmp_path: Path) -> None:
         config_path.read_text(encoding="utf-8").replace(
             '[roles.prose-review]\nroutes = ["primary"]',
             '[routes.unfilled]\nadapter = "<harness>"\nskill = ""\n'
-            'pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"\npreflight = []\n\n'
+            'pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"\npreflight = []\n'
+            'staging = "working-dir"\n\n'
             '[roles.prose-review]\nroutes = ["unfilled"]',
         ),
         encoding="utf-8",

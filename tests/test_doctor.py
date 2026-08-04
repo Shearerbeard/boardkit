@@ -95,7 +95,9 @@ def _filled_board(tmp_path: Path) -> Path:
     root = _fresh_board(tmp_path)
     config = root / "boardkit.toml"
     config.write_text(
-        config.read_text(encoding="utf-8").replace('"<harness-name>"', '"test-harness"'),
+        config.read_text(encoding="utf-8")
+        .replace('"<harness-name>"', '"test-harness"')
+        .replace('"<working-dir or repo-native>"', '"working-dir"'),
         encoding="utf-8",
     )
     doc = root / REVIEW_TOOLING
@@ -159,13 +161,13 @@ def test_a_pre_contract_config_reports_the_migration(tmp_path: Path) -> None:
 
     assert _checks(report, Severity.ERROR) == {"config.loads"}
     message = report.findings[0].message
-    assert "predates delegation contract v1" in message
+    assert "predates delegation contract v2" in message
     assert "boardkit doctor" in message
 
 
 def test_an_unknown_contract_version_is_named_rather_than_a_load_failure(tmp_path: Path) -> None:
     (tmp_path / "boardkit.toml").write_text(
-        config_text().replace("version = 1", "version = 99"), encoding="utf-8"
+        config_text().replace("version = 2", "version = 99"), encoding="utf-8"
     )
 
     report = _report(tmp_path)
@@ -259,7 +261,7 @@ def test_a_docs_stamp_mismatch_is_an_error(tmp_path: Path) -> None:
     root = _filled_board(tmp_path)
     doc = root / "docs" / "board" / "PROCESS.md"
     doc.write_text(
-        doc.read_text(encoding="utf-8").replace("boardkit-contract: v1", "boardkit-contract: v9"),
+        doc.read_text(encoding="utf-8").replace("boardkit-contract: v2", "boardkit-contract: v9"),
         encoding="utf-8",
     )
 
@@ -273,7 +275,7 @@ def test_an_absent_docs_stamp_is_an_error(tmp_path: Path) -> None:
     root = _filled_board(tmp_path)
     doc = root / "docs" / "board" / "MODEL-CLASSES.md"
     doc.write_text(
-        doc.read_text(encoding="utf-8").replace("<!-- boardkit-contract: v1 -->\n", ""),
+        doc.read_text(encoding="utf-8").replace("<!-- boardkit-contract: v2 -->\n", ""),
         encoding="utf-8",
     )
 
@@ -462,7 +464,9 @@ def test_unfilled_routes_names_the_placeholder_tokens(tmp_path: Path) -> None:
     (tmp_path / "boardkit.toml").write_text(INIT_CONFIG_TEMPLATE, encoding="utf-8")
     contract = load_config(tmp_path / "boardkit.toml").contract
 
-    assert unfilled_routes(contract) == {"primary": ["<harness-name>"]}
+    assert unfilled_routes(contract) == {
+        "primary": ["<harness-name>", "<working-dir or repo-native>"]
+    }
 
 
 def test_a_filled_route_has_no_placeholders(tmp_path: Path) -> None:
@@ -565,3 +569,17 @@ def test_skill_contract_version_is_none_when_undeclared() -> None:
     assert skill_contract_version("---\nname: board-hygiene\n---\n\nbody\n") is None
     assert skill_contract_version("no frontmatter at all\n") is None
     assert skill_contract_version("---\nname: [unclosed\n---\n\nbody\n") is None
+
+
+def test_a_v1_config_gets_the_staging_migration_remedy(tmp_path: Path) -> None:
+    """The v1 -> v2 skew is an older config, not a newer kit; the remedy
+    names the staging edit rather than telling the consumer to upgrade."""
+    (tmp_path / "boardkit.toml").write_text(
+        config_text().replace("version = 2", "version = 1"), encoding="utf-8"
+    )
+
+    report = run_doctor(str(tmp_path / "boardkit.toml"), tmp_path)
+
+    finding = next(f for f in report.findings if f.check == "contract.version-known")
+    assert "staging" in finding.remedy
+    assert "version = 2" in finding.remedy

@@ -39,7 +39,7 @@ audit, canary). Three commands read it.
   verbatim, its reference links, the resolved routes, and the process clauses
   quoted from your own docs rather than restated.
 
-Every shipped doc carries a stamp (`<!-- boardkit-contract: v1 -->`) naming
+Every shipped doc carries a stamp (`<!-- boardkit-contract: v2 -->`) naming
 the contract version it was written against, and `boardkit.toml` declares the
 same version under `[contract]`. Doctor compares them, so a kit that has
 moved ahead of a repo says so instead of behaving strangely.

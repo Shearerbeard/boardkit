@@ -382,11 +382,20 @@ def _check_version_known(checks: _Checks, config_path: Path) -> bool:
         )
         return True
     if declared not in SUPPORTED_CONTRACT_VERSIONS:
+        if declared == 1:
+            # An older config, not a newer kit: name the exact migration.
+            remedy = (
+                'add `staging = "working-dir"` or `staging = "repo-native"` to every '
+                "[routes.<name>] table (which read contract the transport honors), "
+                "then set [contract] version = 2"
+            )
+        else:
+            remedy = "upgrade boardkit to a version that knows this contract"
         checks.error(
             "contract.version-known",
             f"the config declares contract version {declared}; this boardkit supports "
             f"{sorted(SUPPORTED_CONTRACT_VERSIONS)}",
-            "upgrade boardkit to a version that knows this contract, or migrate the config down",
+            remedy,
         )
         return False
     checks.ok("contract.version-known")

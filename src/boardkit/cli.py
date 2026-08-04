@@ -55,7 +55,7 @@ output_dir = "docs/board/reviews"
 # The delegation contract: which transport serves each role. Scaffolded with
 # placeholders — fill them in, then run `boardkit doctor`.
 [contract]
-version = 1
+version = 2
 
 # One [routes.<name>] table per transport you can dispatch to. Names are
 # lowercase slugs.
@@ -70,6 +70,11 @@ pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"
 # Commands that prove the transport is reachable. boardkit prints preflight;
 # it never runs it — the caller runs them.
 preflight = []
+# The transport's read contract, printed with every resolution:
+# "working-dir" (stage the packet into the working directory; outside
+# reads are refused) or "repo-native" (cwd at the repo under review,
+# repo-native paths; staged copies outside a git repo stall silently).
+staging = "<working-dir or repo-native>"
 
 # One [roles.<name>] table per required role. `routes` is the ordered
 # fallback list; every name must be declared above.

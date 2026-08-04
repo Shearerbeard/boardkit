@@ -1,6 +1,6 @@
 # Model classes
 
-<!-- boardkit-contract: v1 -->
+<!-- boardkit-contract: v2 -->
 
 This is the delegation policy: which class of model runs which kind of
 board work, and the invariants that hold regardless of which vendor or
@@ -121,6 +121,13 @@ pre-vets it:
 
 - Reachability and auth: the reviewer's binary, server, or API is reachable
   and authenticated right now, not merely configured.
+- Read probe under the staging contract: the pre-vet probe is shaped like
+  the dispatch, not a bare echo. Stage one small file where the transport's
+  `staging` contract says the packet will sit (`boardkit resolve-route
+  <role>` prints it), and have the reviewer read it back - a nonce from the
+  file's content, not from the prompt. An echo proves the model answers; it
+  proves nothing about whether the reviewer can read the material, and a
+  reviewer that cannot read the packet fails as silence, not as an error.
 - Usage headroom: the reviewer has budget or quota left for this review. An
   exhausted cap discovered mid-gate is worse than catching it before
   dispatch.

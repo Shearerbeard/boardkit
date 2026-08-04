@@ -12,7 +12,7 @@ description: |
   skills `opencode-cli`, `collaborating-with-antigravity`, and `codex-cli`.
   Pair with `board-hygiene` at session close.
 metadata:
-  boardkit-contract: 1
+  boardkit-contract: 2
 ---
 
 # Delegating work

@@ -1,6 +1,6 @@
 # Process
 
-<!-- boardkit-contract: v1 -->
+<!-- boardkit-contract: v2 -->
 
 This file states how work on this board is tracked, delegated, verified, and
 recovered. It is stable: it changes only when the rules change, not when the

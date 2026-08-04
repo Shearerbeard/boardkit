@@ -1,5 +1,5 @@
 #!/bin/sh
-# boardkit-contract: v1
+# boardkit-contract: v2
 # boardkit pre-commit sample. Not installed: `boardkit init` writes this
 # file and never touches .git/hooks, because installing a hook behind a
 # scaffolding command is the kind of side effect you find out about at the

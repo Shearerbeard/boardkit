@@ -26,8 +26,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # a type-only import: config imports this module, never the reverse
     from boardkit.config import Config
 
-CONTRACT_VERSION = 1
-SUPPORTED_CONTRACT_VERSIONS = frozenset({1})
+CONTRACT_VERSION = 2
+SUPPORTED_CONTRACT_VERSIONS = frozenset({2})
 
 # Every board declares a transport for each of these; there is no default
 # route, because a silently defaulted reviewer is an ungraded reviewer.
@@ -41,8 +41,23 @@ REQUIRED_ROLES = (
 )
 
 CONTRACT_KEYS = {"version"}
-ROUTE_KEYS = {"adapter", "skill", "pin_source", "preflight"}
+ROUTE_KEYS = {"adapter", "skill", "pin_source", "preflight", "staging"}
 ROLE_KEYS = {"routes"}
+
+# A transport's staging contract: where the material under review must sit
+# for the transport to read it. The two contracts observed in the field are
+# opposites, and both fail as silence when crossed, so every route declares
+# which one it honors and boardkit prints it wherever the route prints.
+STAGING_CONTRACTS = {
+    "working-dir": (
+        "stage the packet into the transport's working directory and name the"
+        " staged paths; reads outside the working directory are refused"
+    ),
+    "repo-native": (
+        "run with cwd at the repo under review and name repo-native paths;"
+        " a packet staged outside a trusted git repo stalls silently"
+    ),
+}
 
 ROUTE_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 PLACEHOLDER_RE = re.compile(r"<[^<>\n]+>")
@@ -89,6 +104,7 @@ class Route:
     skill: str
     pin_source: str
     preflight: tuple[str, ...]
+    staging: str
 
 
 @dataclass(frozen=True)
@@ -156,6 +172,15 @@ def _parse_version(contract: dict) -> int:
     if not isinstance(version, int) or isinstance(version, bool):
         raise ValueError("[contract]: version must be an integer")
     if version not in SUPPORTED_CONTRACT_VERSIONS:
+        if version == 1:
+            # v1 -> v2 is a migration, not a typo: name the exact edit.
+            raise ValueError(
+                "[contract]: version 1 predates transport staging contracts. "
+                "Add `staging = \"working-dir\"` or `staging = \"repo-native\"` "
+                "to every [routes.<name>] table (which read contract the "
+                "transport honors), set [contract] version = 2, then run "
+                "`boardkit doctor` to check the result."
+            )
         supported = sorted(SUPPORTED_CONTRACT_VERSIONS)
         raise ValueError(
             f"[contract]: unsupported contract version {version}; "
@@ -182,12 +207,21 @@ def _parse_route(name: str, data: dict) -> Route:
     preflight = data["preflight"]
     if not isinstance(preflight, list) or not all(isinstance(s, str) for s in preflight):
         raise ValueError(f"[{section}]: preflight must be a list of strings")
+    staging = data["staging"]
+    if not isinstance(staging, str) or not staging:
+        raise ValueError(f"[{section}]: staging must be a non-empty string")
+    # A scaffolded placeholder parses (doctor reports it as unfilled); any
+    # other value outside the known contracts is a config error.
+    if staging not in STAGING_CONTRACTS and not placeholders(staging):
+        known = ", ".join(sorted(STAGING_CONTRACTS))
+        raise ValueError(f"[{section}]: staging must be one of: {known}")
     return Route(
         name=name,
         adapter=data["adapter"],
         skill=data["skill"],
         pin_source=data["pin_source"],
         preflight=tuple(preflight),
+        staging=staging,
     )
 
 
@@ -268,7 +302,7 @@ def route_placeholders(route: Route) -> list[str]:
     """Placeholder tokens still sitting in a route's values."""
     return [
         token
-        for value in (route.adapter, route.skill, route.pin_source, *route.preflight)
+        for value in (route.adapter, route.skill, route.pin_source, route.staging, *route.preflight)
         for token in placeholders(value)
     ]
 
@@ -322,6 +356,7 @@ def canonical_contract(contract: ContractConfig) -> str:
                 "skill": route.skill,
                 "pin_source": route.pin_source,
                 "preflight": list(route.preflight),
+                "staging": route.staging,
             }
             for name, route in contract.routes.items()
         },
@@ -398,6 +433,7 @@ def render_resolution_text(resolution: Resolution) -> str:
         if route.skill
         else "skill: none (this transport loads no child skill)",
         f"pin source: {route.pin_source}",
+        f"staging: {route.staging} ({staging_contract(route.staging)})",
     ]
     lines.extend(f"preflight: {command}" for command in route.preflight)
     if not route.preflight:
@@ -419,6 +455,15 @@ def render_resolution_json(resolution: Resolution) -> str:
     return json.dumps(payload, indent=2) + "\n"
 
 
+def staging_contract(staging: str) -> str:
+    """The one-line read contract a staging value names.
+
+    A placeholder from a scaffolded route has no contract yet; saying so is
+    more honest than KeyError-ing inside a renderer.
+    """
+    return STAGING_CONTRACTS.get(staging, "unfilled template value; no contract declared")
+
+
 def _route_payload(route: Route) -> dict:
     return {
         "name": route.name,
@@ -426,4 +471,6 @@ def _route_payload(route: Route) -> dict:
         "skill": route.skill,
         "pin_source": route.pin_source,
         "preflight": list(route.preflight),
+        "staging": route.staging,
+        "staging_contract": staging_contract(route.staging),
     }

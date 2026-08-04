@@ -1,6 +1,6 @@
 # Agent instructions
 
-<!-- boardkit-contract: v1 -->
+<!-- boardkit-contract: v2 -->
 
 This file is the canonical agent entry point for this repo, for every
 harness. OpenCode reads it natively. Claude Code and Gemini sessions reach

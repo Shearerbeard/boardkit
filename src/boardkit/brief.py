@@ -32,6 +32,7 @@ from boardkit.contract import (
     read_text_or_none,
     resolve_role,
     sections,
+    staging_contract,
 )
 
 CONTRACT_DOC_DESTS = dict(CONTRACT_DOCS)
@@ -189,6 +190,7 @@ def _render_resolution(role: str, resolution: Resolution | ContractError) -> lis
         f"  - adapter: `{route.adapter}`",
         f"  - skill: {skill}",
         f"  - pin source: `{route.pin_source}`",
+        f"  - staging: `{route.staging}` - {staging_contract(route.staging)}",
     ]
     lines.extend(f"  - preflight: `{command}`" for command in route.preflight)
     if not route.preflight:

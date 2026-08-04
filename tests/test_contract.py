@@ -20,7 +20,7 @@ from boardkit.contract import (
     placeholders,
 )
 
-CONTRACT = {"version": 1}
+CONTRACT = {"version": 2}
 
 
 def _route(**overrides: object) -> dict:
@@ -29,6 +29,7 @@ def _route(**overrides: object) -> dict:
         "skill": "",
         "pin_source": "docs/board/REVIEW-TOOLING.md#harness-bindings",
         "preflight": [],
+        "staging": "working-dir",
     }
     route.update(overrides)
     return route
@@ -52,13 +53,13 @@ def test_missing_contract_section_names_the_migration(tmp_path: Path) -> None:
     message = str(excinfo.value)
     assert str(config_path) in message
     assert "[contract]" in message
-    assert "predates delegation contract v1" in message
+    assert "predates delegation contract v2" in message
     assert "boardkit doctor" in message
 
 
 def test_unknown_contract_key_raises() -> None:
     with pytest.raises(ValueError, match="unknown key"):
-        parse_contract({"version": 1, "digest": "abc"}, {"primary": _route()}, _roles())
+        parse_contract({"version": 2, "digest": "abc"}, {"primary": _route()}, _roles())
 
 
 def test_missing_contract_version_raises() -> None:
@@ -170,7 +171,7 @@ def test_valid_contract_exposes_ordered_routes_per_role() -> None:
     routes = {"primary": _route(), "fallback": _route(adapter="other-harness")}
     contract = parse_contract(CONTRACT, routes, _roles({"code-review": ["fallback", "primary"]}))
 
-    assert contract.version == 1
+    assert contract.version == 2
     # the declared order is the fallback order the dispatcher walks
     assert contract.roles["code-review"] == ("fallback", "primary")
     assert contract.roles["executor"] == ("primary",)

@@ -19,6 +19,7 @@ from conftest import CONTRACT_BLOCK, config_text
 
 from boardkit.config import load_config
 from boardkit.contract import (
+    STAGING_CONTRACTS,
     ContractError,
     render_resolution_json,
     render_resolution_text,
@@ -27,19 +28,21 @@ from boardkit.contract import (
 
 TWO_ROUTE_CONTRACT = """\
 [contract]
-version = 1
+version = 2
 
 [routes.opencode-reviewer]
 adapter = "opencode"
 skill = "opencode-cli"
 pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"
 preflight = ["opencode --version"]
+staging = "working-dir"
 
 [routes.codex-cli]
 adapter = "codex"
 skill = ""
 pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"
 preflight = []
+staging = "repo-native"
 
 [roles.executor]
 routes = ["opencode-reviewer"]
@@ -89,6 +92,7 @@ def test_text_output_is_byte_stable(tmp_path: Path) -> None:
         "adapter: opencode\n"
         "skill: opencode-cli\n"
         "pin source: docs/board/REVIEW-TOOLING.md#harness-bindings\n"
+        f"staging: working-dir ({STAGING_CONTRACTS['working-dir']})\n"
         "preflight: opencode --version\n"
         "fallback: codex-cli\n"
     )
@@ -217,6 +221,8 @@ def test_json_shape_is_pinned(tmp_path: Path) -> None:
             "skill": "opencode-cli",
             "pin_source": "docs/board/REVIEW-TOOLING.md#harness-bindings",
             "preflight": ["opencode --version"],
+            "staging": "working-dir",
+            "staging_contract": STAGING_CONTRACTS["working-dir"],
         },
         "position": {"index": 1, "of": 2},
         "fallbacks": [
@@ -226,6 +232,8 @@ def test_json_shape_is_pinned(tmp_path: Path) -> None:
                 "skill": "",
                 "pin_source": "docs/board/REVIEW-TOOLING.md#harness-bindings",
                 "preflight": [],
+                "staging": "repo-native",
+                "staging_contract": STAGING_CONTRACTS["repo-native"],
             }
         ],
     }

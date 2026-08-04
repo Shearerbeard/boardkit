@@ -11,13 +11,14 @@ GOLDEN_CARDS_DIR = GOLDEN_DIR / "aura-cards"
 # migrated repo's does, not the way a freshly scaffolded one does.
 CONTRACT_BLOCK = """\
 [contract]
-version = 1
+version = 2
 
 [routes.primary]
 adapter = "test-harness"
 skill = ""
 pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"
 preflight = []
+staging = "working-dir"
 
 [roles.executor]
 routes = ["primary"]
