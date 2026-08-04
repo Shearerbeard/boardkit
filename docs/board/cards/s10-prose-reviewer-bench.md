@@ -127,3 +127,6 @@ direct
 - 2026-08-04 Corpus inbox opened at `bench/prose/corpus-inbox/` so the
   user can drop samples before the card is pulled; harvest-at-pull
   from gh and git history covers the rest of lane 2.
+- 2026-08-04 Capture automated: claude-skills ships `prose-corpus`
+  (workflow plugin 1.2.0, claude-skills 27a50c7), which snapshots
+  pre-rewrite drafts into the inbox and sunsets at this card's close.
