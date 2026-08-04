@@ -64,6 +64,20 @@ whether that transport can be reached today, and it runs at dispatch time,
 which is too late to shape a wave. Take the inventory before planning a
 wave or promoting a card, not at the gate the reviewer serves.
 
+Open the inventory by asking the session driver which providers are in
+play for this run. Provider constraints are session facts, not
+configuration facts: a directive such as "fireworks only this run", an
+account that ran out of credit yesterday, or a provider under evaluation
+lives with the driver, not in any file the inventory can read. Restate
+the answer and treat it as the filter every pin read after it passes
+through; a pin that resolves to an excluded provider is unavailable for
+this run even though the config still names it. The answer is
+session-scoped. Record it in the session log and let the cost ledger
+show what actually ran; never copy it into a card or a brief, where it
+would decay into exactly the stale pin the no-model-ids rule forbids. An
+unattended run with no directive on record proceeds on the harness
+configuration as-is; the plan notes that where it names reviewers.
+
 Read the harness's own agent configuration and record which executors and
 reviewers exist and what model each is pinned to. Then, for every external
 reviewer the plan will lean on, run the pre-vet checklist the repo's

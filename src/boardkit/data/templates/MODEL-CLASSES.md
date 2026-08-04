@@ -116,6 +116,17 @@ planned without knowing the pins can allocate work that no available
 reviewer is allowed to review. Discovering that at the gate means the
 work is already written by the wrong hand.
 
+The inventory opens with a question, not a file read: ask the session
+driver which providers are in play for this run. That constraint is a
+session fact known only to the driver - a "this run uses one named
+provider only" directive, say, or an account exhausted yesterday. No
+harness config records it, and every pin read that follows must pass
+through it as a filter. The answer belongs in the session log, with the
+cost ledger showing what actually ran - never in a card or brief, per
+the no-model-ids rule below. An
+unattended run with no directive on record proceeds on the harness
+configuration as-is and says so when the plan names its reviewers.
+
 Before a wave or gate depends on an external reviewer, the board owner
 pre-vets it:
 

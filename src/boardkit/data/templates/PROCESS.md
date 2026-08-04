@@ -456,7 +456,11 @@ from chat memory:
 2. Read the registry's `INDEX.md`. The registry is the state; do not
    reconstruct it from chat history or git log first.
 3. Take the delegation inventory, before promoting a card or planning a
-   wave: read the harness's own agent configuration and record which
+   wave. It opens with a question to the session driver - which providers
+   are in play for this run - because that constraint is a session fact no
+   config file records; the answer filters every pin read that follows and
+   lands in the session log, never in a card or brief. Then read the
+   harness's own agent configuration and record which
    executors and reviewers exist, what model each is pinned to, and whether
    the ones this session will depend on are reachable. `MODEL-CLASSES.md`
    carries the capability taxonomy and the pre-vet checklist;
