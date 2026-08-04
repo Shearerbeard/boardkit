@@ -124,3 +124,6 @@ direct
 - 2026-08-04 Authored from the prose-canary follow-up; corpus focus
   set by the user to external prose (commits, tickets) and the
   claude-skills voice work named as grounding.
+- 2026-08-04 Corpus inbox opened at `bench/prose/corpus-inbox/` so the
+  user can drop samples before the card is pulled; harvest-at-pull
+  from gh and git history covers the rest of lane 2.
