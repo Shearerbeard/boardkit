@@ -68,3 +68,39 @@ precedent in `~/workspace/aura-bench-runner` and the session wiki);
 kit-resolved reference anchors instead of checkout-relative paths; packet
 references that resolve from any checkout or fail detectably. Full
 grounding in the source record.
+
+## 2026-08-04 model-class-examples-drift
+
+```yaml
+date: 2026-08-04
+harness: opencode
+agent: kimi-k3
+workstreams: [boardkit]
+repo: chore-lottery
+source: ~/dev/claude-skills/feedback/2026-08-04-opencode-model-class-drift/process-feedback.md
+```
+
+Two findings from a delegation-inventory session in chore-lottery (Kimi
+K3 as board owner, opencode harness). First, a classification gap: the
+taxonomy pins board ownership and unattended policy to capability
+classes, but the only classification guide is the worked-examples lists,
+so a board-owner model the examples do not name (Kimi K3) needed a live
+user decision mid-session. Candidate fix for the maintainer to weigh:
+the delegation-inventory step could prompt "classify the session model"
+alongside the existing "which providers are in play" question. Second,
+examples drift at the kit: all three MODEL-CLASSES.md copies (kit
+template, kit dogfood board, consumer) were verified byte-identical by
+diff, so the kit's own examples had drifted from the user's fleet
+(MiniMax M3 lingering as the explorer example after every pin moved)
+and the drift propagated verbatim to consumers, because a consumer that
+copies the kit verbatim never touches the examples the template tells
+it to maintain. The consumer refreshed its copy on 2026-08-04 (Gate A
+prose review passed), creating the first intentional consumer/kit
+divergence; whether the template examples get refreshed - including the
+user's 2026-08-04 decision classifying Kimi K3 as frontier orchestrator
+- or examples move to consumer fill-ins entirely is the maintainer's
+call. Adjacent audit shape worth adding to the pre-vet checklist: check
+same-id pin collisions across roles, not just family diversity (three
+chore-lottery roles shared one model id, silently breaking the
+reviewer-differs-from-author invariant for one executor's prose
+output).
