@@ -84,9 +84,9 @@ reviewers, never per-file reviews.
 - Changes: `PROCESS.md` template, `.vale.ini`, `tests/test_templates_prose.py`,
   test updates where template text is pinned.
 - Gates: S → A
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` over the templates and this plan.
-- [ ] Gate A: one digest packet (diff + this plan + the drain record) to
+- [x] Gate A: one digest packet (diff + this plan + the drain record) to
   BOTH kimi-k3 (opencode, fireworks-ai) and gpt-5.6-sol (codex);
   deepseek-v4-pro (opencode, fireworks-ai) reviews the reworded prose
   spans only. Findings numbered, each with a resolution; empty or
@@ -103,9 +103,9 @@ reviewers, never per-file reviews.
   `tests/test_deferred.py` (phantom-deferral fixture and the
   interim-pass non-warning fixture).
 - Gates: S → A
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown; run the new fixtures.
-- [ ] Gate A: one digest packet to both kimi-k3 and gpt-5.6-sol, same
+- [x] Gate A: one digest packet to both kimi-k3 and gpt-5.6-sol, same
   rules as stage 1.
 - Done when: warning fires on the phantom case, stays quiet on the
   interim-pass case, verdicts recorded, stage committed.
@@ -122,11 +122,11 @@ reviewers, never per-file reviews.
 - Changes: `contract.py`, `doctor.py`, `brief.py`, both template docs,
   shipped `boardkit.toml` template/fixtures, tests and goldens.
 - Gates: S → A
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale`; scratch-fixture smoke of `resolve-route`
   and `dispatch-brief` showing the staging line; doctor error message
   check against a v1 config.
-- [ ] Gate A: one digest packet to both kimi-k3 and gpt-5.6-sol, same
+- [x] Gate A: one digest packet to both kimi-k3 and gpt-5.6-sol, same
   rules as stage 1. This is the schema change, so the packet flags the
   version bump and migration error as the highest-risk surface.
 - Done when: schema strict both ways, migration error names the fix,
@@ -135,7 +135,7 @@ reviewers, never per-file reviews.
 #### Stage 4: wave close 🛑 USER GATE
 - Goal: present the whole body of work.
 - Gates: S → U
-- [ ] Gate S: full suite, full lint, re-read of every touched file.
+- [x] Gate S: full suite, full lint, re-read of every touched file.
 - [ ] Gate U: present per-stage diffs, all review verdicts with their
   resolutions, the highest-risk change (the contract version bump), and
   anything deferred. This is where the unattended run ends; nothing
