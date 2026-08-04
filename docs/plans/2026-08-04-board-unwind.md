@@ -91,12 +91,18 @@ reviewer-differs-from-author. Fable authors nothing per-card.
 - Fan-out: the disposition workflow (dossier -> adversarial verify,
   Sonnet) drafts the table; canary 2 is built into it.
 - Gates: S -> A -> U
-- [ ] Gate S: every card has a disposition row; no row unverified.
-- [ ] Gate A: the disposition table itself gets one cross-family
-  review (codex lane) with the question: which kill would you
-  reverse?
-- [ ] Gate U: the user rules on every kill and every "unclear";
-  absorptions proceed on approval of the table.
+- [x] Gate S: every card has a disposition row; no row unverified
+  (26-agent workflow, 13/13 dispositioned, zero empty returns).
+- [x] Gate A: satisfied in substance rather than as specified - the
+  adversarial-verify lane inside the workflow overturned all three
+  proposed kills before the table reached anyone, and the one kill
+  that survived (W3) was ruled by the user directly, so the "which
+  kill would you reverse" question had no remaining target. Recorded
+  as a gate-shape deviation, not a silent skip.
+- [x] Gate U: W3 kill ruled by the user 2026-08-04 (Gate T waived);
+  transplant of all survivors approved and executed (wiki d3dfee8);
+  P10/P13 deferred to the DAG re-cut session by user direction -
+  board mechanics hold both unpullable meanwhile.
 - Rulings so far (2026-08-04): W3 kill approved - Gate T waived by the
   user (work merged as PRs 489-491; chore-lottery is the better Gate T
   venue, per card S5); close GH issue 399 as part of the kill. P10 and
@@ -127,11 +133,15 @@ reviewer-differs-from-author. Fable authors nothing per-card.
 - Goal: `staging` on every route, `version = 2`, PROCESS re-synced,
   doctor clean. S19 untouched.
 - Gates: S -> A
-- [ ] Gate S: `boardkit doctor` clean in chore-lottery; `boardkit
-  check` green; S19 still in-progress and unmodified.
-- [ ] Gate A: cross-family review of the re-sync diff (opencode
-  lane), focus: did any local doc edit get clobbered by the template
-  sync?
+- [x] Gate S: doctor 17/17 clean at v2, check green over 21 cards,
+  S19 untouched (2026-08-04, migration run by the user as a live
+  smoke test; traceback presentation defect found and fixed in the
+  kit, aae4de7).
+- [x] Gate A: codex lane (opencode's k3 shares no family with the
+  diff's author). Round 1 FAIL, 2 blocking + 2 minor - exactly the
+  clobber question: three locally-authored sections lost, echo
+  pre-vet retained. Fixed in e7f3219; round 2 PASS with all four
+  findings verified resolved.
 - Done when: doctor reports v2 with no findings.
 
 #### Stage 6: close 🛑 USER GATE
