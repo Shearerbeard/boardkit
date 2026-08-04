@@ -111,9 +111,9 @@ failure produces a locally staged packet, per the paragraph above. Work
 that only reads asks for no write mode and no worktree.
 
 Cap repeated dispatch attempts on one unit of work at three, matching the
-executor-fallback rule in `PROCESS.md`. Past three, the approach changes,
-not the attempt count: stage the packet for a different transport, or
-defer the gate. Session close accounts for every worktree a delegation created:
+executor-fallback rule in `PROCESS.md`. Past three, the approach changes
+rather than the attempt count. The ways out: a re-staged packet the
+transport can actually read; a different transport; a deferred gate. Session close accounts for every worktree a delegation created:
 list them, and remove the strays (`.agy-mcp/worktrees/job-*` and whatever
 your own transports leave behind) with `git worktree remove`. A retry loop
 that burns a weekly budget and returns no verdict, leaving a dozen
