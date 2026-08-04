@@ -102,11 +102,14 @@ reviewer-differs-from-author invariant holds on any allocation above.
   - Config diff: none - this verifies deployed state as-is. Confirm
     `~/.config/opencode/AGENTS.md` resolves (it is a dotfiles symlink)
     before starting; if it dangles, stop and file that instead.
-  - Run command: `cd ~/dev/boardkit && opencode` then, in the session:
-    ask it to run an adversarial Gate A review of the latest commit
-    range on this board's S2 card (or any card with a fresh diff).
+  - Run command: `cd ~/dev/chore-lottery && opencode` then, in the
+    session: ask it to run an adversarial Gate A review of a live card
+    with a fresh diff. Venue moved from this repo to chore-lottery by
+    user ruling 2026-08-04: a real consumer board makes the review
+    real, and that board is v2 and doctor-clean.
   - Reference prompt: "Act as board owner. Run Gate A on the staged
-    diff for card S2 using this repo's REVIEW-TOOLING bindings."
+    diff for the current in-review card using this repo's
+    REVIEW-TOOLING bindings."
   - Expected observations, in order: (1) the session reads
     `~/.config/opencode/agent/*.md` or `opencode.json` and states the
     reviewer pin; (2) it dispatches the reviewer through its own task
