@@ -17,3 +17,4 @@ Delegation protocol).
 | [S7](s7-transport-wrapper-spike.md) | Thin transport wrapper spike with a canary harness | backlog | S2 | smart | S -> A -> U |
 | [S8](s8-board-root-portability.md) | Board-root portability and checkout-independent references | ready | - | smart | S -> A |
 | [S9](s9-model-class-freshness.md) | Session-model classification and example freshness | ready | - | any | S -> A |
+| [S10](s10-prose-reviewer-bench.md) | Prose-reviewer bench over snapshotted external prose | ready | - | any | S -> A -> M -> U |

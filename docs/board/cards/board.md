@@ -19,6 +19,8 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A. Executor: smart.
 - [ ] **S9** [Session-model classification and example freshness](s9-model-class-freshness.md)
 	Depends: none. Gates: S -> A. Executor: any.
+- [ ] **S10** [Prose-reviewer bench over snapshotted external prose](s10-prose-reviewer-bench.md)
+	Depends: none. Gates: S -> A -> M -> U. Executor: any.
 
 ## In Progress
 
