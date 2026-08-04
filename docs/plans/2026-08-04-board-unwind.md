@@ -95,6 +95,12 @@ reviewer-differs-from-author. Fable authors nothing per-card.
   reverse?
 - [ ] Gate U: the user rules on every kill and every "unclear";
   absorptions proceed on approval of the table.
+- Rulings so far (2026-08-04): W3 kill approved - Gate T waived by the
+  user (work merged as PRs 489-491; chore-lottery is the better Gate T
+  venue, per card S5); close GH issue 399 as part of the kill. P10 and
+  P13 still await a ruling. GH check note: open issues 474 and 475 are
+  live defects in P7/P11/P12 territory, so those absorptions carry the
+  ticket links forward.
 - Done when: both satellite boards are archived (directory renamed
   `_archived-<date>` or deleted per user call), absorbed cards live
   on their target boards, canary 3 readback passes per absorbed card.
