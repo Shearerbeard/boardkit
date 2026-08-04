@@ -112,12 +112,12 @@ that only reads asks for no write mode and no worktree.
 
 Cap repeated dispatch attempts on one unit of work at three, matching the
 executor-fallback rule in `PROCESS.md`. Past three, the approach changes,
-not the attempt count: stage the packet, switch transports, or defer the
-gate. Session close accounts for every worktree a delegation created:
+not the attempt count: stage the packet for a different transport, or
+defer the gate. Session close accounts for every worktree a delegation created:
 list them, and remove the strays (`.agy-mcp/worktrees/job-*` and whatever
 your own transports leave behind) with `git worktree remove`. A retry loop
-that burns a weekly budget, returns no verdict, and leaves a dozen
-registered worktrees behind is the recorded failure these three rules
+that burns a weekly budget and returns no verdict, leaving a dozen
+registered worktrees behind, is the recorded failure these three rules
 exist to prevent.
 
 ## Stall protocol

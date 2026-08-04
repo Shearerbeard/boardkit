@@ -164,8 +164,8 @@ live model pins are read. It never names a model id. Models resolve from
 harness configuration at dispatch time, so an id written into a brief is a
 copy that starts going stale immediately, and a stale one can invert the
 reviewer-differs-from-author invariant by naming the very model that
-authored the diff. Where the brief needs to say which model ran, it says
-so after the fact, in the cost ledger.
+authored the diff. Where the record needs to say which model ran, that
+fact lands after the run, in the cost ledger.
 
 Decision authority stays with the board owner. When a card allows an
 either-or outcome, the subagent reports the evidence and stops; the board
@@ -183,6 +183,12 @@ takeover means it authored the diff and its harness holds no other model
 family, that card's Gate A stays open rather than self-reviewing.
 
 ## Gates
+
+Per-gate checklists restate their deterministic steps in full - the skill
+loads, the commands, the order - rather than pointing at a statement made
+earlier in the plan or the session. A load-this-first imperative stated
+once in planning prose has decayed by the time the gate arrives; the
+checklist that repeats it at the gate is the one that fires.
 
 - Gate S, self: run the deterministic checks the card names (lint,
   typecheck, test, `boardkit check`, or whatever the card's own tooling
@@ -202,7 +208,11 @@ family, that card's Gate A stays open rather than self-reviewing.
   record is auditable finding-by-finding, not as an aggregate count. The
   ledger also names the model that authored the diff and the model that
   reviewed it, so the reviewer-differs-from-author invariant is checkable
-  from the record itself. Never
+  from the record itself. A named check the reviewer's sandbox cannot
+  execute (a denied command, a missing tool) is reported as unverified,
+  never as a finding against the diff: the board owner runs the check
+  itself or routes it to Gate S, and the review record says which checks
+  the reviewer actually ran. Never
   read an empty or failed reviewer return as a pass: a review with no
   verdict has not run. Zero findings is recorded as an explicit PASS, not
   silence. Two cases defer: self-review (the same model authored and would
@@ -309,7 +319,9 @@ body.
   author of every commit. These rules override any default footer a harness
   adds on its own.
 - Prose lint: every checked-in markdown file passes the repo's prose linter
-  before it is committed.
+  before it is committed. A lint suppression or exemption carries its
+  recorded reason where it lands: a comment beside the config line, or the
+  body of the commit that adds it.
 
 ## Session close
 
@@ -325,9 +337,9 @@ standards above. Board state is never left uncommitted across sessions.
 Read a card back after editing it. After any multi-step edit sequence over
 a card - scripted edits, `sed`, a render pass - read the card file back
 from disk before committing and before presenting any gate over it. An
-edit that reports success can still fail to persist; when that happens
-silently, the loss surfaces only after a gate has been approved over stale
-state, and the board has to be reconstructed from git history. The tick
+edit that reports success can still fail to persist. The failure is
+silent: nothing surfaces until a gate has been approved over stale state
+and the board needs rebuilding from git history. The tick
 you are about to show the user is the one you re-read, not the one you
 believe you wrote.
 
