@@ -29,6 +29,12 @@ record and the backlog, not the implementation design.
   entry claimed three spans across the two files; the count has moved
   but the finding stands, and nothing gates the kit's own templates on
   the prose standard the templates impose on consumers.
+  [Correction, recorded during the implementation wave's stage 1
+  review: the "clean" reading of `REVIEW-TOOLING.md.template` was
+  vacuous - vale skips `.template` files without a format mapping, so
+  this drain never linted it. With the mapping in place the file shows
+  two more spans, four total across the two files, so the entry's
+  count was closer to right than this note claimed.]
 - The REVIEW-TOOLING template already carries a stall protocol
   (caller-owned `timeout`, switch-tools-on-stall, empty-return-is-fail)
   and the opencode staging rule (`.review/` inside the working

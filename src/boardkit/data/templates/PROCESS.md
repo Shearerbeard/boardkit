@@ -208,11 +208,12 @@ checklist that repeats it at the gate is the one that fires.
   record is auditable finding-by-finding, not as an aggregate count. The
   ledger also names the model that authored the diff and the model that
   reviewed it, so the reviewer-differs-from-author invariant is checkable
-  from the record itself. A named check the reviewer's sandbox cannot
-  execute (a denied command, a missing tool) is reported as unverified,
-  never as a finding against the diff: the board owner runs the check
-  itself or routes it to Gate S, and the review record says which checks
-  the reviewer actually ran. Never
+  from the record itself. A check the reviewer cannot execute, or one
+  that fails for reasons peculiar to the reviewer's sandbox (a denied
+  command, a missing tool, no network), is reported as unverified, never
+  as a finding against the diff: the board owner runs the check itself
+  or routes it to Gate S, and the review record says which checks the
+  reviewer actually ran. Never
   read an empty or failed reviewer return as a pass: a review with no
   verdict has not run. Zero findings is recorded as an explicit PASS, not
   silence. Two cases defer: self-review (the same model authored and would

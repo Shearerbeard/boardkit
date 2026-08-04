@@ -33,7 +33,7 @@ def test_shipped_templates_pass_prose_lint() -> None:
         "`mkdir -p .vale/styles && vale sync` in the repo root."
     )
 
-    targets = sorted(str(p) for p in TEMPLATES_DIR.iterdir() if p.suffix in (".md", ".template"))
+    targets = sorted(str(p) for p in TEMPLATES_DIR.rglob("*") if p.suffix in (".md", ".template"))
     assert targets, f"no templates found under {TEMPLATES_DIR}"
 
     result = subprocess.run(
