@@ -541,3 +541,26 @@ def test_colon_pass_with_no_space_is_a_verdict(
 
     assert cmd_check(_Args(config=str(board))) == 0
     assert "WARN" in capsys.readouterr().out
+
+
+def test_dash_and_question_terminated_verdicts_are_phantoms(
+    board: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The verdict terminator set covers the dash family and question
+    marks, the re-review round's finding: a canonical verdict followed by
+    a dash-separated clause must stay legible to the warning."""
+    cards_dir = board.parent / "cards"
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        checklist="- [ ] Gate A: fresh-agent review.",
+        log=(
+            "- 2026-07-27 Gate A open: deferred (reviewer unvetted).\n"
+            "- 2026-07-28 Gate A passed - zero findings."
+        ),
+    )
+    assert cmd_render(_Args(config=str(board))) == 0
+
+    assert cmd_check(_Args(config=str(board))) == 0
+    assert "WARN" in capsys.readouterr().out

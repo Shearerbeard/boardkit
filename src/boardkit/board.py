@@ -70,13 +70,14 @@ CHECKBOX_RE = re.compile(rf"^\s*[-*]\s*\[([ xX])\]\s*(Gate\s+{GATE_TOKEN})")
 # the deferral with the box left unticked is the shape sessions misread as
 # a clear, so `boardkit check` calls it out. The legible shapes are the
 # verdict right after the gate name - `Gate A passed`, `Gate A PASS`,
-# `Gate A: PASS` - ended by punctuation, a parenthetical, or the entry;
+# `Gate A: PASS` - ended by punctuation (dashes and question marks
+# included), a quote, a parenthetical, or the end of the entry;
 # the lookahead keeps transitive uses (`Gate A passed the packet`) and
 # compounds (`pass criteria`) from reading as verdicts. Wordings that put
 # other words between the gate and the verdict are not legible; the
 # PROCESS template names the canonical shape so log writers stay legible.
 PASSED_RE = re.compile(
-    rf"Gate\s+({GATE_TOKEN})(?:\s*:\s*|\s+)(?i:pass(?:ed)?)(?=\s*(?:[.,;:!)(]|$))"
+    rf"Gate\s+({GATE_TOKEN})(?:\s*:\s*|\s+)(?i:pass(?:ed)?)(?=\s*(?:[.,;:!?)('\"\u2013\u2014-]|$))"
 )
 
 # The deferral sweep reads the card's Log section only, and only its bullet
