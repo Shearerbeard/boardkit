@@ -1,7 +1,10 @@
 # Topology hardening: delegation contract, doctor, resolve-route, dispatch-brief
 
 Status: approved 2026-08-03 (user gate in the consuming program's plan
-interview). This is the binding design for the engine wave; the consuming
+interview). Schema note, added later the same day: the `[routes.<slug>]`
+shape below is the v1 contract as approved; contract v2 adds a required
+`staging` key per `2026-08-03-drain-implementation.md`, so copy the
+schema from a current `boardkit init` scaffold, not from this record. This is the binding design for the engine wave; the consuming
 board tracks execution. The source review is the codex gpt-5.6-sol second
 opinion on the skill topology (8 BLOCKING + 1 MINOR, archived in the
 consumer's review directory), and the design was authored by a Claude
