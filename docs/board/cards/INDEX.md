@@ -12,9 +12,10 @@ Delegation protocol).
 | [S2](s2-wiring-trio.md) | Wire pre-vet, deferrals, and packet staging into the CLI | ready | - | smart | S -> A |
 | [S3](s3-skills-defect-sweep.md) | claude-skills defect sweep from the topology audit | ready | - | any | S -> A |
 | [S4](s4-rust-holes-canonical.md) | Declare the typed-holes skill canonical over PLAYBOOK | ready | - | any | S -> A |
-| [S5](s5-gate-t-native-opencode.md) | Run the never-run Gate T on native opencode routing | ready | - | any | M -> T |
+| [S5](s5-gate-t-native-opencode.md) | Run the never-run Gate T on native opencode routing | done | - | any | M -> T |
 | [S6](s6-template-canary.md) | Template baseline digest, template-diff, and golden briefs | backlog | - | smart | S -> A |
 | [S7](s7-transport-wrapper-spike.md) | Thin transport wrapper spike with a canary harness | backlog | S2 | smart | S -> A -> U |
 | [S8](s8-board-root-portability.md) | Board-root portability and checkout-independent references | ready | - | smart | S -> A |
 | [S9](s9-model-class-freshness.md) | Session-model classification and example freshness | ready | - | any | S -> A |
 | [S10](s10-prose-reviewer-bench.md) | Prose-reviewer bench over snapshotted external prose | ready | - | any | S -> A -> M -> U |
+| [S11](s11-vale-tiering.md) | Tier the vale prose gate by artifact class | done | - | any | S -> A |

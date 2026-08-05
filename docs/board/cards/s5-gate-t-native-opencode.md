@@ -1,7 +1,7 @@
 ---
 id: S5
 title: Run the never-run Gate T on native opencode routing
-status: ready
+status: done
 depends: []
 serialize-with: []
 lineage: none
@@ -44,9 +44,9 @@ reviewer hits a permission wall. A dated evidence file under
 
 ## Gate checklist
 
-- [ ] Gate M: agent-driven dry run per the plan's handout, transcript
+- [x] Gate M: agent-driven dry run per the plan's handout, transcript
   saved.
-- [ ] Gate T: user runs one real Gate A review from a native opencode
+- [x] Gate T: user runs one real Gate A review from a native opencode
   session on a live card, per the handout.
 
 ## Branch
@@ -57,3 +57,15 @@ direct
 
 - 2026-08-04 Authored; the fix this verifies shipped 2026-07-28 and has
   never been proven live.
+- 2026-08-05 Gate M skipped by user ruling: the user went straight to
+  the live run in their chore-lottery session ("I left the S5 as
+  closed") and the live evidence subsumes what a dry run would have
+  shown; the skip is recorded here rather than backfilled.
+- 2026-08-05 Gate T PASS 🛑 user-run (2026-08-04, chore-lottery, board
+  owner kimi-k3, reviewer DeepSeek-V4-Flash-0731). All four behaviors
+  evidenced in
+  [2026-08-05-s5-gate-t-native-opencode.md](../evidence/2026-08-05-s5-gate-t-native-opencode.md).
+  One observation filed and adjudicated: the session had no Gate T
+  concept - a kit vocabulary hole, not a session failure; fixed in the
+  2026-08-05 drain (Gate T defined in shipped PROCESS.md, doctor
+  gate-vocabulary check added). Card DONE.
