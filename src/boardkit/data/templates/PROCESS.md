@@ -252,6 +252,14 @@ checklist that repeats it at the gate is the one that fires.
   card is itself the milestone.
 - Gate U, user: stop. Present diffs, findings, and risks. Do not proceed
   without explicit user approval.
+- Gate T, user testing: stop. The user exercises the behavior by hand;
+  the board owner's deliverable is the handout that makes that possible:
+  the exact run commands, a reference prompt or script, the expected
+  observations in order (observable behaviors, never "verify it works"),
+  the failure signatures, and the revert steps. The user's observations
+  are recorded as evidence, pass or fail. A test the user cannot run
+  from the handout alone is a failed handout, not a failed test, and it
+  reopens the gate.
 
 ### Deferrals
 
@@ -394,8 +402,11 @@ was not here. Dispatch a cheap model, ideally from a family or harness other
 than the one the board owner ran in, so the proof covers cross-harness
 legibility and not just the board owner's own reading. Give it only the
 cold-start surface a fresh board owner reads: the registry's `INDEX.md`,
-this file's recovery protocol and roles sections, `board.md`, and the cards
-named in `deferred.md` when that view exists, since the generated views
+this file's recovery protocol and roles sections, `board.md`, and
+`deferred.md` with the cards it names. Include `deferred.md` in the brief
+unconditionally. When the view is absent, the brief says so and states
+that absence reads as "no deferred gates" - then the canary answers the
+deferral question outright instead of abstaining. The generated views
 carry no log detail.
 
 Have it answer four questions:

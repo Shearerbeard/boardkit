@@ -198,3 +198,12 @@ totals. How to recover these numbers is harness-specific and belongs in
 the repo's `REVIEW-TOOLING.md`, not here. Without this record the program
 cannot answer whether the cheaper orchestrator is actually cheaper, and
 every retro pays the recovery cost the closing session should have paid.
+
+The duty presupposes a recovery recipe that actually works: prove the
+`REVIEW-TOOLING.md` recipe against one real session transcript before
+the first wave depends on it, and record the known failure modes beside
+it. One already observed: an export piped into a strict JSON parser
+breaks on raw control bytes in transcripts, silently costing the wave
+its per-session figures. When per-session recovery fails mid-close,
+record aggregate and per-model figures and log the recipe failure as
+process feedback rather than dropping the record.

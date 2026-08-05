@@ -61,6 +61,7 @@ EXPECTED_CHECK_IDS = {
     "roles.filled",
     "routes.pin-source",
     "board.parses",
+    "board.gate-vocabulary",
     "views.current",
     "env.boardkit-home",
     "skills.installed",
@@ -197,6 +198,40 @@ def test_a_filled_board_reports_no_errors(tmp_path: Path) -> None:
 
     assert report.errors == ()
     assert report.contract_version == CONTRACT_VERSION
+
+
+def test_defined_gate_letters_pass_the_vocabulary_check(tmp_path: Path) -> None:
+    report = _report(_filled_board(tmp_path))
+
+    assert "board.gate-vocabulary" in report.passed
+
+
+def test_an_undefined_gate_letter_warns_with_the_card_named(tmp_path: Path) -> None:
+    root = _filled_board(tmp_path)
+    template = root / "docs/board/cards/_template.md"
+    card = root / "docs/board/cards/s1-undefined-gate.md"
+    card.write_text(
+        template.read_text(encoding="utf-8")
+        .replace("id: SX", "id: S1")
+        .replace('gates: "S -> A"', 'gates: "S -> A -> Z"'),
+        encoding="utf-8",
+    )
+
+    report = _report(root)
+
+    assert "board.gate-vocabulary" in _checks(report, Severity.WARN)
+    finding = next(f for f in report.findings if f.check == "board.gate-vocabulary")
+    assert "S1" in finding.message
+    assert "Gate Z" in finding.message
+
+
+def test_gate_vocabulary_skips_when_the_board_does_not_parse(tmp_path: Path) -> None:
+    root = _filled_board(tmp_path)
+    (root / "docs/board/cards/s1-broken.md").write_text("no frontmatter", encoding="utf-8")
+
+    report = _report(root)
+
+    assert any(s.check == "board.gate-vocabulary" for s in report.skipped)
 
 
 # --- exit semantics ---------------------------------------------------------

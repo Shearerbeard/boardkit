@@ -33,6 +33,7 @@ from pathlib import Path
 import yaml
 
 from boardkit.board import BoardError, build_board, view_drift
+from boardkit.brief import GATE_BULLET_RE, GATES_SECTION, gate_tokens
 from boardkit.config import CONFIG_FILENAME, Config, find_config, load_config
 from boardkit.contract import (
     BOARDKIT_HOME_VAR,
@@ -96,6 +97,7 @@ ALL_CHECKS = (
     "roles.filled",
     "routes.pin-source",
     "board.parses",
+    "board.gate-vocabulary",
     "views.current",
     "env.boardkit-home",
     "skills.installed",
@@ -567,6 +569,44 @@ def _check_pin_sources(checks: _Checks, config: Config) -> None:
     checks.ok("routes.pin-source")
 
 
+def undefined_gate_tokens(cards: list[dict], process_text: str) -> dict[str, list[str]]:
+    """Card id -> gate letters its `gates` string declares but the Gates section never defines."""
+    gates_body = sections(process_text).get(GATES_SECTION)
+    if gates_body is None:
+        return {}
+    defined = {match.group(1) for match in GATE_BULLET_RE.finditer(gates_body)}
+    missing: dict[str, list[str]] = {}
+    for card in cards:
+        undefined = [t for t in gate_tokens(card.get("gates", "")) if t not in defined]
+        if undefined:
+            missing[card["id"]] = undefined
+    return missing
+
+
+def _check_gate_vocabulary(checks: _Checks, config: Config, cards: list[dict]) -> None:
+    process_text = read_text_or_none(config.root / CONTRACT_DOC_DESTS["PROCESS.md"])
+    if process_text is None:
+        checks.skip("board.gate-vocabulary", "PROCESS.md is missing; see docs.present")
+        return
+    if sections(process_text).get(GATES_SECTION) is None:
+        checks.skip("board.gate-vocabulary", "PROCESS.md has no Gates section")
+        return
+    missing = undefined_gate_tokens(cards, process_text)
+    if missing:
+        detail = "; ".join(
+            f"{card_id} declares Gate {', Gate '.join(tokens)}"
+            for card_id, tokens in sorted(missing.items())
+        )
+        checks.warn(
+            "board.gate-vocabulary",
+            f"gate letters no `- Gate <X>` bullet in PROCESS.md's Gates section defines: {detail}",
+            "define each letter in the Gates section or correct the card's `gates` string; "
+            "`boardkit dispatch-brief` refuses undefined letters at dispatch time",
+        )
+        return
+    checks.ok("board.gate-vocabulary")
+
+
 def _check_board(checks: _Checks, config: Config) -> None:
     try:
         result = build_board(config)
@@ -576,9 +616,12 @@ def _check_board(checks: _Checks, config: Config) -> None:
             "; ".join(exc.errors),
             "fix the cards named above, then run `boardkit check`",
         )
+        checks.skip("board.gate-vocabulary", "the board does not parse; see board.parses")
         checks.skip("views.current", "the board does not parse; see board.parses")
         return
     checks.ok("board.parses")
+
+    _check_gate_vocabulary(checks, config, result.cards)
 
     drift = view_drift(config, result.views)
     if drift:
