@@ -19,6 +19,10 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A. Executor: any.
 - [ ] **S10** [Prose-reviewer bench over snapshotted external prose](s10-prose-reviewer-bench.md)
 	Depends: none. Gates: S -> A -> M -> U. Executor: any.
+- [ ] **S12** [Public-repo seam for contract docs and generated views](s12-public-repo-seam.md)
+	Depends: none. Gates: S -> A. Executor: smart.
+- [ ] **S13** [Board discovery beyond cwd - sibling boards and pointers](s13-board-discovery.md)
+	Depends: none. Gates: S -> A. Executor: smart.
 
 ## In Progress
 

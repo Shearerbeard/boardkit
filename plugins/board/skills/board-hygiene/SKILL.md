@@ -24,14 +24,17 @@ session ends, before a handoff, and after any card status change.
 ## Step one: run boardkit doctor
 
 Before anything else in this skill, and before acting on anything the
-board documents claim:
+board documents claim, resolve the invocation from the repo's agent
+entry file first: bare `boardkit` is never on PATH, because the kit
+runs from a local checkout. The checkout-based form is
 
 ```sh
-boardkit doctor
+uv run --project "${BOARDKIT_HOME:-../boardkit}" boardkit doctor
 ```
 
-If the command is not found, **stop and tell the user the board CLI is not
-installed**. Do not work the checklist from the process docs alone. A
+If the resolved invocation fails to run, **stop and tell the user the
+board CLI is not reachable**. Do not fall back to a bare `boardkit`,
+and do not work the checklist from the process docs alone. A
 session that has read the rules but cannot run `boardkit check` or
 `boardkit render` leaves a board that looks tended and is not, and the
 next session cannot tell the difference. Doctor is the one diagnostic that
@@ -211,7 +214,7 @@ Have it answer four questions:
 the key before dispatch:
 
 ```sh
-boardkit canary-key
+uv run --project "${BOARDKIT_HOME:-../boardkit}" boardkit canary-key
 ```
 
 That answers the first three questions deterministically from the cards,

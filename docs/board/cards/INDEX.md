@@ -19,3 +19,5 @@ Delegation protocol).
 | [S9](s9-model-class-freshness.md) | Session-model classification and example freshness | ready | - | any | S -> A |
 | [S10](s10-prose-reviewer-bench.md) | Prose-reviewer bench over snapshotted external prose | ready | - | any | S -> A -> M -> U |
 | [S11](s11-vale-tiering.md) | Tier the vale prose gate by artifact class | done | - | any | S -> A |
+| [S12](s12-public-repo-seam.md) | Public-repo seam for contract docs and generated views | ready | - | smart | S -> A |
+| [S13](s13-board-discovery.md) | Board discovery beyond cwd - sibling boards and pointers | ready | - | smart | S -> A |
