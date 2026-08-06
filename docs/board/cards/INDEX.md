@@ -21,3 +21,5 @@ Delegation protocol).
 | [S11](s11-vale-tiering.md) | Tier the vale prose gate by artifact class | done | - | any | S -> A |
 | [S12](s12-public-repo-seam.md) | Public-repo seam for contract docs and generated views | ready | - | smart | S -> A |
 | [S13](s13-board-discovery.md) | Board discovery beyond cwd - sibling boards and pointers | ready | - | smart | S -> A |
+| [S14](s14-review-cycle-convergence.md) | Bound the adversarial review cycle with a convergence rule | ready | - | smart | S -> A |
+| [S15](s15-review-packet-guide.md) | Restore the human review guide to generated packets | ready | - | smart | S -> A |

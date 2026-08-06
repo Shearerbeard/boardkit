@@ -23,6 +23,10 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A. Executor: smart.
 - [ ] **S13** [Board discovery beyond cwd - sibling boards and pointers](s13-board-discovery.md)
 	Depends: none. Gates: S -> A. Executor: smart.
+- [ ] **S14** [Bound the adversarial review cycle with a convergence rule](s14-review-cycle-convergence.md)
+	Depends: none. Gates: S -> A. Executor: smart.
+- [ ] **S15** [Restore the human review guide to generated packets](s15-review-packet-guide.md)
+	Depends: none. Gates: S -> A. Executor: smart.
 
 ## In Progress
 
