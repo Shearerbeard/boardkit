@@ -49,13 +49,13 @@ Frontier orchestrator class: the strongest available general-purpose
 models. This class owns board-owner sessions and Gate F reviews, where the
 cost of a mistake is highest and the review needs to catch what a smart-
 class reviewer would miss. Worked examples as of this writing: Claude
-Fable (5.6 Sol), Kimi K3, GPT-5.x.
+Fable (5.6 Sol), Kimi K3.
 
 Smart writer/reviewer class: strong enough to author or review a
 non-trivial card without supervision, but priced for volume rather than
 reserved for the hardest calls. This class owns cards marked
 `executor: smart` and Gate A reviews. Worked examples as of this writing:
-GLM-5.2, Claude Opus, Kimi K2.7-code.
+GLM-5.2, Claude Opus, GPT-5.5, Kimi K2.7-code.
 
 Small explorer class: fast and cheap. It handles search and drift audits,
 and takes any card marked `executor: any`. This class should never author
