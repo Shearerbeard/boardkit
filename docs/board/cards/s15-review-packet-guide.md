@@ -29,8 +29,13 @@ REVIEW.md leads with a ranked review guide instead of opening on
 commit stats: churn-supersession flags are generated where mechanical
 (a file rewritten by a later commit in the range is flagged so the
 reader skips the superseded hunks), and the packet accepts an
-author-supplied ordering for the judgment calls. A card that names a
-typed-holes design record gets it linked near the top of the packet.
+author-supplied ordering for the judgment calls. The ranked order is
+an entry point over an indexed packet, not the packet's one path: the
+E1 user gate showed a single prescribed order does not fit every
+reviewer. A card that names a typed-holes design record gets it linked
+near the top of the packet, and its packet carries a type-relationship
+section: which introduced types wrap, return, or consume which, as a
+table or diagram derived from the design record.
 Diff and file references in log-like packet content render as relative
 markdown links so editors that follow links (the board owner reviews
 in nvim/LazyVim) jump straight from a log line to the diff it names.
@@ -43,7 +48,8 @@ in nvim/LazyVim) jump straight from a log line to the diff it names.
   guide, and every file reference in it resolves as a relative link
   from the packet's directory.
 - A card carrying a typed-holes design record produces a packet that
-  links the record above the commit listing.
+  links the record above the commit listing and includes the
+  type-relationship section.
 
 ## Gate checklist
 
@@ -61,3 +67,7 @@ direct
 
 - 2026-08-05 Minted by the fifth feedback drain from the Epoch E1
   packet regression finding.
+- 2026-08-07 Scope extended by the sixth drain from the E1 user-gate
+  feedback: type-relationship section for typed-holes cards, and the
+  ranked order restated as an entry point rather than the one path
+  ([2026-08-07-feedback-drain-6.md](../../plans/2026-08-07-feedback-drain-6.md)).

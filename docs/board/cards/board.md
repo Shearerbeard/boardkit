@@ -27,6 +27,10 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A. Executor: smart.
 - [ ] **S15** [Restore the human review guide to generated packets](s15-review-packet-guide.md)
 	Depends: none. Gates: S -> A. Executor: smart.
+- [ ] **S16** [Render each card's current gate position in the generated views](s16-gate-position-in-views.md)
+	Depends: none. Gates: S -> A. Executor: smart.
+- [ ] **S17** [Satellite-repo convention - no canonical-looking TODO beside a board](s17-satellite-repo-convention.md)
+	Depends: none. Gates: S -> A. Executor: smart.
 
 ## In Progress
 
