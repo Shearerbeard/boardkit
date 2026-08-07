@@ -13,7 +13,7 @@ of the examples date below. Treat them as illustrations of the
 class, not as a pin. Update the examples when the models you actually use
 change; the class definitions below them should rarely need to.
 
-Examples last updated: 2026-07-18. Bump this date whenever you touch a
+Examples last updated: 2026-08-06. Bump this date whenever you touch a
 model example.
 
 ## Capability taxonomy
@@ -49,13 +49,13 @@ Frontier orchestrator class: the strongest available general-purpose
 models. This class owns board-owner sessions and Gate F reviews, where the
 cost of a mistake is highest and the review needs to catch what a smart-
 class reviewer would miss. Worked examples as of this writing: Claude
-Opus or Fable, GPT-5.x.
+Fable (5.6 Sol), Kimi K3, GPT-5.x.
 
 Smart writer/reviewer class: strong enough to author or review a
 non-trivial card without supervision, but priced for volume rather than
 reserved for the hardest calls. This class owns cards marked
 `executor: smart` and Gate A reviews. Worked examples as of this writing:
-GLM-5.2, Kimi K2.7-code.
+GLM-5.2, Claude Opus, Kimi K2.7-code.
 
 Small explorer class: fast and cheap. It handles search and drift audits,
 and takes any card marked `executor: any`. This class should never author
