@@ -1,10 +1,11 @@
 ---
 id: S19
 title: R1 lanes as first-class card data
-status: in-progress
+status: in-review
 depends: []
 serialize-with: []
 lineage: primary
+commit-range: bb2d0f8..62e5ea1
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
@@ -80,3 +81,8 @@ direct
   carries a second family of work.
 - 2026-08-09 Work commit is shared with S20 (both trailers): the two
   cards land in one diff over config.py and PROCESS.md.
+- 2026-08-09 In-review; commit-range bb2d0f8..62e5ea1. (Transition
+  first missed and caught by the board's own WIP limit when S21 tried
+  to start - the limit fired exactly as designed.)
+- 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
+  Session B boundary; packets present at the Gate B user gate).

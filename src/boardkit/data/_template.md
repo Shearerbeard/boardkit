@@ -79,4 +79,7 @@ side-quest: true | false, absent meaning false. True marks the card as
   serialize-with still applies.
 lane: optional; a lane name from [[board.lanes]] in boardkit.toml. Only
   valid on boards that declare lanes (validated).
+refs: optional; qualified cross-board references (<code>/<id>, e.g.
+  tb/S91), informational only; never affects readiness (validated
+  against the family registry by boardkit check).
 File naming: <id-lowercase>-<slug>.md, unique lowercase slugs. -->

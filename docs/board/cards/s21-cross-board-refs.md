@@ -1,7 +1,7 @@
 ---
 id: S21
 title: R3 qualified cross-board references
-status: backlog
+status: in-progress
 depends: [S18]
 serialize-with: []
 lineage: primary
@@ -49,7 +49,7 @@ inside a single board.
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
 - [ ] Gate A: adversarial review, focus: can an informational ref leak
   into scheduling, and does the prefix check hold for sentinel ids?
@@ -63,3 +63,13 @@ direct
 
 - 2026-08-09 Minted by the seventh feedback drain from standing
   requirement R3, per the Session B build order.
+- 2026-08-09 Pulled in-progress straight from backlog (S18 in-review,
+  same-hand build order per drain 7); executor is the maintainer
+  session.
+- 2026-08-09 Built: `refs:` optional frontmatter list with `<code>/<id>`
+  shape validated at parse; registry resolution in `check` via
+  `card_ref_findings` - unknown short-code is an error, a
+  prefix-scheme mismatch or an unreachable board is a warning (sentinel
+  ids of another board are not knowable from its row); refs never feed
+  readiness; schema prose in both PROCESS and both _template copies.
+  Gate S PASS: 316 pytest green (5 ref tests), ruff clean, vale clean.

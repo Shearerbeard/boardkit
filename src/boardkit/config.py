@@ -24,6 +24,7 @@ is a loud error, never a silent fall-through to the legacy walk-up.
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import tomllib
 from collections.abc import Mapping
@@ -496,6 +497,54 @@ def board_row_errors(config: Config, cwd: Path) -> list[str]:
                     f"differ (row: '{row.entry.scope}'; charter: '{config.charter.owns}')"
                 )
     return found
+
+
+def card_ref_findings(
+    cards: list[dict], cwd: Path
+) -> tuple[list[str], list[str]]:
+    """(errors, warnings) for the cards' qualified cross-board refs (R3).
+
+    The short-code must be a registry row and the id must fit that row's
+    prefix scheme when one is known. A board this machine cannot reach is
+    a warning, not an error: the ref is informational and the registry row
+    proves the code is real. With no registry reachable, refs stay prose.
+    """
+    with_refs = [(card, card.get("refs")) for card in cards if card.get("refs")]
+    if not with_refs:
+        return [], []
+    boardkit_dir = find_boardkit(cwd) or git_common_boardkit(cwd)
+    if boardkit_dir is None:
+        return [], []
+    rows, _errors = registry_rows(boardkit_dir)
+    by_code = {row.code: row for row in rows}
+    errors: list[str] = []
+    warnings: list[str] = []
+    for card, refs in with_refs:
+        for ref in refs:
+            code, _sep, ref_id = ref.partition("/")
+            row = by_code.get(code)
+            if row is None:
+                errors.append(
+                    f"{card['_file']}: ref '{ref}' names unknown board '{code}' "
+                    f"(known: {', '.join(sorted(by_code))})"
+                )
+                continue
+            prefix = row.effective_prefix
+            if prefix is not None and not re.fullmatch(
+                re.escape(prefix) + r"\d+", ref_id
+            ):
+                # Sentinel ids of another board are not knowable from the
+                # row, so a non-prefix id is a warning, never an error.
+                warnings.append(
+                    f"{card['_file']}: ref '{ref}' does not match board '{code}' "
+                    f"prefix scheme '{prefix}<n>' (a sentinel id is fine; check the spelling)"
+                )
+            if row.resolved_root is None:
+                warnings.append(
+                    f"{card['_file']}: ref '{ref}' points at a board this machine "
+                    f"does not resolve (informational ref; add local.toml to inspect it)"
+                )
+    return errors, warnings
 
 
 def charter_route_errors(config: Config, cwd: Path) -> list[str]:

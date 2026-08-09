@@ -49,6 +49,12 @@ SIDE_QUEST_KEY = "side-quest"
 # the board-declared vocabulary in boardkit.toml. A board with no declared
 # lanes accepts no lane keys.
 LANE_KEY = "lane"
+# Optional list frontmatter key (R3): qualified cross-board references,
+# `<code>/<id>` (as in `tb/S91`). Informational only - the scheduler never
+# blocks on another board's state - so shape is validated here and
+# registry resolution happens in `boardkit check`, not at render time.
+REFS_KEY = "refs"
+REF_RE = re.compile(r"^([a-z0-9][a-z0-9-]*)/(\S+)$")
 
 BOARD_HEADER = "---\n\nkanban-plugin: board\n\n---\n"
 COLUMN_TITLES = {
@@ -161,6 +167,16 @@ def parse_card(path: Path, id_re: re.Pattern[str], errors: list[str]) -> dict | 
         )
     if LANE_KEY in meta and (not isinstance(meta[LANE_KEY], str) or not meta[LANE_KEY]):
         errors.append(f"{path.name}: '{LANE_KEY}' must be a non-empty string")
+    if REFS_KEY in meta:
+        refs = meta[REFS_KEY]
+        if not isinstance(refs, list) or not all(isinstance(r, str) for r in refs):
+            errors.append(f"{path.name}: '{REFS_KEY}' must be a list of strings")
+        else:
+            for ref in refs:
+                if not REF_RE.match(ref):
+                    errors.append(
+                        f"{path.name}: ref '{ref}' is not a qualified <code>/<id> reference"
+                    )
     meta["_file"] = path.name
     meta["_body"] = text[end + 5 :]
     return meta

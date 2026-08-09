@@ -1,10 +1,11 @@
 ---
 id: S20
 title: R10 board charters with the bk dogfood charter
-status: in-progress
+status: in-review
 depends: [S18]
 serialize-with: []
 lineage: primary
+commit-range: bb2d0f8..62e5ea1
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
@@ -95,3 +96,6 @@ direct
   `boardkit dispatch-brief S19` carries the Board charter section; both
   PROCESS copies agree.
 - 2026-08-09 Work commit is shared with S19 (both trailers).
+- 2026-08-09 In-review; commit-range bb2d0f8..62e5ea1.
+- 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
+  Session B boundary; packets present at the Gate B user gate).

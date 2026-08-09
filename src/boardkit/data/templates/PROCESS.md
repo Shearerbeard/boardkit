@@ -57,6 +57,11 @@ their entries below):
   than one family of work legibly: the generated views group by lane, and
   a lane may carry its own WIP cap or a board-wide WIP exemption in config
   rather than in process prose.
+- `refs`: optional; qualified cross-board references, `<code>/<id>` (as in
+  `tb/S91`), resolved against the family registry. Informational only:
+  the scheduler never blocks on another board's state, so a ref never
+  affects readiness. Bare ids stay valid inside a single board; a
+  cross-board mention without a short-code qualifier is not resolvable.
 
 Filename rule: `<id-lowercase>-<slug>.md`, with a unique lowercase slug per
 card.
