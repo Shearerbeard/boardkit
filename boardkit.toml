@@ -7,6 +7,8 @@ cards_dir = "docs/board/cards"
 id_prefix = "S"
 # Non-numbered card ids that stand outside the prefix scheme.
 sentinel_ids = ["MILESTONE"]
+# Branch this board's host repo should sit on (doctor host.base-branch).
+base_branch = "master"
 
 [review]
 # Path (relative to this file) to the git repo review packets diff against.

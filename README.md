@@ -1,6 +1,8 @@
 # boardkit
 
-**Status: pre-release scaffold. Nothing here is usable yet.**
+**Status: unpublished; runs from a local checkout.** In daily use by its
+own board and the consumer repos that point `BOARDKIT_HOME` at this
+checkout; not on any package index.
 
 boardkit is a process kit for AI-assisted software development. It packages
 three practices that were proven on a live project and extracts them into a
@@ -23,6 +25,22 @@ form any repository can adopt:
 
 You can run the board from Claude Code or OpenCode. Codex support is a named
 deferral, not an omission (see `EXTRACTION.md`).
+
+## Quick start
+
+boardkit is not published to a package index; it runs from this checkout
+via [uv](https://docs.astral.sh/uv/):
+
+```sh
+export BOARDKIT_HOME=/path/to/boardkit   # its own line, before uv run
+uv run --project "${BOARDKIT_HOME:-../boardkit}" boardkit check
+```
+
+`boardkit init` scaffolds a new board in the current repo; `check`
+validates an existing one; `boardkit doctor` diagnoses the installation.
+The `export` must be its own line: a same-line prefix expands the
+`../boardkit` default before the assignment lands and silently targets
+the wrong checkout.
 
 ## Diagnostics and routing
 
@@ -57,6 +75,13 @@ location (`dir:` today; the keyword `external` defers to a gitignored
 checkout) - and optional in-repo board homes under `.boardkit/boards/<code>/`,
 committed or gitignored per repo. Board-level config stays in
 `boardkit.toml` at each board's root.
+
+`boardkit dag --to <id|epic>` answers goal-directed questions over one
+board. Its output has four parts - the goal's ancestor closure, the
+unblocked frontier, a wave partition over the remaining work, and which
+gates sit on which edges - and `--render` emits the plan as Mermaid. A
+standing `graph.md` view (status-colored, epic and lane clusters)
+regenerates with the other views.
 
 The manifest is also the family registry: rows may carry `engine`,
 `id_prefix`, `scope`, and `status`, so pre-boardkit, hand-maintained, and

@@ -2,10 +2,10 @@
 
 Ported from terminalbench-aura's scripts/cards_index.py. Validates card
 frontmatter (schema, unique ids, dependency DAG acyclicity) and body
-links (relative markdown links must resolve), then renders INDEX.md and
-the Obsidian-kanban board.md. The card id scheme (prefix + sentinels)
-and cards directory come from the loaded Config rather than being
-hardcoded.
+links (relative markdown links must resolve), then renders INDEX.md,
+the Obsidian-kanban board.md, and the Mermaid graph.md. The card id
+scheme (prefix + sentinels) and cards directory come from the loaded
+Config rather than being hardcoded.
 
 Deviation from the source script: an empty cards directory is valid
 here (a freshly `boardkit init`-ed board has zero cards); the source

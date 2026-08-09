@@ -40,3 +40,29 @@ apparent. Ground it in a real session; do not assert from memory.
   a fix inside an entry.
 
 ## Entries
+
+## 2026-08-09 review-artifact-audit-trail
+
+```yaml
+date: 2026-08-09
+harness: claude-code
+agent: claude-fable-5
+workstreams: [boardkit, wiki-system]
+repo: aura-session-docs (Gate A of the board-consolidation plan)
+source: aura-session-docs reports/gate-a-adjudication-list-2026-08-09.md (D4 section) and DECISIONS.md "Gate A rulings - board consolidation (2026-08-09)"
+```
+
+At Gate A, Mike ruled the wiki-side D4 question keep-ephemeral: review
+packets stay gitignored and machine-local, the card log stays the durable
+record. He attached a standing direction for the kit: the eventual version
+of boardkit must carry a full audit trail of review artifacts as a
+first-class feature, with the machine-local arrangement accepted only as
+an interim state. Evidence of the gap: 159 review files (Gate A ledgers, review
+packets with full diffs, secvet reviews, design-panel rounds) exist only on
+one machine's disk across three untracked copies, while an archived board's
+README claims them as part of the record; a wiki clone does not have them.
+Two candidate shapes when the maintainer takes this up: a durable
+artifact store under the store seam - a blob concern beside CardStore,
+per the 2026-08-09 rulings - or a tracked-archive convention that covers
+frozen boards only.
+Proposes; the maintainer disposes.

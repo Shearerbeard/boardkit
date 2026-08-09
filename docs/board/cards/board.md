@@ -33,11 +33,11 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> U(code-review) @ S. Executor: smart.
 
 ## In Progress
-- [ ] **S16** [Render each card's current gate position in the generated views](s16-gate-position-in-views.md)
-	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: smart.
 
 ## In Review
 - [ ] **S13** [R5' .boardkit resolution with the CardStore seam](s13-board-discovery.md)
+	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: smart.
+- [ ] **S16** [Render each card's current gate position in the generated views](s16-gate-position-in-views.md)
 	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: smart.
 - [ ] **S18** [R4 boards registry - the manifest is the registry](s18-boards-registry.md)
 	Depends: S13. Gates: S -> A -> U(code-review) @ A. Executor: smart.

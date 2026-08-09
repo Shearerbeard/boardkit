@@ -28,7 +28,7 @@ Admission test: where does the diff land.
 | [S13](s13-board-discovery.md) | R5' .boardkit resolution with the CardStore seam | in-review | - | smart | S -> A -> U(code-review) @ A |
 | [S14](s14-review-cycle-convergence.md) | Bound the adversarial review cycle with a convergence rule | ready | - | smart | S -> A @ S |
 | [S15](s15-review-packet-guide.md) | Restore the human review guide to generated packets | ready | - | smart | S -> A @ S |
-| [S16](s16-gate-position-in-views.md) | Render each card's current gate position in the generated views | in-progress | - | smart | S -> A -> U(code-review) @ A |
+| [S16](s16-gate-position-in-views.md) | Render each card's current gate position in the generated views | in-review | - | smart | S -> A -> U(code-review) @ A |
 | [S17](s17-satellite-repo-convention.md) | Satellite-repo convention - no canonical-looking TODO beside a board | ready | - | smart | S -> A @ S |
 | [S18](s18-boards-registry.md) | R4 boards registry - the manifest is the registry | in-review | S13 | smart | S -> A -> U(code-review) @ A |
 | [S19](s19-lanes-first-class.md) | R1 lanes as first-class card data | in-review | - | smart | S -> A -> U(code-review) @ A |

@@ -35,7 +35,7 @@ file first.
    there or, worse, succeeds against the wrong checkout.
 
    It validates the card registry and confirms the
-   generated views (`INDEX.md`, `board.md`) are current. A clean run means
+   generated views (`INDEX.md`, `board.md`, `graph.md`) are current. A clean run means
    the board state you are about to read is trustworthy; a failing run
    means fix the drift before acting on anything the views say.
 6. Read the registry's `INDEX.md`, then the eligible `ready` card you are

@@ -27,7 +27,7 @@ flowchart TD
   S13["S13 R5' .boardkit resolution with the…"]:::inreview
   S14["S14 Bound the adversarial review cycl…"]:::ready
   S15["S15 Restore the human review guide to…"]:::ready
-  S16["S16 Render each card's current gate p…"]:::inprogress
+  S16["S16 Render each card's current gate p…"]:::inreview
   S17["S17 Satellite-repo convention - no ca…"]:::ready
   S18["S18 R4 boards registry - the manifest…"]:::inreview
   S19["S19 R1 lanes as first-class card data"]:::inreview

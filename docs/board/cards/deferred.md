@@ -8,6 +8,7 @@ properly; the next user gate surfaces it rather than absorbing it.
 | Card | Gate | Waiting on |
 |---|---|---|
 | [S13](s13-board-discovery.md) | Gate A | adversarial reviews batch at the Session B boundary so the reviewer sees the whole wave; packets present at the Gate B user gate |
+| [S16](s16-gate-position-in-views.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
 | [S18](s18-boards-registry.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
 | [S19](s19-lanes-first-class.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
 | [S20](s20-board-charters.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |

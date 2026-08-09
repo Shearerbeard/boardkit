@@ -1,10 +1,11 @@
 ---
 id: S16
 title: Render each card's current gate position in the generated views
-status: in-progress
+status: in-review
 depends: []
 serialize-with: []
 lineage: primary
+commit-range: a95fcab..5211b1b
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
@@ -65,7 +66,7 @@ direct
 - 2026-08-09 Built: `gate_cell` renders `<ladder> @ <position>` for
   ready/in-progress/in-review cards in INDEX and board.md, position =
   first letter `remaining_gates` reports (a letter with no checklist
-  box counts open; letter granularity holds a multi-U card at U until
+  box counts open; matching by letter holds a multi-U card at U until
   every U box ticks); backlog/done render the bare ladder; the canary
   key's In Review / In Progress sections use the same computation, so
   key and views cannot disagree. Golden fixtures refreshed by the
@@ -74,3 +75,6 @@ direct
   in-review-with-A-ticked shape is covered by the constructed fixture
   in test_board.py (renders `@ U`), not the golden board, which has no
   such card - the epoch E9 miss shape is the test's exact scenario.
+- 2026-08-09 In-review; commit-range a95fcab..5211b1b.
+- 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
+  Session B boundary; packets present at the Gate B user gate).
