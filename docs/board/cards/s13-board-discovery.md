@@ -1,57 +1,88 @@
 ---
 id: S13
-title: Board discovery beyond cwd - sibling boards and pointers
-status: ready
+title: R5' .boardkit resolution with the CardStore seam
+status: in-progress
 depends: []
 serialize-with: []
 lineage: primary
 executor: smart
-gates: "S -> A"
-user-gates: []
+gates: "S -> A -> U(code-review)"
+user-gates: [code-review]
 ---
 
-# S13: Board discovery beyond cwd - sibling boards and pointers
+# S13: R5' .boardkit resolution with the CardStore seam
 
 Mechanics: [PROCESS.md](../PROCESS.md). Required reading before pulling:
-[REVIEW-TOOLING.md](../REVIEW-TOOLING.md). Drain record:
-[2026-08-05-feedback-drain-4.md](../../plans/2026-08-05-feedback-drain-4.md),
-final entry.
+[REVIEW-TOOLING.md](../REVIEW-TOOLING.md). Drain records:
+[2026-08-05-feedback-drain-4.md](../../plans/2026-08-05-feedback-drain-4.md)
+(final entry, the original discovery scope) and
+[2026-08-09-feedback-drain-7.md](../../plans/2026-08-09-feedback-drain-7.md)
+(the R5' rewrite; the ruling is RULE-2 of the aura plan of record, the
+store-seam constraint is RULE-3).
 
 ## Scope
 
-`src/boardkit/config.py` (config discovery), `src/boardkit/cli.py`,
-`src/boardkit/doctor.py`, `plugins/board/skills/board-hygiene/SKILL.md`
-and `plugins/board/skills/delegating-work/SKILL.md` (the precondition
-prose), tests.
+`src/boardkit/config.py` (resolution), a new `src/boardkit/store.py`
+(CardStore seam), `src/boardkit/board.py` and `src/boardkit/cli.py`
+(store construction and the `--board` flag), `src/boardkit/doctor.py`
+(resolution reporting), `plugins/board/skills/board-hygiene/SKILL.md` and
+`plugins/board/skills/delegating-work/SKILL.md` (the precondition prose),
+tests. This repo's own `.boardkit/` lands on S18 with the registry rows,
+not here.
 
 ## Deliverable
 
-A missing root `boardkit.toml` stops meaning "no board exists". The
-CLI resolves a board from, in order: an explicit user-supplied path, a
-`BOARDKIT_BOARD` env var, a local untracked pointer file, then cwd. In
-a split layout the tooling reminds that the code repo needs an
-untracked pointer back to the board. Both board skills replace the
-"hard stop, offer `boardkit init`" precondition with "honor a
-user-named board and check for a sibling board before offering init".
-Init in a hand-made board repo is also covered: a repo with cards but
-no entry files gets a repair path rather than silence.
+A harness-neutral `.boardkit/` directory convention, superseding both the
+R5 `.claude/board` sketch and this card's earlier pointer-file design:
+
+- `manifest.toml`, committed: boards this repo participates in, keyed by
+  short-code, each with a `location`; a `default` key.
+- `boards/<code>/`, in-repo board homes; per-board commit-or-gitignore is
+  the repo's choice (ruled).
+- `local.toml`, gitignored: machine overlay resolving `external` boards
+  to absolute paths (a wiki checkout, a directory outside git).
+
+Resolution order, first hit wins: `--board <code-or-path>` flag,
+`BOARDKIT_BOARD`, walk-up `.boardkit/` (manifest plus overlay), git
+common-dir fallback (in a linked worktree, resolve
+`git rev-parse --git-common-dir` to the main checkout and read its
+`.boardkit/`), then the legacy `boardkit.toml` walk-up so unported
+consumers keep working. A resolved location must hold `boardkit.toml` at
+the board root; board-level config stays there.
+
+Store-seam constraints (RULE-3) bind the shape: `location` values are
+scheme-prefixed store refs (`dir:` today; a bare string means `dir:`;
+`linear:` reserved; an unknown scheme is a loud error). The CLI core
+talks to a CardStore interface (list/get plus board metadata, with
+put/transition/append_log defined on the seam); the markdown-dir layout
+is driver #1, not the data model; card identity is the `id` frontmatter,
+never the filename. One source of truth per board, views stay
+non-authoritative renders, gates/WIP/routing stay kit-side. append_log
+ships on the seam with driver-level tests only; no CLI command calls it
+yet, and the card log says so.
 
 ## Acceptance
 
-- `uv run pytest -q` green; tests cover the resolution order and the
-  pointer-file path.
-- With `BOARDKIT_BOARD` set to a sibling board, `boardkit check` runs
-  from the code repo without a root `boardkit.toml`.
-- Both skill texts drop the init-first precondition in favor of the
-  discovery order, and their contract stamps stay consistent.
+- `uv run pytest -q` green; tests cover every step of the resolution
+  order, the overlay, the common-dir fallback from a linked-worktree
+  fixture, the legacy fallback, and the unknown-scheme error.
+- With a `.boardkit/manifest.toml` naming an external board resolved via
+  `local.toml`, `boardkit check` runs from a repo with no root
+  `boardkit.toml`.
+- From a linked worktree with no per-worktree setup, resolution lands on
+  the main checkout's `.boardkit/`.
+- Both board skills drop the init-first precondition in favor of the
+  resolution order, and their contract stamps stay consistent.
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
-- [ ] Gate A: adversarial review, focus: can the new resolution order
-  silently target the wrong board (env var pointing at a stale
-  checkout, pointer file drifting after a board move)?
+- [ ] Gate A: adversarial review, focus: can the resolution order
+  silently target the wrong board (stale `BOARDKIT_BOARD`, overlay
+  pointing at a moved checkout, common-dir fallback in a submodule or
+  bare-repo layout)?
+- [ ] Gate U (code-review): present the review packet; stop.
 
 ## Branch
 
@@ -61,3 +92,16 @@ direct
 
 - 2026-08-05 Minted by the fourth feedback drain from the Epoch
   split-layout discovery findings.
+- 2026-08-09 Rewritten by the seventh drain to the R5' ruling (RULE-2)
+  with the RULE-3 store seam folded in; the pointer-file design is
+  superseded. U(code-review) gate inserted per PROCESS (card predates
+  the standing gate).
+- 2026-08-09 Pulled in-progress; executor is the maintainer session
+  (Session B of the aura plan of record).
+- 2026-08-09 Built: resolution order in `config.py` (manifest, overlay,
+  common-dir fallback, legacy), `store.py` CardStore seam (list/get/
+  transition/append_log; `put` deferred - no caller and no
+  format-preserving serialization), `--board` flag wired through the
+  CLI and doctor, both board skills re-worded. Gate S PASS: 291 pytest
+  green (14 new resolution tests incl. a real linked-worktree fixture,
+  8 new store tests), ruff clean, vale clean on the two skill files.

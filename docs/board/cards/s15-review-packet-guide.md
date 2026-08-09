@@ -22,6 +22,8 @@ second entry.
 `src/boardkit/review_packet.py`, `src/boardkit/cli.py` (any new
 packet flags), tests. Card frontmatter or card body conventions for
 naming a typed-holes design record, if a pointer is needed.
+`src/boardkit/data/templates/PROCESS.md` and `docs/board/PROCESS.md`
+for the retention-contract paragraph.
 
 ## Deliverable
 
@@ -36,6 +38,10 @@ reviewer. A card that names a typed-holes design record gets it linked
 near the top of the packet, and its packet carries a type-relationship
 section: which introduced types wrap, return, or consume which, as a
 table or diagram derived from the design record.
+The packet docs also state the ruled retention contract: packets are
+regenerable working material, gitignored by init; cards and their logs
+are the durable record; a repo that wants retention un-ignores the
+output directory deliberately and owns the consequence.
 Diff and file references in log-like packet content render as relative
 markdown links so editors that follow links (the board owner reviews
 in nvim/LazyVim) jump straight from a log line to the diff it names.
@@ -71,3 +77,7 @@ direct
   feedback: type-relationship section for typed-holes cards, and the
   ranked order restated as an entry point rather than the one path
   ([2026-08-07-feedback-drain-6.md](../../plans/2026-08-07-feedback-drain-6.md)).
+- 2026-08-09 Scope extended by the seventh drain: the packet docs carry
+  the ruled ephemeral-retention contract (the D4 kit-contract half,
+  interview decision 3 in
+  [2026-08-09-feedback-drain-7.md](../../plans/2026-08-09-feedback-drain-7.md)).

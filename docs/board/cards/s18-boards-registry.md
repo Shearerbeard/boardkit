@@ -1,0 +1,78 @@
+---
+id: S18
+title: R4 boards registry - the manifest is the registry
+status: backlog
+depends: [S13]
+serialize-with: []
+lineage: primary
+executor: smart
+gates: "S -> A -> U(code-review)"
+user-gates: [code-review]
+---
+
+# S18: R4 boards registry - the manifest is the registry
+
+Mechanics: [PROCESS.md](../PROCESS.md). Required reading before pulling:
+[REVIEW-TOOLING.md](../REVIEW-TOOLING.md). Drain record:
+[2026-08-09-feedback-drain-7.md](../../plans/2026-08-09-feedback-drain-7.md)
+(first drained entry, plus interview decision 5).
+
+## Scope
+
+`src/boardkit/config.py` (manifest row schema), `src/boardkit/cli.py`
+(the `boards` command), `src/boardkit/doctor.py` (row-vs-board
+verification), this repo's own `.boardkit/manifest.toml` (the bk
+dogfood rows), docs, tests.
+
+## Deliverable
+
+The `.boardkit/manifest.toml` from S13 grows into the family registry.
+Each `[boards.<code>]` row carries `location` (scheme-prefixed),
+`engine`, `id_prefix`, and `scope` (one line; the charter `owns` mirror
+once S20 lands). Optional `status` marks a row `transitioning`,
+`external`, or `archived`. Engine heterogeneity is data: pre-boardkit,
+hand-maintained, and TODO-file surfaces are first-class rows, so the
+registry can describe a family before it is uniform.
+
+`boardkit boards` enumerates from the resolved manifest plus
+`local.toml`: one row per board with short-code, home, engine, prefix,
+scope, and whether the home currently resolves on this machine.
+Uniqueness: short-codes are unique by TOML table semantics; a new row
+claiming an id prefix another row already holds fails validation unless
+the collision is marked known on the row, because the aura family's
+existing S-prefix collisions must remain describable while new ones are
+refused. For `dir:` rows, cached fields are verified against the
+board's own `boardkit.toml`; a mismatch fails `boardkit check`. A
+second hand-maintained family copy is forbidden: prose indexes generate
+from these rows.
+
+## Acceptance
+
+- `uv run pytest -q` green; tests cover row parsing, the known-collision
+  refusal for new prefix claims, `dir:` row verification, and an
+  external row with and without an overlay path.
+- `boardkit boards` run in this repo answers from
+  `.boardkit/manifest.toml` and lists the bk board without reading any
+  hand-written index.
+- A cross-board resolution test exists: from a fixture repo whose
+  manifest names two boards, resolving each short-code lands on the
+  right `boardkit.toml`.
+
+## Gate checklist
+
+- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+  `uv run ruff check`, `vale` on touched markdown.
+- [ ] Gate A: adversarial review, focus: can the registry lie (cached
+  row drifting from the board config, an overlay masking the committed
+  location, collision marks papering over a real new collision)?
+- [ ] Gate U (code-review): present the review packet; stop.
+
+## Branch
+
+direct
+
+## Log
+
+- 2026-08-09 Minted by the seventh feedback drain from the 2026-08-07
+  registry entry, shaped by the manifest-is-registry interview decision
+  and the RULE-3 store-seam constraints.

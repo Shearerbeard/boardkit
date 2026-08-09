@@ -27,10 +27,11 @@ lands.
 ## Deliverable
 
 A stated convention for repos inside a boarded workstream that carry
-their own roadmap files: the repo either gets a real board, or its
-TODO.md is demoted with a header that names the driving goal, points
-at the owning board, and marks its entries as a pull-only-when-blocking
-enhancement backlog. The premise to protect: card frontmatter is the
+their own roadmap files: the repo either gets a real board - after S13
+lands, the cheap form is `.boardkit/boards/<code>` with a manifest row -
+or its TODO.md is demoted with a header that names the driving goal,
+points at the owning board, and marks its entries as a
+pull-only-when-blocking enhancement backlog. The premise to protect: card frontmatter is the
 only surface that may read as canonical work state. The orientation
 canary's question set gains a probe for canonical-roadmap claims found
 outside the board, so the next self-declared "canonical active
@@ -45,7 +46,9 @@ steering a cold session's DAG.
   its contract stamp stays consistent.
 - Applied once: agent-driver-rs TODO.md (the motivating case) is
   demoted per the convention, or the divergence is logged where the
-  owning workstream records it.
+  owning workstream records it. The aura plan of record schedules that
+  demotion at its Session C, so this criterion may be satisfied by
+  pointing at that session's record.
 
 ## Gate checklist
 
@@ -63,3 +66,7 @@ direct
 
 - 2026-08-07 Minted by the sixth feedback drain from the agent-driver
   satellite-repo finding.
+- 2026-08-09 Ruled EXTENDED (not superseded) under R5' by the seventh
+  drain: the real-board option becomes `.boardkit/boards/<code>`, the
+  agent-driver demotion lands at the aura plan's Session C
+  ([2026-08-09-feedback-drain-7.md](../../plans/2026-08-09-feedback-drain-7.md)).

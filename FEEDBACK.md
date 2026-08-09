@@ -7,6 +7,11 @@ entries into `docs/plans/` (or rejects them with a recorded reason) and
 deletes them from this file; the plans are the durable record, this file is
 a queue.
 
+This inbox is the canonical intake (affirmed 2026-08-09, drain 7). A
+maintainer drain MAY also sweep claude-skills `feedback/` for entries that
+name boardkit and were never mirrored here; when it does, the drain record
+names that source explicitly.
+
 ## Entry format
 
 One `##`-level section per entry, newest last, opening with a fenced YAML
