@@ -59,12 +59,18 @@ substitutes for the other.
 Two conditions must hold or the rest of this skill does not apply. Missing
 either one is a hard stop, not a thing to route around.
 
-- **`boardkit.toml` at the repo root.** Without it there is no registry
-  path, no review output directory, and no delegation contract to resolve
-  a dispatch against. Tell the user this repo has no board and offer to
-  scaffold one with `boardkit init`, which writes the config, the card
-  directory, and the board documents, then prints the fill-in work still
-  to do.
+- **A resolvable board.** The CLI resolves one in this order: a
+  `--board` value (short-code or path), `BOARDKIT_BOARD`, a walk-up
+  `.boardkit/` (committed `manifest.toml` plus the gitignored
+  `local.toml` machine overlay for external boards), the git common-dir
+  fallback that lets a linked worktree reach its main checkout's
+  `.boardkit/`, then the legacy `boardkit.toml` walk-up. Honor a board
+  the user names and check those sources before concluding no board
+  exists. Only when none of them answers, tell the user and offer
+  `boardkit init`, which writes the config, the card directory, and the
+  board documents, then prints the fill-in work still to do. A repo
+  with cards but no entry files is a repair (point the manifest or a
+  `--board` flag at it), not a silent init-over.
 - **A compatible `boardkit --version`.** The board documents carry a
   contract stamp, the config declares the same version, and board-bound
   skills declare it in frontmatter metadata. Doctor compares all of them.

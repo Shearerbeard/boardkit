@@ -17,7 +17,13 @@ from boardkit.board import (
     view_drift,
 )
 from boardkit.brief import BriefError, build_brief
-from boardkit.config import CONFIG_FILENAME, Config, load_config
+from boardkit.config import (
+    BOARD_ENV_VAR,
+    CONFIG_FILENAME,
+    Config,
+    load_config,
+    resolve_board,
+)
 from boardkit.contract import (
     BOARD_DOCS,
     CONTRACT_VERSION,
@@ -104,13 +110,22 @@ def _fail(errors: list[str]) -> int:
     return 1
 
 
-def _resolve_config(config_arg: str | None) -> Config:
-    path = Path(config_arg).resolve() if config_arg is not None else None
-    return load_config(path)
+def _resolve_config(args: argparse.Namespace) -> Config:
+    """Load the board this invocation targets.
+
+    `--config` names a boardkit.toml directly and wins outright; otherwise
+    the R5' resolution order runs: `--board`, then BOARDKIT_BOARD, then the
+    `.boardkit/` walk-up with its git common-dir fallback, then the legacy
+    walk-up.
+    """
+    if args.config is not None:
+        return load_config(Path(args.config).resolve())
+    resolution = resolve_board(Path.cwd(), board=args.board)
+    return load_config(resolution.config_path)
 
 
 def cmd_check(args: argparse.Namespace) -> int:
-    config = _resolve_config(args.config)
+    config = _resolve_config(args)
     try:
         result = build_board(config)
     except BoardError as exc:
@@ -126,7 +141,7 @@ def cmd_check(args: argparse.Namespace) -> int:
 
 
 def cmd_render(args: argparse.Namespace) -> int:
-    config = _resolve_config(args.config)
+    config = _resolve_config(args)
     try:
         result = build_board(config)
     except BoardError as exc:
@@ -143,7 +158,7 @@ def cmd_render(args: argparse.Namespace) -> int:
 
 
 def cmd_canary_key(args: argparse.Namespace) -> int:
-    config = _resolve_config(args.config)
+    config = _resolve_config(args)
     try:
         result = build_board(config)
     except BoardError as exc:
@@ -155,13 +170,22 @@ def cmd_canary_key(args: argparse.Namespace) -> int:
 
 
 def cmd_doctor(args: argparse.Namespace) -> int:
-    report = run_doctor(args.config, Path.cwd())
+    # Doctor never raises, so board resolution failures downgrade to the
+    # config-absent finding path rather than a traceback; a malformed
+    # manifest still refuses loudly (ValueError reaches main's handler).
+    config_arg = args.config
+    if config_arg is None:
+        try:
+            config_arg = str(resolve_board(Path.cwd(), board=args.board).config_path)
+        except FileNotFoundError:
+            config_arg = None
+    report = run_doctor(config_arg, Path.cwd())
     print(render_json(report) if args.json else render_text(report), end="")
     return 1 if report.errors else 0
 
 
 def cmd_resolve_route(args: argparse.Namespace) -> int:
-    config = _resolve_config(args.config)
+    config = _resolve_config(args)
     try:
         resolution = resolve_role(config, args.role)
     except ContractError as exc:
@@ -175,7 +199,7 @@ def cmd_resolve_route(args: argparse.Namespace) -> int:
 
 
 def cmd_dispatch_brief(args: argparse.Namespace) -> int:
-    config = _resolve_config(args.config)
+    config = _resolve_config(args)
     try:
         brief = build_brief(config, args.card_id)
     except (BoardError, BriefError) as exc:
@@ -186,7 +210,7 @@ def cmd_dispatch_brief(args: argparse.Namespace) -> int:
 
 
 def cmd_review_packet(args: argparse.Namespace) -> int:
-    config = _resolve_config(args.config)
+    config = _resolve_config(args)
     repo = Path(args.repo).resolve() if args.repo is not None else None
     try:
         outdir = build_review_packet(
@@ -273,7 +297,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--config",
         default=None,
-        help=f"path to {CONFIG_FILENAME} (default: walk up from cwd)",
+        help=f"path to {CONFIG_FILENAME} (wins over all board resolution)",
+    )
+    parser.add_argument(
+        "--board",
+        default=None,
+        help=(
+            "board short-code (resolved via .boardkit/manifest.toml) or a path "
+            f"containing {CONFIG_FILENAME}; beats {BOARD_ENV_VAR} and the walk-up"
+        ),
     )
     parser.add_argument("--version", action="version", version=f"boardkit {__version__}")
     subparsers = parser.add_subparsers(dest="command")
