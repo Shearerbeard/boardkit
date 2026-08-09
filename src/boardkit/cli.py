@@ -45,6 +45,7 @@ from boardkit.contract import (
     render_resolution_text,
     resolve_role,
 )
+from boardkit.dag import DagError, render_dag_mermaid, render_dag_text
 from boardkit.doctor import render_json, render_text, run_doctor
 from boardkit.review_packet import ReviewPacketError, build_review_packet
 
@@ -186,6 +187,25 @@ def cmd_canary_key(args: argparse.Namespace) -> int:
 
     drift = [e.split(":", 1)[0] for e in view_drift(config, result.views)]
     print(render_canary_key(result, drift), end="")
+    return 0
+
+
+def cmd_dag(args: argparse.Namespace) -> int:
+    config = _resolve_config(args)
+    try:
+        result = build_board(config)
+    except BoardError as exc:
+        return _fail(exc.errors)
+    cards = {card["id"]: card for card in result.cards}
+    try:
+        output = (
+            render_dag_mermaid(cards, args.to)
+            if args.render
+            else render_dag_text(cards, args.to)
+        )
+    except DagError as exc:
+        return _fail([str(exc)])
+    print(output, end="")
     return 0
 
 
@@ -411,6 +431,17 @@ def build_parser() -> argparse.ArgumentParser:
         "render", help="validate the board and write its generated views"
     )
     render.set_defaults(handler=cmd_render)
+
+    dag = subparsers.add_parser(
+        "dag", help="goal-directed graph queries: closure, frontier, waves, gates on edges"
+    )
+    dag.set_defaults(handler=cmd_dag)
+    dag.add_argument("--to", required=True, metavar="ID", help="goal card id, for example S20")
+    dag.add_argument(
+        "--render",
+        action="store_true",
+        help="emit the goal-scoped Mermaid wave plan instead of text",
+    )
 
     boards = subparsers.add_parser(
         "boards", help="enumerate the board family from the .boardkit manifest registry"

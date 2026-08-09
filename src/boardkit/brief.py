@@ -22,7 +22,7 @@ import posixpath
 import re
 from pathlib import Path
 
-from boardkit.board import LINK_RE, build_board
+from boardkit.board import LINK_RE, build_board, gate_tokens
 from boardkit.config import CONFIG_FILENAME, Config
 from boardkit.contract import (
     CONTRACT_DOCS,
@@ -57,7 +57,6 @@ GATE_ROLES = {
     "D": ("drift-audit",),
 }
 
-GATE_TOKEN_RE = re.compile(r"^([A-Z])")
 # A bullet ends at the next gate bullet or at any heading: the Gates section
 # body includes its own subsections, and Gate U is the last bullet before one.
 GATE_BULLET_RE = re.compile(
@@ -104,21 +103,6 @@ def bullet_at(text: str, anchor: str, source: Path) -> str:
 
 def _dedent_bullet(bullet: str) -> str:
     return "\n".join(line.rstrip() for line in bullet.strip().splitlines())
-
-
-def gate_tokens(gates: str) -> tuple[str, ...]:
-    """Parse a card's `gates` string into its gate letters.
-
-    Accepts the qualified forms the board already allows - `U(code-review)`,
-    `A (deferred)` - because the letter is what selects a route, and the
-    qualifier is the board owner's note to themselves.
-    """
-    tokens = []
-    for part in str(gates).split("->"):
-        match = GATE_TOKEN_RE.match(part.strip())
-        if match:
-            tokens.append(match.group(1))
-    return tuple(tokens)
 
 
 def gate_bullets(process_text: str, tokens: tuple[str, ...]) -> list[str]:

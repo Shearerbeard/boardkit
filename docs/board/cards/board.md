@@ -41,8 +41,8 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 
 ## In Progress
-- [ ] **S21** [R3 qualified cross-board references](s21-cross-board-refs.md)
-	Depends: S18. Gates: S -> A -> U(code-review). Executor: smart.
+- [ ] **S22** [R9 goal-directed dag queries with Mermaid renders](s22-dag-queries.md)
+	Depends: S13, S19. Gates: S -> A -> U(code-review). Executor: smart.
 
 ## In Review
 - [ ] **S13** [R5' .boardkit resolution with the CardStore seam](s13-board-discovery.md)
@@ -53,14 +53,14 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 - [ ] **S20** [R10 board charters with the bk dogfood charter](s20-board-charters.md)
 	Depends: S18. Gates: S -> A -> U(code-review). Executor: smart.
+- [ ] **S21** [R3 qualified cross-board references](s21-cross-board-refs.md)
+	Depends: S18. Gates: S -> A -> U(code-review). Executor: smart.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)
 	Depends: none. Gates: S -> A. Executor: smart.
 - [ ] **S7** [Thin transport wrapper spike with a canary harness](s7-transport-wrapper-spike.md)
 	Depends: S2. Gates: S -> A -> U. Executor: smart.
-- [ ] **S22** [R9 goal-directed dag queries with Mermaid renders](s22-dag-queries.md)
-	Depends: S13, S19. Gates: S -> A -> U(code-review). Executor: smart.
 - [ ] **S27** [Maintained architecture flowchart of the kit and its skills](s27-architecture-flowchart.md)
 	Depends: none. Gates: S -> A. Executor: any.
 

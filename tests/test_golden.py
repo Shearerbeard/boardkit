@@ -14,6 +14,11 @@ from boardkit.config import load_config
 # test would prove nothing. The fixtures may only be refreshed by re-copying
 # from the source repo's board. test_golden_views_match_card_population below
 # is the renderer-independent tripwire for that mistake.
+#
+# Exception: graph.md is a boardkit-native view (R9, 2026-08-09) with no
+# upstream source to copy from. Its committed fixture was generated once by
+# the renderer that introduced it and is frozen from then on, so it guards
+# regressions rather than proving first-render correctness.
 GOLDEN_CARDS_DIR = Path(__file__).parent / "golden" / "aura-cards"
 
 
@@ -38,7 +43,8 @@ def test_golden_views_match_card_population(golden_board: Path) -> None:
     card_files = [
         p
         for p in GOLDEN_CARDS_DIR.glob("*.md")
-        if p.name not in ("INDEX.md", "board.md") and not p.name.startswith("_")
+        if p.name not in ("INDEX.md", "board.md", "graph.md", "deferred.md")
+        and not p.name.startswith("_")
     ]
     index_rows = [
         line

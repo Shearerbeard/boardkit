@@ -86,7 +86,7 @@ def test_no_deferred_gates_means_no_view(board: Path) -> None:
     result = build_board(load_config(board))
 
     assert DEFERRED_VIEW not in result.views
-    assert set(result.views) == {"INDEX.md", "board.md"}
+    assert set(result.views) == {"INDEX.md", "board.md", "graph.md"}
 
 
 def test_open_deferred_gate_appears_with_reason_and_link(board: Path) -> None:

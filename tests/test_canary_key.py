@@ -132,7 +132,7 @@ Ready queue: S4, S5.
 
 ## Views
 
-Current: INDEX.md, board.md, deferred.md.
+Current: INDEX.md, board.md, deferred.md, graph.md.
 """
 
 

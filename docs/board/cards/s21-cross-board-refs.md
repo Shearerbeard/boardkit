@@ -1,10 +1,11 @@
 ---
 id: S21
 title: R3 qualified cross-board references
-status: in-progress
+status: in-review
 depends: [S18]
 serialize-with: []
 lineage: primary
+commit-range: 62e5ea1..d059160
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
@@ -73,3 +74,6 @@ direct
   ids of another board are not knowable from its row); refs never feed
   readiness; schema prose in both PROCESS and both _template copies.
   Gate S PASS: 316 pytest green (5 ref tests), ruff clean, vale clean.
+- 2026-08-09 In-review; commit-range 62e5ea1..d059160.
+- 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
+  Session B boundary; packets present at the Gate B user gate).
