@@ -1,7 +1,7 @@
 ---
 id: S18
 title: R4 boards registry - the manifest is the registry
-status: backlog
+status: in-progress
 depends: [S13]
 serialize-with: []
 lineage: primary
@@ -60,7 +60,7 @@ from these rows.
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
 - [ ] Gate A: adversarial review, focus: can the registry lie (cached
   row drifting from the board config, an overlay masking the committed
@@ -76,3 +76,22 @@ direct
 - 2026-08-09 Minted by the seventh feedback drain from the 2026-08-07
   registry entry, shaped by the manifest-is-registry interview decision
   and the RULE-3 store-seam constraints.
+- 2026-08-09 Pulled in-progress straight from backlog: S13 is in-review
+  in the same sitting and the dependency is on S13's diff, not its done
+  state (same-hand build order per drain 7). Executor is the maintainer
+  session.
+- 2026-08-09 Built: registry fields on manifest rows (optional per the
+  RULE-2 minimal shape; `dir:` boards self-describe and cached fields
+  verify against them), `registry_rows` validation with the marked-
+  collision rule, `boardkit boards` (+ `--json`), row drift wired into
+  `check` via `board_row_errors`, the bk dogfood manifest, README
+  section. Maintainer adjustment vs the card text: row verification
+  landed in `boards` + `check`, not doctor - check is where drift
+  fails; doctor stays installation-level. Gate S PASS: 302 pytest
+  green (10 registry tests + the named Gate B cross-board resolution
+  test), ruff clean, vale clean on README.
+- 2026-08-09 Acceptance run: `boardkit boards` in this repo answers
+  from `.boardkit/manifest.toml` (bk row, default-marked, reachable);
+  `--json` emits stable fields; cross-board test
+  `test_cross_board_resolution_lands_each_code_on_its_own_config`
+  passes.

@@ -20,12 +20,12 @@ Delegation protocol).
 | [S10](s10-prose-reviewer-bench.md) | Prose-reviewer bench over snapshotted external prose | ready | - | any | S -> A -> M -> U |
 | [S11](s11-vale-tiering.md) | Tier the vale prose gate by artifact class | done | - | any | S -> A |
 | [S12](s12-public-repo-seam.md) | Public-repo seam for contract docs and generated views | ready | - | smart | S -> A |
-| [S13](s13-board-discovery.md) | R5' .boardkit resolution with the CardStore seam | in-progress | - | smart | S -> A -> U(code-review) |
+| [S13](s13-board-discovery.md) | R5' .boardkit resolution with the CardStore seam | in-review | - | smart | S -> A -> U(code-review) |
 | [S14](s14-review-cycle-convergence.md) | Bound the adversarial review cycle with a convergence rule | ready | - | smart | S -> A |
 | [S15](s15-review-packet-guide.md) | Restore the human review guide to generated packets | ready | - | smart | S -> A |
 | [S16](s16-gate-position-in-views.md) | Render each card's current gate position in the generated views | ready | - | smart | S -> A |
 | [S17](s17-satellite-repo-convention.md) | Satellite-repo convention - no canonical-looking TODO beside a board | ready | - | smart | S -> A |
-| [S18](s18-boards-registry.md) | R4 boards registry - the manifest is the registry | backlog | S13 | smart | S -> A -> U(code-review) |
+| [S18](s18-boards-registry.md) | R4 boards registry - the manifest is the registry | in-progress | S13 | smart | S -> A -> U(code-review) |
 | [S19](s19-lanes-first-class.md) | R1 lanes as first-class card data | ready | - | smart | S -> A -> U(code-review) |
 | [S20](s20-board-charters.md) | R10 board charters with the bk dogfood charter | backlog | S18 | smart | S -> A -> U(code-review) |
 | [S21](s21-cross-board-refs.md) | R3 qualified cross-board references | backlog | S18 | smart | S -> A -> U(code-review) |

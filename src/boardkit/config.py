@@ -117,14 +117,32 @@ def parse_store_ref(raw: str, context: str) -> StoreRef:
     return StoreRef(scheme=scheme, value=value)
 
 
-# Registry row fields beyond `location` land with the S18 registry card;
-# the manifest loader is strict so a typo never silently drops a field.
-MANIFEST_BOARD_KEYS = {"location"}
+# The manifest IS the family registry (R4, ruled 2026-08-09): rows may
+# carry registry fields beyond `location`. They are optional because the
+# ruled RULE-2 minimal shape is location + default; `dir:` boards
+# self-describe, so `boardkit boards` fills their prefix from the board's
+# own config, and a cached value is verified against it. Rows that cannot
+# self-describe (external, hand-maintained, TODO-file surfaces) carry the
+# fields in the family-home repo's manifest.
+MANIFEST_BOARD_KEYS = {
+    "location",
+    "engine",
+    "id_prefix",
+    "scope",
+    "status",
+    "prefix_collision_ok",
+}
+ROW_STATUSES = {"active", "transitioning", "archived"}
 
 
 @dataclass(frozen=True)
 class ManifestEntry:
     location: StoreRef
+    engine: str | None = None
+    id_prefix: str | None = None
+    scope: str | None = None
+    status: str = "active"
+    prefix_collision_ok: bool = False
 
 
 @dataclass(frozen=True)
@@ -150,13 +168,28 @@ def load_manifest(boardkit_dir: Path) -> Manifest:
     boards: dict[str, ManifestEntry] = {}
     for code, row in boards_data.items():
         row_data = require_table(f"boards.{code}", row)
+        context = f"{path}: [boards.{code}]"
         unknown_row = row_data.keys() - MANIFEST_BOARD_KEYS
         if unknown_row:
-            raise ValueError(f"{path}: [boards.{code}]: unknown key(s): {sorted(unknown_row)}")
+            raise ValueError(f"{context}: unknown key(s): {sorted(unknown_row)}")
         if "location" not in row_data:
-            raise ValueError(f"{path}: [boards.{code}]: missing required key 'location'")
+            raise ValueError(f"{context}: missing required key 'location'")
+        for key in ("engine", "id_prefix", "scope"):
+            if key in row_data and (not isinstance(row_data[key], str) or not row_data[key]):
+                raise ValueError(f"{context}: '{key}' must be a non-empty string")
+        status = row_data.get("status", "active")
+        if status not in ROW_STATUSES:
+            raise ValueError(f"{context}: status '{status}' not in {sorted(ROW_STATUSES)}")
+        collision_ok = row_data.get("prefix_collision_ok", False)
+        if not isinstance(collision_ok, bool):
+            raise ValueError(f"{context}: 'prefix_collision_ok' must be true or false")
         boards[code] = ManifestEntry(
-            location=parse_store_ref(row_data["location"], f"{path}: [boards.{code}]")
+            location=parse_store_ref(row_data["location"], context),
+            engine=row_data.get("engine"),
+            id_prefix=row_data.get("id_prefix"),
+            scope=row_data.get("scope"),
+            status=status,
+            prefix_collision_ok=collision_ok,
         )
     default = data.get("default")
     if not isinstance(default, str) or not default:
@@ -315,6 +348,108 @@ def resolve_board(
             f"{BOARDKIT_DIRNAME}/{MANIFEST_FILENAME} in any parent or via the git "
             f"common-dir, and no legacy {CONFIG_FILENAME} in any parent"
         ) from None
+
+
+@dataclass(frozen=True)
+class RegistryRow:
+    """One board of the family, as `boardkit boards` reports it."""
+
+    code: str
+    entry: ManifestEntry
+    default: bool
+    resolved_root: Path | None  # None when this machine cannot reach the board
+    effective_prefix: str | None
+
+
+def _board_declared_prefix(root: Path) -> str | None:
+    """The id_prefix a `dir:` board's own config declares, read lightly.
+
+    Light on purpose: enumeration must not fail because one board's
+    delegation contract is mid-migration; the full strict load happens
+    when that board is actually used.
+    """
+    config_path = root / CONFIG_FILENAME
+    if not config_path.is_file():
+        return None
+    try:
+        with config_path.open("rb") as f:
+            data = tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError):
+        return None
+    board = data.get("board")
+    prefix = board.get("id_prefix") if isinstance(board, dict) else None
+    return prefix if isinstance(prefix, str) and prefix else None
+
+
+def registry_rows(boardkit_dir: Path) -> tuple[list[RegistryRow], list[str]]:
+    """Every registry row plus the validation errors over the family.
+
+    Errors cover cached-field drift (a `dir:` row whose id_prefix does not
+    match the board's own config) and unmarked prefix collisions: a prefix
+    shared by two or more rows is refused unless every row in the collision
+    carries `prefix_collision_ok = true`. That is the R4 mint-time rule -
+    the aura family's existing S-collisions stay describable as marked
+    rows, while a new board silently claiming a taken prefix fails.
+    """
+    manifest = load_manifest(boardkit_dir)
+    overlay = load_overlay(boardkit_dir)
+    rows: list[RegistryRow] = []
+    errors: list[str] = []
+    for code, entry in sorted(manifest.boards.items()):
+        if entry.location.scheme == EXTERNAL_KEYWORD:
+            resolved_root = overlay.get(code)
+        else:
+            resolved_root = (manifest.root / entry.location.value).resolve()
+        effective_prefix = entry.id_prefix
+        if entry.location.scheme == "dir" and resolved_root is not None:
+            declared = _board_declared_prefix(resolved_root)
+            if declared is None and entry.id_prefix is None:
+                errors.append(
+                    f"[boards.{code}]: no id_prefix on the row and none readable from "
+                    f"{resolved_root / CONFIG_FILENAME}"
+                )
+            elif entry.id_prefix is not None and declared not in (None, entry.id_prefix):
+                errors.append(
+                    f"[boards.{code}]: cached id_prefix '{entry.id_prefix}' but the board "
+                    f"declares '{declared}' ({resolved_root / CONFIG_FILENAME})"
+                )
+            effective_prefix = entry.id_prefix or declared
+        rows.append(
+            RegistryRow(
+                code=code,
+                entry=entry,
+                default=code == manifest.default,
+                resolved_root=resolved_root,
+                effective_prefix=effective_prefix,
+            )
+        )
+    by_prefix: dict[str, list[RegistryRow]] = {}
+    for row in rows:
+        if row.effective_prefix is not None:
+            by_prefix.setdefault(row.effective_prefix, []).append(row)
+    for prefix, group in sorted(by_prefix.items()):
+        if len(group) > 1 and not all(r.entry.prefix_collision_ok for r in group):
+            unmarked = ", ".join(r.code for r in group if not r.entry.prefix_collision_ok)
+            raise_codes = ", ".join(r.code for r in group)
+            errors.append(
+                f"id prefix '{prefix}' is claimed by {raise_codes}; collisions must be "
+                f"marked `prefix_collision_ok = true` on every row (unmarked: {unmarked})"
+            )
+    return rows, errors
+
+
+def board_row_errors(config: Config, cwd: Path) -> list[str]:
+    """Registry errors that concern the board `config` describes, for `check`.
+
+    Empty when no manifest is reachable from `cwd`: an unported repo has no
+    registry to drift from.
+    """
+    boardkit_dir = find_boardkit(cwd) or git_common_boardkit(cwd)
+    if boardkit_dir is None:
+        return []
+    rows, errors = registry_rows(boardkit_dir)
+    mine = [row.code for row in rows if row.resolved_root == config.root]
+    return [e for e in errors if any(f"[boards.{code}]" in e for code in mine)]
 
 
 def load_config(path: Path | None) -> Config:

@@ -70,6 +70,30 @@ def test_flag_short_code_resolves_via_manifest(tmp_path: Path) -> None:
     assert resolution.code == "aux"
 
 
+def test_cross_board_resolution_lands_each_code_on_its_own_config(tmp_path: Path) -> None:
+    """The Gate B cross-board resolution test (plan of record, Session B).
+
+    One manifest, two boards; resolving each short-code from the same cwd
+    must land on that board's own boardkit.toml, and the default must land
+    on the board the manifest names.
+    """
+    repo = tmp_path / "repo"
+    _board(repo / ".boardkit" / "boards" / "kit")
+    _board(repo / ".boardkit" / "boards" / "docs")
+    _manifest(
+        repo,
+        'default = "kit"\n'
+        '[boards.kit]\nlocation = "dir:.boardkit/boards/kit"\n'
+        '[boards.docs]\nlocation = "dir:.boardkit/boards/docs"\n',
+    )
+    for code in ("kit", "docs"):
+        resolution = resolve_board(repo, board=code, env={})
+        expected = (repo / ".boardkit" / "boards" / code / "boardkit.toml").resolve()
+        assert resolution.config_path == expected
+        assert resolution.code == code
+    assert resolve_board(repo, env={}).code == "kit"
+
+
 def test_bare_name_is_a_code_even_when_a_directory_shares_it(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     _board(repo)

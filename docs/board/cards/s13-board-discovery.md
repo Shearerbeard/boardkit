@@ -1,10 +1,11 @@
 ---
 id: S13
 title: R5' .boardkit resolution with the CardStore seam
-status: in-progress
+status: in-review
 depends: []
 serialize-with: []
 lineage: primary
+commit-range: 8bd2624..deb9c2b
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
@@ -105,3 +106,8 @@ direct
   CLI and doctor, both board skills re-worded. Gate S PASS: 291 pytest
   green (14 new resolution tests incl. a real linked-worktree fixture,
   8 new store tests), ruff clean, vale clean on the two skill files.
+- 2026-08-09 In-review; commit-range 8bd2624..deb9c2b (work commit
+  deb9c2b; the drain commit carried this card's board writes).
+- 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
+  Session B boundary so the reviewer sees the whole wave; packets
+  present at the Gate B user gate).

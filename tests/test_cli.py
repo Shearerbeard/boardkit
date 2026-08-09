@@ -18,6 +18,7 @@ from boardkit.cli import build_parser, main
 
 PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
 SUBCOMMANDS = {
+    "boards",
     "check",
     "render",
     "doctor",

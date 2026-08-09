@@ -1,0 +1,12 @@
+# .boardkit/manifest.toml - the kit family's board registry.
+# R4 (ruled 2026-08-09): the manifest IS the registry; `boardkit boards`
+# answers from these rows and a second hand-maintained family copy is
+# forbidden. Board-level config stays in boardkit.toml at the board root.
+
+default = "bk"
+
+[boards.bk]
+location = "dir:."
+engine = "boardkit-v2"
+id_prefix = "S"
+scope = "the kit family: boardkit itself, rust-holes, and the prose bench"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -19,9 +20,15 @@ from boardkit.board import (
 from boardkit.brief import BriefError, build_brief
 from boardkit.config import (
     BOARD_ENV_VAR,
+    BOARDKIT_DIRNAME,
     CONFIG_FILENAME,
+    MANIFEST_FILENAME,
     Config,
+    board_row_errors,
+    find_boardkit,
+    git_common_boardkit,
     load_config,
+    registry_rows,
     resolve_board,
 )
 from boardkit.contract import (
@@ -132,6 +139,8 @@ def cmd_check(args: argparse.Namespace) -> int:
         return _fail(exc.errors)
 
     errors = view_drift(config, result.views)
+    # A board reachable through a manifest must agree with its registry row.
+    errors += board_row_errors(config, Path.cwd())
     if errors:
         return _fail(errors)
     for warning in phantom_deferrals(result.cards):
@@ -167,6 +176,80 @@ def cmd_canary_key(args: argparse.Namespace) -> int:
     drift = [e.split(":", 1)[0] for e in view_drift(config, result.views)]
     print(render_canary_key(result, drift), end="")
     return 0
+
+
+def cmd_boards(args: argparse.Namespace) -> int:
+    """Enumerate the family from the registry (R4: the manifest IS it)."""
+    boardkit_dir = find_boardkit(Path.cwd()) or git_common_boardkit(Path.cwd())
+    if boardkit_dir is None:
+        return _fail(
+            [
+                f"no {BOARDKIT_DIRNAME}/{MANIFEST_FILENAME} found from {Path.cwd()}; "
+                "the boards registry is the manifest"
+            ]
+        )
+    rows, errors = registry_rows(boardkit_dir)
+
+    if args.json:
+        payload = {
+            "manifest": str(boardkit_dir / MANIFEST_FILENAME),
+            "boards": [
+                {
+                    "code": row.code,
+                    "default": row.default,
+                    "location": (
+                        row.entry.location.scheme
+                        if not row.entry.location.value
+                        else f"{row.entry.location.scheme}:{row.entry.location.value}"
+                    ),
+                    "engine": row.entry.engine,
+                    "id_prefix": row.effective_prefix,
+                    "scope": row.entry.scope,
+                    "status": row.entry.status,
+                    "resolved_root": (
+                        str(row.resolved_root) if row.resolved_root is not None else None
+                    ),
+                    "reachable": bool(
+                        row.resolved_root is not None
+                        and (row.resolved_root / CONFIG_FILENAME).is_file()
+                    ),
+                }
+                for row in rows
+            ],
+            "errors": errors,
+        }
+        print(json.dumps(payload, indent=2))
+        return 1 if errors else 0
+
+    print(f"boards registry: {boardkit_dir / MANIFEST_FILENAME}")
+    header = ("code", "engine", "prefix", "status", "home", "scope")
+    table: list[tuple[str, ...]] = [header]
+    for row in rows:
+        loc = row.entry.location
+        if row.resolved_root is None:
+            home = f"{loc.scheme} (unresolved here; add {BOARDKIT_DIRNAME}/local.toml)"
+        elif not (row.resolved_root / CONFIG_FILENAME).is_file():
+            home = f"{row.resolved_root} (no {CONFIG_FILENAME})"
+        else:
+            home = str(row.resolved_root)
+        table.append(
+            (
+                row.code + (" *" if row.default else ""),
+                row.entry.engine or "-",
+                row.effective_prefix or "-",
+                row.entry.status,
+                home,
+                row.entry.scope or "-",
+            )
+        )
+    widths = [max(len(line[col]) for line in table) for col in range(len(header))]
+    for line in table:
+        print(
+            "  ".join(cell.ljust(width) for cell, width in zip(line, widths, strict=True)).rstrip()
+        )
+    for error in errors:
+        print(f"ERROR: {error}", file=sys.stderr)
+    return 1 if errors else 0
 
 
 def cmd_doctor(args: argparse.Namespace) -> int:
@@ -317,6 +400,14 @@ def build_parser() -> argparse.ArgumentParser:
         "render", help="validate the board and write its generated views"
     )
     render.set_defaults(handler=cmd_render)
+
+    boards = subparsers.add_parser(
+        "boards", help="enumerate the board family from the .boardkit manifest registry"
+    )
+    boards.set_defaults(handler=cmd_boards)
+    boards.add_argument(
+        "--json", action="store_true", help="emit the registry as JSON with stable fields"
+    )
 
     doctor = subparsers.add_parser(
         "doctor", help="diagnose whether this repo's board installation is ready to run"

@@ -44,6 +44,29 @@ the contract version it was written against, and `boardkit.toml` declares the
 same version under `[contract]`. Doctor compares them, so a kit that has
 moved ahead of a repo says so instead of behaving strangely.
 
+## Board resolution and the family registry
+
+The CLI finds its board in this order, first hit wins: a `--board` value
+(short-code or path), `BOARDKIT_BOARD`, a walk-up `.boardkit/` directory, a
+git common-dir fallback (a linked worktree resolves its main checkout's
+`.boardkit/` with zero per-worktree setup), then the legacy `boardkit.toml`
+walk-up. `.boardkit/` holds a committed `manifest.toml` - the boards the
+repo participates in, keyed by short-code, each with a scheme-prefixed
+location (`dir:` today; the keyword `external` defers to a gitignored
+`local.toml` machine overlay for boards outside the repo, such as a wiki
+checkout) - and optional in-repo board homes under `.boardkit/boards/<code>/`,
+committed or gitignored per repo. Board-level config stays in
+`boardkit.toml` at each board's root.
+
+The manifest is also the family registry: rows may carry `engine`,
+`id_prefix`, `scope`, and `status`, so pre-boardkit, hand-maintained, and
+TODO-file surfaces are first-class rows. `boardkit boards` (with `--json`
+for tooling) enumerates the family from it, fills a `dir:` board's prefix
+from that board's own config, verifies cached row fields against it, and
+refuses an id-prefix collision unless every colliding row is marked
+`prefix_collision_ok = true`. Prose indexes generate from these rows; a
+second hand-maintained family copy is forbidden.
+
 `check` and `doctor` answer different questions. `check` is board validity:
 are the cards well-formed and the generated views current? It is what the
 pre-commit hook runs. `doctor` is installation readiness: is this repo wired
