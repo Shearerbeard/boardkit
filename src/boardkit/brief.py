@@ -257,6 +257,20 @@ def build_brief(config: Config, card_id: str) -> str:
         lines.append("The card links to no reference material.")
     lines.append("")
 
+    if config.charter is not None:
+        # The R10 charter rides every brief so an executor knows the
+        # board's admission test before it writes a line.
+        lines.append("## Board charter")
+        lines.append("")
+        lines.append(f"- owns: {config.charter.owns}")
+        lines.append(f"- not here: {config.charter.not_}")
+        lines.extend(
+            f"- route {code} -> {description}"
+            for code, description in sorted(config.charter.route.items())
+        )
+        lines.append("- admission test: where does the diff land.")
+        lines.append("")
+
     lines.append("## Routes")
     lines.append("")
     for role, resolution in _role_resolutions(config, tokens):

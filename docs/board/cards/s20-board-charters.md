@@ -1,7 +1,7 @@
 ---
 id: S20
 title: R10 board charters with the bk dogfood charter
-status: backlog
+status: in-progress
 depends: [S18]
 serialize-with: []
 lineage: primary
@@ -61,7 +61,7 @@ fixes, routes aura-family work to the wiki board.
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
 - [ ] Gate A: adversarial review, focus: can a charter mislead a
   dispatch (route target that resolves but is wrong, owns line drifting
@@ -77,3 +77,21 @@ direct
 - 2026-08-09 Minted by the seventh feedback drain from part (d) of the
   dotdir entry, with part (e) folded in and check-level validation
   accepted at the interview.
+- 2026-08-09 Pulled in-progress straight from backlog: S18 is in-review
+  in the same sitting (same-hand build order per drain 7). Executor is
+  the maintainer session.
+- 2026-08-09 Built: optional `[charter]` block (owns/not/route) parsed
+  strictly; rendered atop INDEX and as a %% comment in board.md so the
+  kanban plugin ignores it; injected into every dispatch brief; owns
+  mirrored byte-for-byte against the registry row scope (check fails on
+  drift); route targets validated against registry short-codes when a
+  manifest is reachable, silent when none is (v1 prose-level rule);
+  check WARNs on a missing charter. bk dogfood charter authored in
+  boardkit.toml with an external aura row added to the manifest so the
+  route resolves. One-board-per-family guidance (folded part e) shipped
+  in both PROCESS copies. Gate S PASS: 311 pytest green (4 charter
+  tests), ruff clean, vale clean incl. the strict template tier.
+- 2026-08-09 Acceptance run: generated views open with the bk charter;
+  `boardkit dispatch-brief S19` carries the Board charter section; both
+  PROCESS copies agree.
+- 2026-08-09 Work commit is shared with S19 (both trailers).

@@ -6,6 +6,11 @@ Ready requires every entry in Depends to be done; the session
 running the board promotes eligible cards (PROCESS.md,
 Delegation protocol).
 
+CHARTER - owns: the kit family: boardkit itself, rust-holes, and the prose bench
+Not here: consumer-repo process fixes and aura-family work
+Route aura -> aura-family cards, epics, and consolidation work
+Admission test: where does the diff land.
+
 | ID | Title | Status | Depends | Executor | Gates |
 |---|---|---|---|---|---|
 | [S1](s1-wave-close-retro.md) | Wave-close retro with snapshots and driver input | ready | - | any | S -> A -> U |
@@ -25,9 +30,9 @@ Delegation protocol).
 | [S15](s15-review-packet-guide.md) | Restore the human review guide to generated packets | ready | - | smart | S -> A |
 | [S16](s16-gate-position-in-views.md) | Render each card's current gate position in the generated views | ready | - | smart | S -> A |
 | [S17](s17-satellite-repo-convention.md) | Satellite-repo convention - no canonical-looking TODO beside a board | ready | - | smart | S -> A |
-| [S18](s18-boards-registry.md) | R4 boards registry - the manifest is the registry | in-progress | S13 | smart | S -> A -> U(code-review) |
-| [S19](s19-lanes-first-class.md) | R1 lanes as first-class card data | ready | - | smart | S -> A -> U(code-review) |
-| [S20](s20-board-charters.md) | R10 board charters with the bk dogfood charter | backlog | S18 | smart | S -> A -> U(code-review) |
+| [S18](s18-boards-registry.md) | R4 boards registry - the manifest is the registry | in-review | S13 | smart | S -> A -> U(code-review) |
+| [S19](s19-lanes-first-class.md) | R1 lanes as first-class card data | in-progress | - | smart | S -> A -> U(code-review) |
+| [S20](s20-board-charters.md) | R10 board charters with the bk dogfood charter | in-progress | S18 | smart | S -> A -> U(code-review) |
 | [S21](s21-cross-board-refs.md) | R3 qualified cross-board references | backlog | S18 | smart | S -> A -> U(code-review) |
 | [S22](s22-dag-queries.md) | R9 goal-directed dag queries with Mermaid renders | backlog | S13, S19 | smart | S -> A -> U(code-review) |
 | [S23](s23-epic-grouping.md) | R2 epic cards and epic membership | ready | - | smart | S -> A -> U(code-review) |

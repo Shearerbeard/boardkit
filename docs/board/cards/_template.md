@@ -77,4 +77,6 @@ side-quest: true | false, absent meaning false. True marks the card as
   PROCESS.md exempts from the WIP limit. Set it only on the user's
   explicit declaration. It exempts the card from the WIP count alone:
   serialize-with still applies.
+lane: optional; a lane name from [[board.lanes]] in boardkit.toml. Only
+  valid on boards that declare lanes (validated).
 File naming: <id-lowercase>-<slug>.md, unique lowercase slugs. -->

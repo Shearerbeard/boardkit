@@ -414,7 +414,7 @@ def test_interim_pass_without_a_deferral_is_not_a_phantom(
     assert cmd_render(_Args(config=str(board))) == 0
 
     assert cmd_check(_Args(config=str(board))) == 0
-    assert "WARN" not in capsys.readouterr().out
+    assert "logged as passed after" not in capsys.readouterr().out
 
 
 def test_pass_before_a_later_deferral_is_not_a_phantom(
@@ -436,7 +436,7 @@ def test_pass_before_a_later_deferral_is_not_a_phantom(
     assert cmd_render(_Args(config=str(board))) == 0
 
     assert cmd_check(_Args(config=str(board))) == 0
-    assert "WARN" not in capsys.readouterr().out
+    assert "logged as passed after" not in capsys.readouterr().out
 
 
 def test_ticked_box_silences_the_phantom_warning(
@@ -458,7 +458,7 @@ def test_ticked_box_silences_the_phantom_warning(
     assert cmd_render(_Args(config=str(board))) == 0
 
     assert cmd_check(_Args(config=str(board))) == 0
-    assert "WARN" not in capsys.readouterr().out
+    assert "logged as passed after" not in capsys.readouterr().out
 
 
 def test_pass_on_a_continuation_line_of_the_deferral_bullet_is_a_phantom(
@@ -500,7 +500,7 @@ def test_pass_phrase_inside_the_deferral_reason_is_not_a_verdict(
     assert cmd_render(_Args(config=str(board))) == 0
 
     assert cmd_check(_Args(config=str(board))) == 0
-    assert "WARN" not in capsys.readouterr().out
+    assert "logged as passed after" not in capsys.readouterr().out
 
 
 def test_transitive_and_compound_pass_wordings_are_not_verdicts(
@@ -523,7 +523,7 @@ def test_transitive_and_compound_pass_wordings_are_not_verdicts(
     assert cmd_render(_Args(config=str(board))) == 0
 
     assert cmd_check(_Args(config=str(board))) == 0
-    assert "WARN" not in capsys.readouterr().out
+    assert "logged as passed after" not in capsys.readouterr().out
 
 
 def test_colon_pass_with_no_space_is_a_verdict(

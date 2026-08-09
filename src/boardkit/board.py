@@ -45,6 +45,10 @@ WIP_LIMIT = 2  # PROCESS.md board mechanics: at most two cards in-progress
 # template says nothing about shared files, so the serialize-with mutex
 # still applies to a side-quest card.
 SIDE_QUEST_KEY = "side-quest"
+# Optional string frontmatter key (R1): the card's lane, validated against
+# the board-declared vocabulary in boardkit.toml. A board with no declared
+# lanes accepts no lane keys.
+LANE_KEY = "lane"
 
 BOARD_HEADER = "---\n\nkanban-plugin: board\n\n---\n"
 COLUMN_TITLES = {
@@ -155,6 +159,8 @@ def parse_card(path: Path, id_re: re.Pattern[str], errors: list[str]) -> dict | 
         errors.append(
             f"{path.name}: '{SIDE_QUEST_KEY}' must be true or false, got {meta[SIDE_QUEST_KEY]!r}"
         )
+    if LANE_KEY in meta and (not isinstance(meta[LANE_KEY], str) or not meta[LANE_KEY]):
+        errors.append(f"{path.name}: '{LANE_KEY}' must be a non-empty string")
     meta["_file"] = path.name
     meta["_body"] = text[end + 5 :]
     return meta
@@ -184,7 +190,8 @@ def check_links(card: dict, cards_dir: Path, generated: set[str], errors: list[s
             errors.append(f"{card['_file']}: broken link '{target}'")
 
 
-def check_dag(cards: dict[str, dict], errors: list[str]) -> None:
+def check_dag(cards: dict[str, dict], errors: list[str], lanes: dict | None = None) -> None:
+    lanes = lanes or {}
     for card in cards.values():
         for ref_key in ("depends", "serialize-with"):
             for ref in card[ref_key]:
@@ -201,17 +208,39 @@ def check_dag(cards: dict[str, dict], errors: list[str]) -> None:
                     errors.append(
                         f"{card['_file']}: ready but dependency {dep} is {cards[dep]['status']}"
                     )
-    # board invariants from PROCESS.md that the views cannot show
+    # board invariants from PROCESS.md that the views cannot show. The
+    # global WIP count skips side-quest cards (user-declared) and cards in
+    # an exempt lane (board-declared); a lane's own `wip` cap counts every
+    # in-progress card in the lane, exemptions included - exemption is from
+    # the global count only, never from the lane's own cap.
+    def _lane_exempt(card: dict) -> bool:
+        lane = lanes.get(card.get(LANE_KEY, ""))
+        return lane is not None and lane.exempt
+
     in_progress = [
         c
         for c in cards.values()
-        if c["status"] == "in-progress" and not c.get(SIDE_QUEST_KEY, False)
+        if c["status"] == "in-progress" and not c.get(SIDE_QUEST_KEY, False) and not _lane_exempt(c)
     ]
     if len(in_progress) > WIP_LIMIT:
         names = ", ".join(sorted(c["id"] for c in in_progress))
         errors.append(
             f"WIP limit exceeded: {len(in_progress)} cards in-progress ({names}), limit {WIP_LIMIT}"
         )
+    for lane in lanes.values():
+        if lane.wip is None:
+            continue
+        in_lane = [
+            c
+            for c in cards.values()
+            if c["status"] == "in-progress" and c.get(LANE_KEY) == lane.name
+        ]
+        if len(in_lane) > lane.wip:
+            names = ", ".join(sorted(c["id"] for c in in_lane))
+            errors.append(
+                f"lane '{lane.name}' WIP exceeded: {len(in_lane)} cards in-progress "
+                f"({names}), lane limit {lane.wip}"
+            )
     for card in cards.values():
         for ref in card["serialize-with"]:
             if (
@@ -417,7 +446,24 @@ def sort_key(card: dict, config: Config) -> tuple[int, int]:
     return (0, int(cid[len(config.board.id_prefix) :]))
 
 
-def render_index(cards: list[dict]) -> str:
+def _charter_lines(config: Config) -> list[str]:
+    """The R10 charter block rendered at the top of a generated view."""
+    charter = config.charter
+    if charter is None:
+        return []
+    lines = [
+        f"CHARTER - owns: {charter.owns}",
+        f"Not here: {charter.not_}",
+    ]
+    lines.extend(
+        f"Route {code} -> {description}" for code, description in sorted(charter.route.items())
+    )
+    lines.append("Admission test: where does the diff land.")
+    lines.append("")
+    return lines
+
+
+def render_index(cards: list[dict], config: Config) -> str:
     lines = [
         "# Card index",
         "",
@@ -427,28 +473,45 @@ def render_index(cards: list[dict]) -> str:
         "running the board promotes eligible cards (PROCESS.md,",
         "Delegation protocol).",
         "",
-        "| ID | Title | Status | Depends | Executor | Gates |",
-        "|---|---|---|---|---|---|",
+        *_charter_lines(config),
     ]
+    show_lane = bool(config.board.lanes)
+    if show_lane:
+        lines += [
+            "| ID | Title | Lane | Status | Depends | Executor | Gates |",
+            "|---|---|---|---|---|---|---|",
+        ]
+    else:
+        lines += [
+            "| ID | Title | Status | Depends | Executor | Gates |",
+            "|---|---|---|---|---|---|",
+        ]
     for c in cards:
         deps = ", ".join(c["depends"]) or "-"
+        lane_cell = f" {c.get(LANE_KEY) or '-'} |" if show_lane else ""
         lines.append(
-            f"| [{c['id']}]({c['_file']}) | {c['title']} | {c['status']} "
+            f"| [{c['id']}]({c['_file']}) | {c['title']} |{lane_cell} {c['status']} "
             f"| {deps} | {c['executor']} | {c['gates']} |"
         )
     lines.append("")
     return "\n".join(lines)
 
 
-def render_board(cards: list[dict]) -> str:
+def render_board(cards: list[dict], config: Config) -> str:
     parts = [BOARD_HEADER]
+    charter = _charter_lines(config)
+    if charter:
+        # kanban plugins ignore %% comments, so the charter rides one.
+        parts.append("\n%% " + " / ".join(line for line in charter if line) + " %%\n")
     for status in STATUSES:
         parts.append(f"\n## {COLUMN_TITLES[status]}\n")
         for c in (c for c in cards if c["status"] == status):
             deps = ", ".join(c["depends"]) or "none"
+            lane = c.get(LANE_KEY)
+            lane_note = f" Lane: {lane}." if lane else ""
             parts.append(
                 f"- [ ] **{c['id']}** [{c['title']}]({c['_file']})\n"
-                f"\tDepends: {deps}. Gates: {c['gates']}. Executor: {c['executor']}.\n"
+                f"\tDepends: {deps}. Gates: {c['gates']}. Executor: {c['executor']}.{lane_note}\n"
             )
     parts.append(
         "\n%% Generated by boardkit render. Card frontmatter is the"
@@ -585,15 +648,19 @@ def build_board(config: Config) -> BoardResult:
     generated = GENERATED if deferred else GENERATED - {DEFERRED_VIEW}
     for card in parsed:
         check_links(card, cards_dir, generated, errors)
+        lane = card.get(LANE_KEY)
+        if lane is not None and isinstance(lane, str) and lane not in config.board.lanes:
+            declared = ", ".join(sorted(config.board.lanes)) or "none declared"
+            errors.append(f"{card['_file']}: lane '{lane}' not in board lanes ({declared})")
     if errors:
         raise BoardError(errors)
 
-    check_dag(cards, errors)
+    check_dag(cards, errors, config.board.lanes)
     if errors:
         raise BoardError(errors)
 
     ordered = sorted(cards.values(), key=lambda c: sort_key(c, config))
-    views = {"INDEX.md": render_index(ordered), "board.md": render_board(ordered)}
+    views = {"INDEX.md": render_index(ordered, config), "board.md": render_board(ordered, config)}
     if deferred:
         views[DEFERRED_VIEW] = render_deferred(deferred_gates(ordered))
     return BoardResult(cards=ordered, views=views)

@@ -10,3 +10,12 @@ location = "dir:."
 engine = "boardkit-v2"
 id_prefix = "S"
 scope = "the kit family: boardkit itself, rust-holes, and the prose bench"
+
+# The aura family board, hosted in the wiki checkout (RULE-2: recorded as
+# external; a machine that works it adds the path to .boardkit/local.toml).
+# Row exists so bk's charter can route aura-family work by short-code.
+[boards.aura]
+location = "external"
+engine = "boardkit-v2"
+id_prefix = "P"
+scope = "the aura family: orchestration, agent-driver integration, hitl, governance"

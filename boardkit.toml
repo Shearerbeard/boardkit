@@ -14,6 +14,16 @@ repo = "."
 # Directory (relative to this file) review packets are written to.
 output_dir = "docs/board/reviews"
 
+# The R10 board charter (dogfood, authored at S20). `owns` is mirrored
+# byte-for-byte into this board's registry row in .boardkit/manifest.toml;
+# `boardkit check` fails when they drift.
+[charter]
+owns = "the kit family: boardkit itself, rust-holes, and the prose bench"
+not = "consumer-repo process fixes and aura-family work"
+
+[charter.route]
+aura = "aura-family cards, epics, and consolidation work"
+
 # The delegation contract: which transport serves each role. Scaffolded with
 # placeholders — fill them in, then run `boardkit doctor`.
 [contract]

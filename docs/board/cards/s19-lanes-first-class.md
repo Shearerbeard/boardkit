@@ -1,7 +1,7 @@
 ---
 id: S19
 title: R1 lanes as first-class card data
-status: ready
+status: in-progress
 depends: []
 serialize-with: []
 lineage: primary
@@ -52,7 +52,7 @@ without opening it.
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
 - [ ] Gate A: adversarial review, focus: does per-lane WIP interact
   wrongly with `side-quest` exemptions or the global limit (double
@@ -67,3 +67,16 @@ direct
 
 - 2026-08-09 Minted by the seventh feedback drain from standing
   requirement R1, per the Session B build order.
+- 2026-08-09 Pulled in-progress; executor is the maintainer session.
+- 2026-08-09 Built: `[[board.lanes]]` vocabulary (name, optional wip,
+  optional exempt) parsed strictly; `lane:` key validated against it;
+  per-lane WIP cap counts every in-progress card in the lane while
+  `exempt` lanes drop out of the global count only; INDEX gains an
+  opt-in Lane column and board.md a per-card lane note; schema prose in
+  both PROCESS copies and both _template copies. Gate S PASS: 311
+  pytest green (5 lane tests in test_lanes_charter.py), ruff clean,
+  vale clean on both PROCESS copies. This board declares no lanes yet -
+  a fixture board exercises the feature; bk stays single-lane until it
+  carries a second family of work.
+- 2026-08-09 Work commit is shared with S20 (both trailers): the two
+  cards land in one diff over config.py and PROCESS.md.

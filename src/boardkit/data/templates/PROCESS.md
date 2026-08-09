@@ -51,6 +51,12 @@ their entries below):
   a card as part of a flow the user has declared a detached side quest, so
   it does not count against the WIP limit. See the WIP-limit bullet under
   "Board mechanics" for when this may be set.
+- `lane`: optional; the lane this card belongs to, from the board-declared
+  vocabulary (`[[board.lanes]]` in `boardkit.toml`). A board that declares
+  no lanes accepts no `lane` keys. Lanes are how one board carries more
+  than one family of work legibly: the generated views group by lane, and
+  a lane may carry its own WIP cap or a board-wide WIP exemption in config
+  rather than in process prose.
 
 Filename rule: `<id-lowercase>-<slug>.md`, with a unique lowercase slug per
 card.
@@ -80,9 +86,30 @@ Statuses and their lifecycle:
 - `done`: every gate on the card has passed, and the log records who
   verified the acceptance criteria and how.
 
+## Board charter
+
+A board may declare a `[charter]` block in `boardkit.toml`: `owns` (the
+one-liner mirrored into the board's registry row), `not` (what this board
+refuses), and `[charter.route]` mapping registry short-codes to the work
+that belongs there. The admission test is one question: where does the
+diff land. The charter renders at the top of the generated views and rides
+every dispatch brief; enforcement is prose-level, and `boardkit check`
+validates only that route targets resolve to registry short-codes and that
+the registry mirror matches.
+
+One board per family is the bright line: initiatives group inside a board
+with epics and lanes. Only a different source-of-truth repo or a different
+lifecycle owner justifies a new board, because cross-board references are
+informational by design - split coupled initiatives across two boards and
+their edges silently drop out of the schedulable DAG.
+
 ## Board mechanics
 
-- WIP limit: at most two cards `in-progress` at once. This forces the board
+- WIP limit: at most two cards `in-progress` at once. A lane declared
+  `exempt = true` in `boardkit.toml` keeps its cards out of this count
+  (the config home for a spike-lane exemption); a lane with its own
+  `wip = <n>` caps that lane's in-progress cards separately, and the
+  lane cap counts every card in the lane, exemptions included. This forces the board
   owner to finish or hand off before starting more work than one session
   can track. One exemption: a flow the user explicitly declares a detached
   side quest does not count against the limit. Such a flow must not

@@ -1,10 +1,11 @@
 ---
 id: S18
 title: R4 boards registry - the manifest is the registry
-status: in-progress
+status: in-review
 depends: [S13]
 serialize-with: []
 lineage: primary
+commit-range: deb9c2b..bb2d0f8
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
@@ -95,3 +96,6 @@ direct
   `--json` emits stable fields; cross-board test
   `test_cross_board_resolution_lands_each_code_on_its_own_config`
   passes.
+- 2026-08-09 In-review; commit-range deb9c2b..bb2d0f8.
+- 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
+  Session B boundary; packets present at the Gate B user gate).

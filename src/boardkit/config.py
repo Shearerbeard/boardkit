@@ -45,9 +45,13 @@ MANIFEST_FILENAME = "manifest.toml"
 LOCAL_FILENAME = "local.toml"
 BOARD_ENV_VAR = "BOARDKIT_BOARD"
 
-TOP_LEVEL_SECTIONS = {"board", "review", "contract", "routes", "roles"}
+TOP_LEVEL_SECTIONS = {"board", "review", "contract", "routes", "roles", "charter"}
 BOARD_KEYS = {"cards_dir", "id_prefix", "sentinel_ids"}
+# Optional [board] keys: lanes is the R1 vocabulary, opt-in per board.
+BOARD_OPTIONAL_KEYS = {"lanes"}
 REVIEW_KEYS = {"repo", "output_dir"}
+CHARTER_KEYS = {"owns", "not", "route"}
+LANE_KEYS = {"name", "wip", "exempt"}
 
 # `external` boards resolve through local.toml; everything else is a
 # scheme-prefixed store ref. A relative directory literally named
@@ -58,10 +62,27 @@ RESERVED_SCHEMES = {"linear"}
 
 
 @dataclass(frozen=True)
+class LaneConfig:
+    """One lane of the board-declared vocabulary (R1).
+
+    `wip` is the lane's own in-progress cap, None for uncapped. `exempt`
+    excludes the lane's cards from the board-wide WIP count - the config
+    home for what used to be a stale PROCESS.md paragraph about a spike
+    lane. Exemption is from the global count only; the lane's own `wip`
+    and `serialize-with` still apply.
+    """
+
+    name: str
+    wip: int | None = None
+    exempt: bool = False
+
+
+@dataclass(frozen=True)
 class BoardConfig:
     cards_dir: Path
     id_prefix: str
     sentinel_ids: list[str]
+    lanes: dict[str, LaneConfig]
 
 
 @dataclass(frozen=True)
@@ -71,11 +92,26 @@ class ReviewConfig:
 
 
 @dataclass(frozen=True)
+class CharterConfig:
+    """The R10 board charter: what this board owns, refuses, and routes.
+
+    `route` maps registry short-codes to a description of the work that
+    belongs there. The admission test is one question: where does the
+    diff land. Enforcement is prose-level in v1.
+    """
+
+    owns: str
+    not_: str
+    route: dict[str, str]
+
+
+@dataclass(frozen=True)
 class Config:
     root: Path
     board: BoardConfig
     review: ReviewConfig
     contract: ContractConfig
+    charter: CharterConfig | None
 
 
 def find_config(start: Path) -> Path:
@@ -441,15 +477,46 @@ def registry_rows(boardkit_dir: Path) -> tuple[list[RegistryRow], list[str]]:
 def board_row_errors(config: Config, cwd: Path) -> list[str]:
     """Registry errors that concern the board `config` describes, for `check`.
 
-    Empty when no manifest is reachable from `cwd`: an unported repo has no
-    registry to drift from.
+    Covers cached-field drift on this board's row and the R10 mirror rule:
+    a chartered board's registry `scope` is the charter's `owns` one-liner,
+    so the two must match byte for byte. Empty when no manifest is
+    reachable from `cwd`: an unported repo has no registry to drift from.
     """
     boardkit_dir = find_boardkit(cwd) or git_common_boardkit(cwd)
     if boardkit_dir is None:
         return []
     rows, errors = registry_rows(boardkit_dir)
-    mine = [row.code for row in rows if row.resolved_root == config.root]
-    return [e for e in errors if any(f"[boards.{code}]" in e for code in mine)]
+    mine = [row for row in rows if row.resolved_root == config.root]
+    found = [e for e in errors if any(f"[boards.{row.code}]" in e for row in mine)]
+    if config.charter is not None:
+        for row in mine:
+            if row.entry.scope is not None and row.entry.scope != config.charter.owns:
+                found.append(
+                    f"[boards.{row.code}]: scope is the charter `owns` mirror and they "
+                    f"differ (row: '{row.entry.scope}'; charter: '{config.charter.owns}')"
+                )
+    return found
+
+
+def charter_route_errors(config: Config, cwd: Path) -> list[str]:
+    """Charter route targets that do not resolve to a registry short-code.
+
+    Validation needs a registry; with no manifest reachable there is
+    nothing to resolve against, and the charter stays prose. That is the
+    v1 enforcement level the 2026-08-09 interview accepted.
+    """
+    if config.charter is None or not config.charter.route:
+        return []
+    boardkit_dir = find_boardkit(cwd) or git_common_boardkit(cwd)
+    if boardkit_dir is None:
+        return []
+    manifest = load_manifest(boardkit_dir)
+    return [
+        f"[charter.route]: '{code}' is not a registry short-code "
+        f"(known: {', '.join(sorted(manifest.boards))})"
+        for code in sorted(config.charter.route)
+        if code not in manifest.boards
+    ]
 
 
 def load_config(path: Path | None) -> Config:
@@ -472,11 +539,12 @@ def load_config(path: Path | None) -> Config:
             "[roles.<name>] table per required role, then run `boardkit doctor` to "
             "check the result."
         )
-    missing_top = TOP_LEVEL_SECTIONS - data.keys()
+    missing_top = TOP_LEVEL_SECTIONS - {"charter"} - data.keys()
     if missing_top:
         raise ValueError(f"{config_path}: missing required section(s): {sorted(missing_top)}")
 
     board_data = require_table("board", data["board"])
+    lanes_data = board_data.pop("lanes", [])
     require_keys("board", board_data, BOARD_KEYS)
     if not isinstance(board_data["cards_dir"], str) or not board_data["cards_dir"]:
         raise ValueError("[board]: cards_dir must be a non-empty string path")
@@ -486,6 +554,7 @@ def load_config(path: Path | None) -> Config:
         isinstance(s, str) for s in board_data["sentinel_ids"]
     ):
         raise ValueError("[board]: sentinel_ids must be a list of strings")
+    lanes = _parse_lanes(lanes_data)
 
     review_data = require_table("review", data["review"])
     require_keys("review", review_data, REVIEW_KEYS)
@@ -498,10 +567,52 @@ def load_config(path: Path | None) -> Config:
         cards_dir=(root / board_data["cards_dir"]).resolve(),
         id_prefix=board_data["id_prefix"],
         sentinel_ids=list(board_data["sentinel_ids"]),
+        lanes=lanes,
     )
     review = ReviewConfig(
         repo=(root / review_data["repo"]).resolve(),
         output_dir=(root / review_data["output_dir"]).resolve(),
     )
     contract = parse_contract(data["contract"], data["routes"], data["roles"])
-    return Config(root=root, board=board, review=review, contract=contract)
+    charter = _parse_charter(data["charter"]) if "charter" in data else None
+    return Config(root=root, board=board, review=review, contract=contract, charter=charter)
+
+
+def _parse_lanes(lanes_data: object) -> dict[str, LaneConfig]:
+    if not isinstance(lanes_data, list):
+        raise ValueError("[board]: lanes must be an array of tables ([[board.lanes]])")
+    lanes: dict[str, LaneConfig] = {}
+    for index, row in enumerate(lanes_data):
+        context = f"[[board.lanes]] entry {index + 1}"
+        row_data = require_table(context, row)
+        unknown = row_data.keys() - LANE_KEYS
+        if unknown:
+            raise ValueError(f"{context}: unknown key(s): {sorted(unknown)}")
+        name = row_data.get("name")
+        if not isinstance(name, str) or not name:
+            raise ValueError(f"{context}: 'name' must be a non-empty string")
+        if name in lanes:
+            raise ValueError(f"{context}: duplicate lane '{name}'")
+        wip = row_data.get("wip")
+        if wip is not None and (not isinstance(wip, int) or isinstance(wip, bool) or wip < 0):
+            raise ValueError(f"{context}: 'wip' must be a non-negative integer")
+        exempt = row_data.get("exempt", False)
+        if not isinstance(exempt, bool):
+            raise ValueError(f"{context}: 'exempt' must be true or false")
+        lanes[name] = LaneConfig(name=name, wip=wip, exempt=exempt)
+    return lanes
+
+
+def _parse_charter(charter_data: object) -> CharterConfig:
+    data = require_table("charter", charter_data)
+    unknown = data.keys() - CHARTER_KEYS
+    if unknown:
+        raise ValueError(f"[charter]: unknown key(s): {sorted(unknown)}")
+    for key in ("owns", "not"):
+        if not isinstance(data.get(key), str) or not data[key]:
+            raise ValueError(f"[charter]: '{key}' must be a non-empty string")
+    route_data = require_table("charter.route", data.get("route", {}))
+    for code, description in route_data.items():
+        if not isinstance(description, str) or not description:
+            raise ValueError(f"[charter.route]: '{code}' must map to a non-empty string")
+    return CharterConfig(owns=data["owns"], not_=data["not"], route=dict(route_data))

@@ -25,6 +25,7 @@ from boardkit.config import (
     MANIFEST_FILENAME,
     Config,
     board_row_errors,
+    charter_route_errors,
     find_boardkit,
     git_common_boardkit,
     load_config,
@@ -139,10 +140,14 @@ def cmd_check(args: argparse.Namespace) -> int:
         return _fail(exc.errors)
 
     errors = view_drift(config, result.views)
-    # A board reachable through a manifest must agree with its registry row.
+    # A board reachable through a manifest must agree with its registry row,
+    # and a charter's route targets must resolve to registry short-codes.
     errors += board_row_errors(config, Path.cwd())
+    errors += charter_route_errors(config, Path.cwd())
     if errors:
         return _fail(errors)
+    if config.charter is None:
+        print("WARN no [charter] block in boardkit.toml (R10: every board grows one)")
     for warning in phantom_deferrals(result.cards):
         print(f"WARN {warning}")
     print(f"OK: {len(result.cards)} cards valid, views current")
