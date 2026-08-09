@@ -99,10 +99,13 @@ ALL_CHECKS = (
     "board.parses",
     "board.gate-vocabulary",
     "views.current",
+    "host.base-branch",
+    "host.tree-state",
     "env.boardkit-home",
     "skills.installed",
     "worktrees.stray",
     "entry.agents-stamp",
+    "entry.parity",
 )
 
 
@@ -669,6 +672,93 @@ def _check_agents_stamp(checks: _Checks, root: Path, version: int) -> None:
     checks.ok("entry.agents-stamp")
 
 
+def _check_host(checks: _Checks, config: Config) -> None:
+    """R6: hazards on the repo hosting the resolved board. Warnings only.
+
+    The recorded failures: a board living on a feature branch of an
+    adapter repo (home vanishes or duplicates on merge), and a board
+    hosted in a dirty repo with unpushed commits. A session that knows
+    can proceed deliberately, so nothing here errors.
+    """
+    root = config.root
+    branch = _git_text(root, "rev-parse", "--abbrev-ref", "HEAD")
+    if branch is None:
+        reason = "git is unavailable or the board's host is not a git repository"
+        checks.skip("host.base-branch", reason)
+        checks.skip("host.tree-state", reason)
+        return
+
+    declared = config.board.base_branch
+    if declared is None:
+        checks.skip("host.base-branch", "no [board] base_branch declared (skipped, not passed)")
+    elif branch.strip() != declared:
+        checks.warn(
+            "host.base-branch",
+            f"the board's host repo is on branch '{branch.strip()}', not the declared "
+            f"base '{declared}'; a board parked on a side branch vanishes or duplicates "
+            "on merge",
+            f"switch the host checkout to '{declared}', or update [board] base_branch",
+        )
+    else:
+        checks.ok("host.base-branch")
+
+    problems = []
+    status = _git_text(root, "status", "--porcelain")
+    if status and status.strip():
+        problems.append(f"dirty tree ({len(status.strip().splitlines())} path(s))")
+    upstream = _git_text(root, "rev-parse", "--abbrev-ref", "@{u}")
+    if upstream is not None:
+        unpushed = _git_text(root, "rev-list", "--count", "@{u}..HEAD")
+        if unpushed is not None and unpushed.strip() != "0":
+            problems.append(f"{unpushed.strip()} unpushed commit(s)")
+    if problems:
+        checks.warn(
+            "host.tree-state",
+            f"the board's host repo has {' and '.join(problems)}; a cold session may "
+            "read board state that exists nowhere else",
+            "commit and push the host repo, or proceed knowing the board is local-only",
+        )
+        return
+    checks.ok("host.tree-state")
+
+
+def _check_entry_parity(checks: _Checks, root: Path) -> None:
+    """R7: one real agent entry file; the others are shims that point at it."""
+    agents = read_text_or_none(root / "AGENTS.md")
+    shims = {
+        name: read_text_or_none(root / name)
+        for name in ("CLAUDE.md", "GEMINI.md")
+        if (root / name).is_file()
+    }
+    if agents is None and not shims:
+        checks.warn(
+            "entry.parity",
+            "no agent entry files at the repo root; every harness runs blind here",
+            "copy the kit's AGENTS.md template and shims, or write your own",
+        )
+        return
+    if agents is None:
+        checks.warn(
+            "entry.parity",
+            f"{', '.join(sorted(shims))} exist(s) but AGENTS.md does not, so harnesses "
+            "that read AGENTS.md run blind while others follow their own files",
+            "make AGENTS.md the one real entry file and demote the others to shims",
+        )
+        return
+    divergent = [
+        name for name, text in shims.items() if text is not None and "AGENTS.md" not in text
+    ]
+    if divergent:
+        checks.warn(
+            "entry.parity",
+            f"{', '.join(sorted(divergent))} never mention(s) AGENTS.md, so two harnesses "
+            "follow different rules in the same checkout",
+            "demote each to a one-line shim that says to read AGENTS.md first",
+        )
+        return
+    checks.ok("entry.parity")
+
+
 def run_doctor(config_arg: str | None, cwd: Path, home: Path | None = None) -> DoctorReport:
     """Diagnose the whole installation. Reports failures; never raises them.
 
@@ -699,6 +789,7 @@ def run_doctor(config_arg: str | None, cwd: Path, home: Path | None = None) -> D
     _check_roles_filled(checks, config)
     _check_pin_sources(checks, config)
     _check_board(checks, config)
+    _check_host(checks, config)
     home_finding = boardkit_home_finding(os.environ.get(BOARDKIT_HOME_VAR), INSTALL_ROOT, root)
     if home_finding is None:
         checks.ok("env.boardkit-home")
@@ -706,6 +797,7 @@ def run_doctor(config_arg: str | None, cwd: Path, home: Path | None = None) -> D
         checks.add(home_finding)
     _check_worktrees(checks, cwd)
     _check_agents_stamp(checks, root, version)
+    _check_entry_parity(checks, root)
 
     checks.skip_remaining("not reached")
     return checks.report(config_path, version, contract_digest(config))

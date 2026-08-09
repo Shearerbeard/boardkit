@@ -63,10 +63,13 @@ EXPECTED_CHECK_IDS = {
     "board.parses",
     "board.gate-vocabulary",
     "views.current",
+    "host.base-branch",
+    "host.tree-state",
     "env.boardkit-home",
     "skills.installed",
     "worktrees.stray",
     "entry.agents-stamp",
+    "entry.parity",
 }
 
 REVIEW_TOOLING = Path("docs/board/REVIEW-TOOLING.md")

@@ -48,8 +48,10 @@ BOARD_ENV_VAR = "BOARDKIT_BOARD"
 
 TOP_LEVEL_SECTIONS = {"board", "review", "contract", "routes", "roles", "charter"}
 BOARD_KEYS = {"cards_dir", "id_prefix", "sentinel_ids"}
-# Optional [board] keys: lanes is the R1 vocabulary, opt-in per board.
-BOARD_OPTIONAL_KEYS = {"lanes"}
+# Optional [board] keys: lanes is the R1 vocabulary, opt-in per board;
+# base_branch declares the branch the board's host repo should sit on, for
+# the R6 doctor check (absent means the check is skipped, not passed).
+BOARD_OPTIONAL_KEYS = {"lanes", "base_branch"}
 REVIEW_KEYS = {"repo", "output_dir"}
 CHARTER_KEYS = {"owns", "not", "route"}
 LANE_KEYS = {"name", "wip", "exempt"}
@@ -84,6 +86,7 @@ class BoardConfig:
     id_prefix: str
     sentinel_ids: list[str]
     lanes: dict[str, LaneConfig]
+    base_branch: str | None
 
 
 @dataclass(frozen=True)
@@ -594,6 +597,9 @@ def load_config(path: Path | None) -> Config:
 
     board_data = require_table("board", data["board"])
     lanes_data = board_data.pop("lanes", [])
+    base_branch = board_data.pop("base_branch", None)
+    if base_branch is not None and (not isinstance(base_branch, str) or not base_branch):
+        raise ValueError("[board]: base_branch must be a non-empty string")
     require_keys("board", board_data, BOARD_KEYS)
     if not isinstance(board_data["cards_dir"], str) or not board_data["cards_dir"]:
         raise ValueError("[board]: cards_dir must be a non-empty string path")
@@ -617,6 +623,7 @@ def load_config(path: Path | None) -> Config:
         id_prefix=board_data["id_prefix"],
         sentinel_ids=list(board_data["sentinel_ids"]),
         lanes=lanes,
+        base_branch=base_branch,
     )
     review = ReviewConfig(
         repo=(root / review_data["repo"]).resolve(),

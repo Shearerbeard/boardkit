@@ -1,7 +1,7 @@
 ---
 id: S24
 title: R6/R7 doctor checks - host-repo hazards and harness parity
-status: ready
+status: in-progress
 depends: []
 serialize-with: []
 lineage: primary
@@ -48,7 +48,7 @@ warns; a repo with no entry file at all warns.
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
 - [ ] Gate A: adversarial review, focus: false calm (a hazard the
   check silently skips) and false alarm (a legitimate layout the
@@ -63,3 +63,13 @@ direct
 
 - 2026-08-09 Minted by the seventh feedback drain from standing
   requirements R6/R7, riding the Session B wave per the build order.
+- 2026-08-09 Pulled in-progress; executor is the maintainer session.
+- 2026-08-09 Built: doctor checks `host.base-branch` (against the new
+  optional `[board] base_branch`; undeclared skips, never passes),
+  `host.tree-state` (dirty tree + unpushed commits, one warning; no
+  upstream means the unpushed half stays quiet), and `entry.parity`
+  (AGENTS.md canonical, shims must mention it; absent layouts warn).
+  All warnings, never errors. Gate S PASS: 337 pytest green (8 tests
+  on real git fixtures incl. a bare-remote unpushed case), ruff clean.
+  Live probe: doctor on this repo warned dirty+unpushed mid-build,
+  exactly the R6 evidence shape.
