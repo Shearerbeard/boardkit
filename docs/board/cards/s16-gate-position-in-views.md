@@ -1,13 +1,13 @@
 ---
 id: S16
 title: Render each card's current gate position in the generated views
-status: ready
+status: in-progress
 depends: []
 serialize-with: []
 lineage: primary
 executor: smart
-gates: "S -> A"
-user-gates: []
+gates: "S -> A -> U(code-review)"
+user-gates: [code-review]
 ---
 
 # S16: Render each card's current gate position in the generated views
@@ -44,11 +44,12 @@ computation, so the key and the views cannot disagree.
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
 - [ ] Gate A: adversarial review, focus: can the rendered position lie
   (phase-scoped log passes with the box left unticked, sentinel cards,
   gates absent from the checklist)?
+- [ ] Gate U (code-review): present the review packet; stop.
 
 ## Branch
 
@@ -58,3 +59,18 @@ direct
 
 - 2026-08-07 Minted by the sixth feedback drain from the epoch-board
   E9 tracking-canary miss.
+- 2026-08-09 Pulled in-progress as a Session B ride-along (interview
+  decision 8, drain 7); U(code-review) gate inserted per PROCESS (card
+  predates the standing gate). Executor is the maintainer session.
+- 2026-08-09 Built: `gate_cell` renders `<ladder> @ <position>` for
+  ready/in-progress/in-review cards in INDEX and board.md, position =
+  first letter `remaining_gates` reports (a letter with no checklist
+  box counts open; letter granularity holds a multi-U card at U until
+  every U box ticks); backlog/done render the bare ladder; the canary
+  key's In Review / In Progress sections use the same computation, so
+  key and views cannot disagree. Golden fixtures refreshed by the
+  recorded diff-review procedure (S9 `@ U`, S36 `@ S`, four lines).
+  Gate S PASS: 338 pytest green, ruff clean. Acceptance note: the
+  in-review-with-A-ticked shape is covered by the constructed fixture
+  in test_board.py (renders `@ U`), not the golden board, which has no
+  such card - the epoch E9 miss shape is the test's exact scenario.

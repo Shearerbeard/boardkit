@@ -17,7 +17,7 @@ Delegation protocol).
 | [S6](s6-dead-code-sweep.md) | Dead-code sweep | done | S3, S4, S5 | any | S -> A |
 | [S7](s7-stream-assistant-text.md) | Stream assistant text deltas | done | S2 | any | S -> A -> M |
 | [S8](s8-latency-profile.md) | Latency profile investigation | done | - | smart | S -> A |
-| [S9](s9-coordinator-thread-shape.md) | Coordinator thread shape (W17) | in-progress | S2, MILESTONE | smart | U(mockup) -> S -> A -> U(launch) -> M -> U(baseline) |
+| [S9](s9-coordinator-thread-shape.md) | Coordinator thread shape (W17) | in-progress | S2, MILESTONE | smart | U(mockup) -> S -> A -> U(launch) -> M -> U(baseline) @ U |
 | [S10](s10-delegation-contract.md) | Delegation-contract reconciliation (W18) | backlog | S9 | smart | U(mockup) -> S -> A -> U(launch) -> M -> U(baseline) |
 | [S11](s11-worker-contract-blocks.md) | Worker contract blocks | backlog | S9, S10 | smart | scope at promotion -> U(mockup) -> S -> A -> U(launch) -> M -> U(baseline) |
 | [S12](s12-frame-decision.md) | Evidence-frame fix-or-remove decision (W19) | backlog | S9, S10 | smart | S -> A -> U(decision) |
@@ -44,6 +44,6 @@ Delegation protocol).
 | [S33](s33-fanout-nudge-config-candidate.md) | Discover-then-fan-out planning + nudge fold-in decision (ai-experiments PR 17) | backlog | - | any | S -> A -> U(decision) |
 | [S34](s34-config-override-gap.md) | No config-path override in AuraOrchestratedAgent | backlog | - | any | S -> A -> U(run-decision) |
 | [S35](s35-templates-replace-fix.md) | Fix templates chained .replace() re-substitution (Gate F1) | backlog | - | any | S -> A |
-| [S36](s36-architecture-reanchor.md) | Re-anchor ARCHITECTURE.md to the accepted head 7a0f0651 | ready | - | any | S -> A |
+| [S36](s36-architecture-reanchor.md) | Re-anchor ARCHITECTURE.md to the accepted head 7a0f0651 | ready | - | any | S -> A @ S |
 | [S37](s37-operator-scope-pane-fault.md) | Bound operator task scope and terminal pane observation on hard tasks | backlog | - | smart | scope at promotion -> S -> A |
 | [MILESTONE](milestone-track-a-replication.md) | Track A replication gate | done | S6, S17, S16 | smart | U(launch) -> M -> U(acceptance) |

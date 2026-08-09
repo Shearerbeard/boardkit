@@ -254,3 +254,35 @@ def test_unquoted_hash_title_refuses_instead_of_truncating(tmp_path: Path) -> No
     (cards / "s1-a.md").write_text(quoted, encoding="utf-8")
     result = build_board(load_config(tmp_path / "boardkit.toml"))
     assert "Record the #398 follow-up" in result.views["INDEX.md"]
+
+
+def test_gate_position_renders_for_active_cards(tmp_path: Path) -> None:
+    """S16: the views carry each active card's parked gate; backlog and
+    done render the bare ladder; the canary key uses the same computation."""
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
+    cards = tmp_path / "cards"
+    cards.mkdir()
+
+    def card(cid: str, status: str, checklist: str) -> str:
+        return (
+            f"---\nid: {cid}\ntitle: Card {cid}\nstatus: {status}\n"
+            "depends: []\nserialize-with: []\nlineage: none\nexecutor: any\n"
+            'gates: "S -> A -> U"\nuser-gates: [review]\n---\n\n'
+            f"# {cid}: Card {cid}\n\n## Gate checklist\n\n{checklist}\n\n"
+            "## Log\n\n- 2026-08-09 x.\n"
+        )
+
+    half = "- [x] Gate S: checks.\n- [x] Gate A: review.\n- [ ] Gate U: stop."
+    fresh = "- [ ] Gate S: checks.\n- [ ] Gate A: review.\n- [ ] Gate U: stop."
+    (cards / "s1-a.md").write_text(card("S1", "in-review", half), encoding="utf-8")
+    (cards / "s2-b.md").write_text(card("S2", "backlog", fresh), encoding="utf-8")
+    from boardkit.board import render_canary_key, view_drift  # noqa: F401
+
+    result = build_board(load_config(tmp_path / "boardkit.toml"))
+    index = result.views["INDEX.md"]
+    assert "S -> A -> U @ U |" in index  # S and A ticked: parked at U
+    assert "| backlog | - | any | S -> A -> U |" in index  # bare ladder
+    assert "Gates: S -> A -> U @ U." in result.views["board.md"]
+
+    key = render_canary_key(result, drift=[])
+    assert "(at Gate U)" in key.split("## In Review")[1].split("##")[0]

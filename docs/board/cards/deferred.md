@@ -14,3 +14,5 @@ properly; the next user gate surfaces it rather than absorbing it.
 | [S21](s21-cross-board-refs.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
 | [S22](s22-dag-queries.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
 | [S23](s23-epic-grouping.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
+| [S24](s24-doctor-host-hazards.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
+| [S25](s25-title-hash-truncation.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |

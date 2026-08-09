@@ -27,7 +27,7 @@ flowchart TD
   S13["S13 R5' .boardkit resolution with the…"]:::inreview
   S14["S14 Bound the adversarial review cycl…"]:::ready
   S15["S15 Restore the human review guide to…"]:::ready
-  S16["S16 Render each card's current gate p…"]:::ready
+  S16["S16 Render each card's current gate p…"]:::inprogress
   S17["S17 Satellite-repo convention - no ca…"]:::ready
   S18["S18 R4 boards registry - the manifest…"]:::inreview
   S19["S19 R1 lanes as first-class card data"]:::inreview
@@ -35,8 +35,8 @@ flowchart TD
   S21["S21 R3 qualified cross-board referenc…"]:::inreview
   S22["S22 R9 goal-directed dag queries with…"]:::inreview
   S23["S23 R2 epic cards and epic membership"]:::inreview
-  S24["S24 R6/R7 doctor checks - host-repo h…"]:::inprogress
-  S25["S25 R8 fix - card titles truncated at…"]:::inprogress
+  S24["S24 R6/R7 doctor checks - host-repo h…"]:::inreview
+  S25["S25 R8 fix - card titles truncated at…"]:::inreview
   S26["S26 rust-holes HOLES ledger with a ho…"]:::ready
   S27["S27 Maintained architecture flowchart…"]:::backlog
   S1 -.- S6

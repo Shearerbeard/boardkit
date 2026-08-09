@@ -19,6 +19,13 @@ from boardkit.config import load_config
 # upstream source to copy from. Its committed fixture was generated once by
 # the renderer that introduced it and is frozen from then on, so it guards
 # regressions rather than proving first-render correctness.
+#
+# Format-evolution refreshes: when the kit deliberately changes view format,
+# the fixtures are regenerated and the DIFF is hand-reviewed against an
+# independently derived expectation before committing, and the change is
+# recorded here. 2026-08-09 (S16): the two active cards' Gates cells gained
+# an `@ <position>` suffix (S9 `@ U`, S36 `@ S`, both fully unticked
+# ladders) - four lines, nothing else.
 GOLDEN_CARDS_DIR = Path(__file__).parent / "golden" / "aura-cards"
 
 

@@ -114,11 +114,11 @@ sections of `PROCESS.md`.
 
 ## In Review
 
-- [S2](s2-adapter.md) Adapter shim
+- [S2](s2-adapter.md) Adapter shim (at Gate S)
 
 ## In Progress
 
-- [S3](s3-runner.md) Runner
+- [S3](s3-runner.md) Runner (at Gate S)
 
 ## Next pull
 

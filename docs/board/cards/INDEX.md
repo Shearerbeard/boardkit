@@ -13,30 +13,30 @@ Admission test: where does the diff land.
 
 | ID | Title | Status | Depends | Executor | Gates |
 |---|---|---|---|---|---|
-| [S1](s1-wave-close-retro.md) | Wave-close retro with snapshots and driver input | ready | - | any | S -> A -> U |
-| [S2](s2-wiring-trio.md) | Wire pre-vet, deferrals, and packet staging into the CLI | ready | - | smart | S -> A |
-| [S3](s3-skills-defect-sweep.md) | claude-skills defect sweep from the topology audit | ready | - | any | S -> A |
-| [S4](s4-rust-holes-canonical.md) | Declare the typed-holes skill canonical over PLAYBOOK | ready | - | any | S -> A |
+| [S1](s1-wave-close-retro.md) | Wave-close retro with snapshots and driver input | ready | - | any | S -> A -> U @ S |
+| [S2](s2-wiring-trio.md) | Wire pre-vet, deferrals, and packet staging into the CLI | ready | - | smart | S -> A @ S |
+| [S3](s3-skills-defect-sweep.md) | claude-skills defect sweep from the topology audit | ready | - | any | S -> A @ S |
+| [S4](s4-rust-holes-canonical.md) | Declare the typed-holes skill canonical over PLAYBOOK | ready | - | any | S -> A @ S |
 | [S5](s5-gate-t-native-opencode.md) | Run the never-run Gate T on native opencode routing | done | - | any | M -> T |
 | [S6](s6-template-canary.md) | Template baseline digest, template-diff, and golden briefs | backlog | - | smart | S -> A |
 | [S7](s7-transport-wrapper-spike.md) | Thin transport wrapper spike with a canary harness | backlog | S2 | smart | S -> A -> U |
-| [S8](s8-board-root-portability.md) | Board-root portability and checkout-independent references | ready | - | smart | S -> A |
-| [S9](s9-model-class-freshness.md) | Session-model classification and example freshness | ready | - | any | S -> A |
-| [S10](s10-prose-reviewer-bench.md) | Prose-reviewer bench over snapshotted external prose | ready | - | any | S -> A -> M -> U |
+| [S8](s8-board-root-portability.md) | Board-root portability and checkout-independent references | ready | - | smart | S -> A @ S |
+| [S9](s9-model-class-freshness.md) | Session-model classification and example freshness | ready | - | any | S -> A @ S |
+| [S10](s10-prose-reviewer-bench.md) | Prose-reviewer bench over snapshotted external prose | ready | - | any | S -> A -> M -> U @ S |
 | [S11](s11-vale-tiering.md) | Tier the vale prose gate by artifact class | done | - | any | S -> A |
-| [S12](s12-public-repo-seam.md) | Public-repo seam for contract docs and generated views | ready | - | smart | S -> A |
-| [S13](s13-board-discovery.md) | R5' .boardkit resolution with the CardStore seam | in-review | - | smart | S -> A -> U(code-review) |
-| [S14](s14-review-cycle-convergence.md) | Bound the adversarial review cycle with a convergence rule | ready | - | smart | S -> A |
-| [S15](s15-review-packet-guide.md) | Restore the human review guide to generated packets | ready | - | smart | S -> A |
-| [S16](s16-gate-position-in-views.md) | Render each card's current gate position in the generated views | ready | - | smart | S -> A |
-| [S17](s17-satellite-repo-convention.md) | Satellite-repo convention - no canonical-looking TODO beside a board | ready | - | smart | S -> A |
-| [S18](s18-boards-registry.md) | R4 boards registry - the manifest is the registry | in-review | S13 | smart | S -> A -> U(code-review) |
-| [S19](s19-lanes-first-class.md) | R1 lanes as first-class card data | in-review | - | smart | S -> A -> U(code-review) |
-| [S20](s20-board-charters.md) | R10 board charters with the bk dogfood charter | in-review | S18 | smart | S -> A -> U(code-review) |
-| [S21](s21-cross-board-refs.md) | R3 qualified cross-board references | in-review | S18 | smart | S -> A -> U(code-review) |
-| [S22](s22-dag-queries.md) | R9 goal-directed dag queries with Mermaid renders | in-review | S13, S19 | smart | S -> A -> U(code-review) |
-| [S23](s23-epic-grouping.md) | R2 epic cards and epic membership | in-review | - | smart | S -> A -> U(code-review) |
-| [S24](s24-doctor-host-hazards.md) | R6/R7 doctor checks - host-repo hazards and harness parity | in-progress | - | smart | S -> A -> U(code-review) |
-| [S25](s25-title-hash-truncation.md) | R8 fix - card titles truncated at an inline hash | in-progress | - | any | S -> A -> U(code-review) |
-| [S26](s26-rust-holes-ledger.md) | rust-holes HOLES ledger with a hook-grade check | ready | - | smart | S -> A -> U(code-review) |
+| [S12](s12-public-repo-seam.md) | Public-repo seam for contract docs and generated views | ready | - | smart | S -> A @ S |
+| [S13](s13-board-discovery.md) | R5' .boardkit resolution with the CardStore seam | in-review | - | smart | S -> A -> U(code-review) @ A |
+| [S14](s14-review-cycle-convergence.md) | Bound the adversarial review cycle with a convergence rule | ready | - | smart | S -> A @ S |
+| [S15](s15-review-packet-guide.md) | Restore the human review guide to generated packets | ready | - | smart | S -> A @ S |
+| [S16](s16-gate-position-in-views.md) | Render each card's current gate position in the generated views | in-progress | - | smart | S -> A -> U(code-review) @ A |
+| [S17](s17-satellite-repo-convention.md) | Satellite-repo convention - no canonical-looking TODO beside a board | ready | - | smart | S -> A @ S |
+| [S18](s18-boards-registry.md) | R4 boards registry - the manifest is the registry | in-review | S13 | smart | S -> A -> U(code-review) @ A |
+| [S19](s19-lanes-first-class.md) | R1 lanes as first-class card data | in-review | - | smart | S -> A -> U(code-review) @ A |
+| [S20](s20-board-charters.md) | R10 board charters with the bk dogfood charter | in-review | S18 | smart | S -> A -> U(code-review) @ A |
+| [S21](s21-cross-board-refs.md) | R3 qualified cross-board references | in-review | S18 | smart | S -> A -> U(code-review) @ A |
+| [S22](s22-dag-queries.md) | R9 goal-directed dag queries with Mermaid renders | in-review | S13, S19 | smart | S -> A -> U(code-review) @ A |
+| [S23](s23-epic-grouping.md) | R2 epic cards and epic membership | in-review | - | smart | S -> A -> U(code-review) @ A |
+| [S24](s24-doctor-host-hazards.md) | R6/R7 doctor checks - host-repo hazards and harness parity | in-review | - | smart | S -> A -> U(code-review) @ A |
+| [S25](s25-title-hash-truncation.md) | R8 fix - card titles truncated at an inline hash | in-review | - | any | S -> A -> U(code-review) @ A |
+| [S26](s26-rust-holes-ledger.md) | rust-holes HOLES ledger with a hook-grade check | ready | - | smart | S -> A -> U(code-review) @ S |
 | [S27](s27-architecture-flowchart.md) | Maintained architecture flowchart of the kit and its skills | backlog | - | any | S -> A |

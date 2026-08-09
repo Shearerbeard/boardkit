@@ -1,10 +1,11 @@
 ---
 id: S25
 title: R8 fix - card titles truncated at an inline hash
-status: in-progress
+status: in-review
 depends: []
 serialize-with: []
 lineage: primary
+commit-range: 028ce5d..a95fcab
 executor: any
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
@@ -70,3 +71,6 @@ direct
   the truncation - the fix is upstream of all of them. Gate S PASS:
   337 pytest green (regression test with the verbatim W4 shape), ruff
   clean, vale clean.
+- 2026-08-09 In-review; commit-range 028ce5d..a95fcab.
+- 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
+  Session B boundary; packets present at the Gate B user gate).

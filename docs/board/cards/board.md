@@ -8,53 +8,53 @@ kanban-plugin: board
 
 ## Ready
 - [ ] **S1** [Wave-close retro with snapshots and driver input](s1-wave-close-retro.md)
-	Depends: none. Gates: S -> A -> U. Executor: any.
+	Depends: none. Gates: S -> A -> U @ S. Executor: any.
 - [ ] **S2** [Wire pre-vet, deferrals, and packet staging into the CLI](s2-wiring-trio.md)
-	Depends: none. Gates: S -> A. Executor: smart.
+	Depends: none. Gates: S -> A @ S. Executor: smart.
 - [ ] **S3** [claude-skills defect sweep from the topology audit](s3-skills-defect-sweep.md)
-	Depends: none. Gates: S -> A. Executor: any.
+	Depends: none. Gates: S -> A @ S. Executor: any.
 - [ ] **S4** [Declare the typed-holes skill canonical over PLAYBOOK](s4-rust-holes-canonical.md)
-	Depends: none. Gates: S -> A. Executor: any.
+	Depends: none. Gates: S -> A @ S. Executor: any.
 - [ ] **S8** [Board-root portability and checkout-independent references](s8-board-root-portability.md)
-	Depends: none. Gates: S -> A. Executor: smart.
+	Depends: none. Gates: S -> A @ S. Executor: smart.
 - [ ] **S9** [Session-model classification and example freshness](s9-model-class-freshness.md)
-	Depends: none. Gates: S -> A. Executor: any.
+	Depends: none. Gates: S -> A @ S. Executor: any.
 - [ ] **S10** [Prose-reviewer bench over snapshotted external prose](s10-prose-reviewer-bench.md)
-	Depends: none. Gates: S -> A -> M -> U. Executor: any.
+	Depends: none. Gates: S -> A -> M -> U @ S. Executor: any.
 - [ ] **S12** [Public-repo seam for contract docs and generated views](s12-public-repo-seam.md)
-	Depends: none. Gates: S -> A. Executor: smart.
+	Depends: none. Gates: S -> A @ S. Executor: smart.
 - [ ] **S14** [Bound the adversarial review cycle with a convergence rule](s14-review-cycle-convergence.md)
-	Depends: none. Gates: S -> A. Executor: smart.
+	Depends: none. Gates: S -> A @ S. Executor: smart.
 - [ ] **S15** [Restore the human review guide to generated packets](s15-review-packet-guide.md)
-	Depends: none. Gates: S -> A. Executor: smart.
-- [ ] **S16** [Render each card's current gate position in the generated views](s16-gate-position-in-views.md)
-	Depends: none. Gates: S -> A. Executor: smart.
+	Depends: none. Gates: S -> A @ S. Executor: smart.
 - [ ] **S17** [Satellite-repo convention - no canonical-looking TODO beside a board](s17-satellite-repo-convention.md)
-	Depends: none. Gates: S -> A. Executor: smart.
+	Depends: none. Gates: S -> A @ S. Executor: smart.
 - [ ] **S26** [rust-holes HOLES ledger with a hook-grade check](s26-rust-holes-ledger.md)
-	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
+	Depends: none. Gates: S -> A -> U(code-review) @ S. Executor: smart.
 
 ## In Progress
-- [ ] **S24** [R6/R7 doctor checks - host-repo hazards and harness parity](s24-doctor-host-hazards.md)
-	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
-- [ ] **S25** [R8 fix - card titles truncated at an inline hash](s25-title-hash-truncation.md)
-	Depends: none. Gates: S -> A -> U(code-review). Executor: any.
+- [ ] **S16** [Render each card's current gate position in the generated views](s16-gate-position-in-views.md)
+	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: smart.
 
 ## In Review
 - [ ] **S13** [R5' .boardkit resolution with the CardStore seam](s13-board-discovery.md)
-	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
+	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: smart.
 - [ ] **S18** [R4 boards registry - the manifest is the registry](s18-boards-registry.md)
-	Depends: S13. Gates: S -> A -> U(code-review). Executor: smart.
+	Depends: S13. Gates: S -> A -> U(code-review) @ A. Executor: smart.
 - [ ] **S19** [R1 lanes as first-class card data](s19-lanes-first-class.md)
-	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
+	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: smart.
 - [ ] **S20** [R10 board charters with the bk dogfood charter](s20-board-charters.md)
-	Depends: S18. Gates: S -> A -> U(code-review). Executor: smart.
+	Depends: S18. Gates: S -> A -> U(code-review) @ A. Executor: smart.
 - [ ] **S21** [R3 qualified cross-board references](s21-cross-board-refs.md)
-	Depends: S18. Gates: S -> A -> U(code-review). Executor: smart.
+	Depends: S18. Gates: S -> A -> U(code-review) @ A. Executor: smart.
 - [ ] **S22** [R9 goal-directed dag queries with Mermaid renders](s22-dag-queries.md)
-	Depends: S13, S19. Gates: S -> A -> U(code-review). Executor: smart.
+	Depends: S13, S19. Gates: S -> A -> U(code-review) @ A. Executor: smart.
 - [ ] **S23** [R2 epic cards and epic membership](s23-epic-grouping.md)
-	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
+	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: smart.
+- [ ] **S24** [R6/R7 doctor checks - host-repo hazards and harness parity](s24-doctor-host-hazards.md)
+	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: smart.
+- [ ] **S25** [R8 fix - card titles truncated at an inline hash](s25-title-hash-truncation.md)
+	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: any.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)

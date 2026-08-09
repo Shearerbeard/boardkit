@@ -6,11 +6,11 @@ kanban-plugin: board
 
 ## Ready
 - [ ] **S36** [Re-anchor ARCHITECTURE.md to the accepted head 7a0f0651](s36-architecture-reanchor.md)
-	Depends: none. Gates: S -> A. Executor: any.
+	Depends: none. Gates: S -> A @ S. Executor: any.
 
 ## In Progress
 - [ ] **S9** [Coordinator thread shape (W17)](s9-coordinator-thread-shape.md)
-	Depends: S2, MILESTONE. Gates: U(mockup) -> S -> A -> U(launch) -> M -> U(baseline). Executor: smart.
+	Depends: S2, MILESTONE. Gates: U(mockup) -> S -> A -> U(launch) -> M -> U(baseline) @ U. Executor: smart.
 
 ## In Review
 

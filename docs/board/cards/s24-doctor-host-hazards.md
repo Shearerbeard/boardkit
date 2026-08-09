@@ -1,10 +1,11 @@
 ---
 id: S24
 title: R6/R7 doctor checks - host-repo hazards and harness parity
-status: in-progress
+status: in-review
 depends: []
 serialize-with: []
 lineage: primary
+commit-range: 22bd55c..028ce5d
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
@@ -73,3 +74,9 @@ direct
   on real git fixtures incl. a bare-remote unpushed case), ruff clean.
   Live probe: doctor on this repo warned dirty+unpushed mid-build,
   exactly the R6 evidence shape.
+- 2026-08-09 In-review; commit-range 22bd55c..028ce5d. That commit was
+  made --no-verify with views knowingly stale mid-wave; the following
+  commit (a95fcab) rendered them current - logged as the deviation it
+  is.
+- 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
+  Session B boundary; packets present at the Gate B user gate).
