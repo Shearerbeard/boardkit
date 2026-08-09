@@ -82,4 +82,9 @@ lane: optional; a lane name from [[board.lanes]] in boardkit.toml. Only
 refs: optional; qualified cross-board references (<code>/<id>, e.g.
   tb/S91), informational only; never affects readiness (validated
   against the family registry by boardkit check).
+kind: optional; card (default) or epic. An epic card names an
+  initiative and may not itself carry the epic key.
+epic: optional; id of the same-board epic card this card serves
+  (validated: target exists and is kind epic). Grouping, never
+  dependency.
 File naming: <id-lowercase>-<slug>.md, unique lowercase slugs. -->

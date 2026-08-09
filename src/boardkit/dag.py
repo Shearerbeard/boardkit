@@ -42,12 +42,21 @@ class DagError(Exception):
 
 
 def ancestor_closure(cards: dict[str, dict], goal: str) -> set[str]:
-    """The goal plus everything it transitively depends on."""
+    """The goal plus everything it transitively depends on.
+
+    An epic goal (`kind: epic`) closes over its members: the closure is
+    the epic card plus the union of every member's own closure, because
+    membership is grouping, not dependency - finishing the epic means
+    finishing the members.
+    """
     if goal not in cards:
         known = ", ".join(sorted(cards)) or "none"
         raise DagError(f"unknown card id '{goal}'; this board declares: {known}")
+    roots = [goal]
+    if cards[goal].get("kind") == "epic":
+        roots.extend(cid for cid, card in cards.items() if card.get("epic") == goal)
     seen: set[str] = set()
-    stack = [goal]
+    stack = roots
     while stack:
         cid = stack.pop()
         if cid in seen:

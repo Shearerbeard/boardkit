@@ -62,6 +62,13 @@ their entries below):
   the scheduler never blocks on another board's state, so a ref never
   affects readiness. Bare ids stay valid inside a single board; a
   cross-board mention without a short-code qualifier is not resolvable.
+- `kind`: optional; `card` (the default) or `epic`. An epic is itself a
+  card that names an initiative: it holds the goal prose and may carry
+  gates like any card. It may not be a member of another epic.
+- `epic`: optional; the id of the same-board epic card this card serves.
+  Membership is grouping, not dependency: it feeds the per-epic rollup in
+  the views, the epic clusters in the graph, and `boardkit dag --to
+  <epic>`, and it never blocks scheduling on its own.
 
 Filename rule: `<id-lowercase>-<slug>.md`, with a unique lowercase slug per
 card.

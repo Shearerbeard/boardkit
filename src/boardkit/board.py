@@ -56,6 +56,12 @@ LANE_KEY = "lane"
 # registry resolution happens in `boardkit check`, not at render time.
 REFS_KEY = "refs"
 REF_RE = re.compile(r"^([a-z0-9][a-z0-9-]*)/(\S+)$")
+# R2 epic grouping: an epic is itself a card (`kind: epic`); member cards
+# carry `epic: <id>` pointing at it. One level only - an epic card may not
+# be a member of another epic, so cycles are unrepresentable.
+KIND_KEY = "kind"
+KINDS = {"card", "epic"}
+EPIC_KEY = "epic"
 
 BOARD_HEADER = "---\n\nkanban-plugin: board\n\n---\n"
 COLUMN_TITLES = {
@@ -178,6 +184,10 @@ def parse_card(path: Path, id_re: re.Pattern[str], errors: list[str]) -> dict | 
                     errors.append(
                         f"{path.name}: ref '{ref}' is not a qualified <code>/<id> reference"
                     )
+    if KIND_KEY in meta and meta[KIND_KEY] not in KINDS:
+        errors.append(f"{path.name}: '{KIND_KEY}' must be one of {sorted(KINDS)}")
+    if EPIC_KEY in meta and (not isinstance(meta[EPIC_KEY], str) or not meta[EPIC_KEY]):
+        errors.append(f"{path.name}: '{EPIC_KEY}' must be a card id string")
     meta["_file"] = path.name
     meta["_body"] = text[end + 5 :]
     return meta
@@ -225,6 +235,23 @@ def check_dag(cards: dict[str, dict], errors: list[str], lanes: dict | None = No
                     errors.append(
                         f"{card['_file']}: ready but dependency {dep} is {cards[dep]['status']}"
                     )
+    # R2 epic membership: the target must exist, be an epic card, and an
+    # epic may not be a member of anything (one level, cycle-free).
+    for card in cards.values():
+        target_id = card.get(EPIC_KEY)
+        if target_id is None or not isinstance(target_id, str):
+            continue
+        if card.get(KIND_KEY) == "epic":
+            errors.append(f"{card['_file']}: an epic card may not carry '{EPIC_KEY}'")
+            continue
+        target = cards.get(target_id)
+        if target is None:
+            errors.append(f"{card['_file']}: {EPIC_KEY} references unknown card '{target_id}'")
+        elif target.get(KIND_KEY) != "epic":
+            errors.append(
+                f"{card['_file']}: {EPIC_KEY} target '{target_id}' is not an epic card "
+                f"(kind: epic)"
+            )
     # board invariants from PROCESS.md that the views cannot show. The
     # global WIP count skips side-quest cards (user-declared) and cards in
     # an exempt lane (board-declared); a lane's own `wip` cap counts every
@@ -548,6 +575,21 @@ def render_index(cards: list[dict], config: Config) -> str:
             f"| {deps} | {c['executor']} | {c['gates']} |"
         )
     lines.append("")
+    epics = [c for c in cards if c.get(KIND_KEY) == "epic"]
+    if epics:
+        lines += ["## Epics", ""]
+        for epic in epics:
+            members = [c for c in cards if c.get(EPIC_KEY) == epic["id"]]
+            done = sum(1 for m in members if m["status"] == "done")
+            roster = (
+                ", ".join(f"{m['id']} ({m['status']})" for m in members)
+                or "no member cards yet"
+            )
+            lines.append(
+                f"- [{epic['id']}]({epic['_file']}) {epic['title']} - "
+                f"{done}/{len(members)} done - {roster}"
+            )
+        lines.append("")
     return "\n".join(lines)
 
 
@@ -727,9 +769,11 @@ def build_board(config: Config) -> BoardResult:
 def render_graph(cards: list[dict], config: Config) -> str:
     """The standing Mermaid graph view (R9): whole board, status-colored.
 
-    Lane subgraph clusters when the board declares lanes; epic clusters
-    land at the post-R2 pass. Solid arrows are `depends` edges, dotted
-    links are `serialize-with` pairs.
+    Epic subgraph clusters first (an epic card and its members share a
+    cluster), then lane clusters for the rest - a member's epic wins over
+    its lane because Mermaid subgraphs cannot overlap, and the epic is
+    the initiative a wayfinding reader is tracing. Solid arrows are
+    `depends` edges, dotted links are `serialize-with` pairs.
     """
     from boardkit.dag import MERMAID_CLASSES, node_line
 
@@ -745,9 +789,17 @@ def render_graph(cards: list[dict], config: Config) -> str:
         "flowchart TD",
         *(f"  {c}" for c in MERMAID_CLASSES),
     ]
+    clustered: set[str] = set()
+    for epic in (c for c in cards if c.get(KIND_KEY) == "epic"):
+        group = [epic] + [c for c in cards if c.get(EPIC_KEY) == epic["id"]]
+        lines.append(f'  subgraph epic_{epic["id"]}["epic: {epic["id"]}"]')
+        lines.extend(f"    {node_line(c)}" for c in group)
+        lines.append("  end")
+        clustered.update(c["id"] for c in group)
+    rest = [c for c in cards if c["id"] not in clustered]
     if config.board.lanes:
         by_lane: dict[str, list[dict]] = {}
-        for card in cards:
+        for card in rest:
             by_lane.setdefault(card.get(LANE_KEY) or "", []).append(card)
         for lane in sorted(by_lane):
             if lane:
@@ -756,7 +808,7 @@ def render_graph(cards: list[dict], config: Config) -> str:
                 lines.append("  end")
         lines.extend(f"  {node_line(c)}" for c in by_lane.get("", []))
     else:
-        lines.extend(f"  {node_line(c)}" for c in cards)
+        lines.extend(f"  {node_line(c)}" for c in rest)
     ids = {c["id"] for c in cards}
     for card in cards:
         lines.extend(f"  {dep} --> {card['id']}" for dep in card["depends"] if dep in ids)

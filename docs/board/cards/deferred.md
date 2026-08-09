@@ -12,3 +12,4 @@ properly; the next user gate surfaces it rather than absorbing it.
 | [S19](s19-lanes-first-class.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
 | [S20](s20-board-charters.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
 | [S21](s21-cross-board-refs.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
+| [S22](s22-dag-queries.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |

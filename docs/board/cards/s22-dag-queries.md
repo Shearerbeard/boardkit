@@ -1,10 +1,11 @@
 ---
 id: S22
 title: R9 goal-directed dag queries with Mermaid renders
-status: in-progress
+status: in-review
 depends: [S13, S19]
 serialize-with: []
 lineage: primary
+commit-range: d059160..85ab722
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
@@ -94,3 +95,9 @@ direct
 - 2026-08-09 R9 recorded SHIPPED-INCOMPLETE per the plan of record:
   lane clusters only; epic clustering and `--to <epic>` land at the
   post-R2 pass.
+- 2026-08-09 In-review; commit-range d059160..85ab722.
+- 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
+  Session B boundary; packets present at the Gate B user gate).
+- 2026-08-09 Post-R2 epic pass landed in S23's commit (epic clusters
+  in graph.md, `dag --to <epic>` member-union closure). R9 is now
+  COMPLETE; the shipped-incomplete marker above is closed.

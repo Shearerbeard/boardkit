@@ -33,8 +33,8 @@ flowchart TD
   S19["S19 R1 lanes as first-class card data"]:::inreview
   S20["S20 R10 board charters with the bk do…"]:::inreview
   S21["S21 R3 qualified cross-board referenc…"]:::inreview
-  S22["S22 R9 goal-directed dag queries with…"]:::inprogress
-  S23["S23 R2 epic cards and epic membership"]:::ready
+  S22["S22 R9 goal-directed dag queries with…"]:::inreview
+  S23["S23 R2 epic cards and epic membership"]:::inprogress
   S24["S24 R6/R7 doctor checks - host-repo h…"]:::ready
   S25["S25 R8 fix - card titles truncated at…"]:::ready
   S26["S26 rust-holes HOLES ledger with a ho…"]:::ready

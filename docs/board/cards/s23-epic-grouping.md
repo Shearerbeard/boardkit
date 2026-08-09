@@ -1,7 +1,7 @@
 ---
 id: S23
 title: R2 epic cards and epic membership
-status: ready
+status: in-progress
 depends: []
 serialize-with: []
 lineage: primary
@@ -51,7 +51,7 @@ S22.
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
 - [ ] Gate A: adversarial review, focus: epic cycles (an epic member of
   itself or of another epic), status semantics of an epic card with
@@ -66,3 +66,14 @@ direct
 
 - 2026-08-09 Minted by the seventh feedback drain from standing
   requirement R2, epic-card shape chosen at the interview.
+- 2026-08-09 Pulled in-progress; executor is the maintainer session.
+- 2026-08-09 Built: `kind: epic` cards and validated `epic:` membership
+  (target must exist and be an epic; an epic may not be a member, so
+  nesting and cycles are unrepresentable); per-epic rollup section in
+  INDEX with member roster and done count; schema prose in both
+  PROCESS and both _template copies. The same commit carries the
+  post-R2 R9 pass: epic subgraph clusters in graph.md (epic wins over
+  lane for members - Mermaid subgraphs cannot overlap and the epic is
+  what a wayfinding reader traces) and `dag --to <epic>` closing over
+  the members' union. Gate S PASS: 329 pytest green (7 epic tests),
+  ruff clean, vale clean.

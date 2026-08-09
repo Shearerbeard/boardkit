@@ -34,8 +34,8 @@ Admission test: where does the diff land.
 | [S19](s19-lanes-first-class.md) | R1 lanes as first-class card data | in-review | - | smart | S -> A -> U(code-review) |
 | [S20](s20-board-charters.md) | R10 board charters with the bk dogfood charter | in-review | S18 | smart | S -> A -> U(code-review) |
 | [S21](s21-cross-board-refs.md) | R3 qualified cross-board references | in-review | S18 | smart | S -> A -> U(code-review) |
-| [S22](s22-dag-queries.md) | R9 goal-directed dag queries with Mermaid renders | in-progress | S13, S19 | smart | S -> A -> U(code-review) |
-| [S23](s23-epic-grouping.md) | R2 epic cards and epic membership | ready | - | smart | S -> A -> U(code-review) |
+| [S22](s22-dag-queries.md) | R9 goal-directed dag queries with Mermaid renders | in-review | S13, S19 | smart | S -> A -> U(code-review) |
+| [S23](s23-epic-grouping.md) | R2 epic cards and epic membership | in-progress | - | smart | S -> A -> U(code-review) |
 | [S24](s24-doctor-host-hazards.md) | R6/R7 doctor checks - host-repo hazards and harness parity | ready | - | smart | S -> A -> U(code-review) |
 | [S25](s25-title-hash-truncation.md) | R8 fix - card titles truncated at an inline hash | ready | - | any | S -> A -> U(code-review) |
 | [S26](s26-rust-holes-ledger.md) | rust-holes HOLES ledger with a hook-grade check | ready | - | smart | S -> A -> U(code-review) |
