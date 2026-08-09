@@ -232,3 +232,25 @@ def test_in_review_lineage_card_requires_commit_range(tmp_path: Path) -> None:
         build_board(config)
 
     assert any("no commit-range" in e for e in excinfo.value.errors)
+
+
+def test_unquoted_hash_title_refuses_instead_of_truncating(tmp_path: Path) -> None:
+    """R8: YAML comment parsing eats everything after an unquoted ' #'."""
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
+    cards = tmp_path / "cards"
+    cards.mkdir()
+    card = (
+        "---\nid: S1\ntitle: Record the #398 follow-up\nstatus: ready\n"
+        "depends: []\nserialize-with: []\nlineage: none\nexecutor: any\n"
+        'gates: "S -> A"\nuser-gates: []\n---\n\n# S1: Record the\n\n## Log\n\n- x.\n'
+    )
+    (cards / "s1-a.md").write_text(card, encoding="utf-8")
+    with pytest.raises(BoardError, match="quote the whole title"):
+        build_board(load_config(tmp_path / "boardkit.toml"))
+
+    quoted = card.replace(
+        "title: Record the #398 follow-up", 'title: "Record the #398 follow-up"'
+    )
+    (cards / "s1-a.md").write_text(quoted, encoding="utf-8")
+    result = build_board(load_config(tmp_path / "boardkit.toml"))
+    assert "Record the #398 follow-up" in result.views["INDEX.md"]

@@ -54,6 +54,8 @@ their external commit shas in the Log as work lands.
 <!-- Frontmatter contract (all keys required except commit-range and
 side-quest; validated by `boardkit check`):
 id: <prefix><number> or a sentinel id, per boardkit.toml; unique.
+title: quote it when it contains '#' - an unquoted '#' starts a YAML
+  comment and silently truncates the title (validated).
 status: backlog | ready | in-progress | in-review | done.
   "ready" requires every depends entry to be done (validated).
 depends: card ids that must be Done first. Includes lineage-ordering

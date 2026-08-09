@@ -106,6 +106,13 @@ LOG_HEADING = "log"
 BULLET_RE = re.compile(r"^\s*[-*]\s+")
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
 
+# R8: an unquoted `#` after whitespace starts a YAML comment, so
+# `title: Record the #398 follow-up` parses as "Record the" and every
+# consumer of the frontmatter (views, canary key, briefs) sees the
+# truncated title. The fix is loud validation at parse, not renderer
+# patching: compare the parsed title against the raw line and refuse.
+TITLE_LINE_RE = re.compile(r"^title:[ \t]*(.*?)[ \t]*$", re.MULTILINE)
+
 
 class BoardError(Exception):
     """Raised with the full list of validation errors found."""
@@ -186,6 +193,16 @@ def parse_card(path: Path, id_re: re.Pattern[str], errors: list[str]) -> dict | 
                     )
     if KIND_KEY in meta and meta[KIND_KEY] not in KINDS:
         errors.append(f"{path.name}: '{KIND_KEY}' must be one of {sorted(KINDS)}")
+    title_line = TITLE_LINE_RE.search(text[4:end])
+    if title_line is not None:
+        raw_title = title_line.group(1)
+        if raw_title and raw_title[0] not in "'\"" and "#" in raw_title:
+            parsed_title = str(meta.get("title", ""))
+            if parsed_title != raw_title:
+                errors.append(
+                    f"{path.name}: title is cut at '#' by YAML comment parsing "
+                    f"(parsed as '{parsed_title}'); quote the whole title"
+                )
     if EPIC_KEY in meta and (not isinstance(meta[EPIC_KEY], str) or not meta[EPIC_KEY]):
         errors.append(f"{path.name}: '{EPIC_KEY}' must be a card id string")
     meta["_file"] = path.name

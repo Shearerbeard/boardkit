@@ -1,10 +1,11 @@
 ---
 id: S23
 title: R2 epic cards and epic membership
-status: in-progress
+status: in-review
 depends: []
 serialize-with: []
 lineage: primary
+commit-range: 85ab722..22bd55c
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
@@ -77,3 +78,6 @@ direct
   what a wayfinding reader traces) and `dag --to <epic>` closing over
   the members' union. Gate S PASS: 329 pytest green (7 epic tests),
   ruff clean, vale clean.
+- 2026-08-09 In-review; commit-range 85ab722..22bd55c.
+- 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
+  Session B boundary; packets present at the Gate B user gate).

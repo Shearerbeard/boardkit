@@ -34,9 +34,9 @@ flowchart TD
   S20["S20 R10 board charters with the bk do…"]:::inreview
   S21["S21 R3 qualified cross-board referenc…"]:::inreview
   S22["S22 R9 goal-directed dag queries with…"]:::inreview
-  S23["S23 R2 epic cards and epic membership"]:::inprogress
-  S24["S24 R6/R7 doctor checks - host-repo h…"]:::ready
-  S25["S25 R8 fix - card titles truncated at…"]:::ready
+  S23["S23 R2 epic cards and epic membership"]:::inreview
+  S24["S24 R6/R7 doctor checks - host-repo h…"]:::inprogress
+  S25["S25 R8 fix - card titles truncated at…"]:::inprogress
   S26["S26 rust-holes HOLES ledger with a ho…"]:::ready
   S27["S27 Maintained architecture flowchart…"]:::backlog
   S1 -.- S6

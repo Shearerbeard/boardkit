@@ -1,7 +1,7 @@
 ---
 id: S25
 title: R8 fix - card titles truncated at an inline hash
-status: ready
+status: in-progress
 depends: []
 serialize-with: []
 lineage: primary
@@ -44,7 +44,7 @@ containing `#` must be quoted.
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
 - [ ] Gate A: adversarial review, focus: other YAML-eats-content
   shapes the same check should catch or explicitly leave (anchors,
@@ -60,3 +60,13 @@ direct
 - 2026-08-09 Minted by the seventh feedback drain from the 2026-08-07
   registry entry's render-truncation finding (D3/R8), isolated bugfix
   per the build order.
+- 2026-08-09 Pulled in-progress; executor is the maintainer session.
+- 2026-08-09 Built: `parse_card` compares the raw frontmatter title
+  line against the YAML-parsed value and refuses with a
+  quote-the-title message when an unquoted '#' comment ate part of it;
+  quoted titles with '#' pass and render in full. Both _template
+  frontmatter contracts gain the quoting line. Diagnosis confirmed:
+  parse-time YAML comment semantics, so every frontmatter consumer saw
+  the truncation - the fix is upstream of all of them. Gate S PASS:
+  337 pytest green (regression test with the verbatim W4 shape), ruff
+  clean, vale clean.

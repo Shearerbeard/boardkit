@@ -31,16 +31,14 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A. Executor: smart.
 - [ ] **S17** [Satellite-repo convention - no canonical-looking TODO beside a board](s17-satellite-repo-convention.md)
 	Depends: none. Gates: S -> A. Executor: smart.
-- [ ] **S24** [R6/R7 doctor checks - host-repo hazards and harness parity](s24-doctor-host-hazards.md)
-	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
-- [ ] **S25** [R8 fix - card titles truncated at an inline hash](s25-title-hash-truncation.md)
-	Depends: none. Gates: S -> A -> U(code-review). Executor: any.
 - [ ] **S26** [rust-holes HOLES ledger with a hook-grade check](s26-rust-holes-ledger.md)
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 
 ## In Progress
-- [ ] **S23** [R2 epic cards and epic membership](s23-epic-grouping.md)
+- [ ] **S24** [R6/R7 doctor checks - host-repo hazards and harness parity](s24-doctor-host-hazards.md)
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
+- [ ] **S25** [R8 fix - card titles truncated at an inline hash](s25-title-hash-truncation.md)
+	Depends: none. Gates: S -> A -> U(code-review). Executor: any.
 
 ## In Review
 - [ ] **S13** [R5' .boardkit resolution with the CardStore seam](s13-board-discovery.md)
@@ -55,6 +53,8 @@ kanban-plugin: board
 	Depends: S18. Gates: S -> A -> U(code-review). Executor: smart.
 - [ ] **S22** [R9 goal-directed dag queries with Mermaid renders](s22-dag-queries.md)
 	Depends: S13, S19. Gates: S -> A -> U(code-review). Executor: smart.
+- [ ] **S23** [R2 epic cards and epic membership](s23-epic-grouping.md)
+	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)
