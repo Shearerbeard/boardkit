@@ -83,7 +83,7 @@ yet, and the card log says so.
   silently target the wrong board (stale `BOARDKIT_BOARD`, overlay
   pointing at a moved checkout, common-dir fallback in a submodule or
   bare-repo layout)?
-- [ ] Gate U (code-review): present the review packet; stop.
+- [x] Gate U (code-review): present the review packet; stop.
 
 ## Branch
 
@@ -111,3 +111,11 @@ direct
 - 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
   Session B boundary so the reviewer sees the whole wave; packets
   present at the Gate B user gate).
+- 2026-08-11 Gate U(code-review) passed: Mike reviewed the packet
+  (batch 1 with S24), verdict pass with one finding. Finding: config
+  values should come from the config file - the `X | None` manifest/
+  registry fields were judged correct (the file may omit them; R4 needs
+  heterogeneous rows), but board.py's `WIP_LIMIT = 2` code constant is
+  config-in-code and should migrate to a `[board] wip` key defaulting
+  to 2. Routed to the drain-8 inbox. Gate A batch deferral survives
+  this gate (surfaced, not absorbed).

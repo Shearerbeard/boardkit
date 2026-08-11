@@ -54,7 +54,7 @@ warns; a repo with no entry file at all warns.
 - [ ] Gate A: adversarial review, focus: false calm (a hazard the
   check silently skips) and false alarm (a legitimate layout the
   parity check flags).
-- [ ] Gate U (code-review): present the review packet; stop.
+- [x] Gate U (code-review): present the review packet; stop.
 
 ## Branch
 
@@ -80,3 +80,6 @@ direct
   is.
 - 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
   Session B boundary; packets present at the Gate B user gate).
+- 2026-08-11 Gate U(code-review) passed: Mike reviewed the packet
+  (batch 1 with S13), verdict pass, no findings on this card. Gate A
+  batch deferral survives this gate (surfaced, not absorbed).

@@ -113,3 +113,47 @@ range. Candidate kit fix: `boardkit review-packet` could cross-check
 `git log --grep '^Card: <ID>$'` against the range and warn on card
 commits it excludes, or the template could state the A-is-exclusive
 convention outright.
+
+## 2026-08-11 dotname-docking-generalization
+
+```yaml
+date: 2026-08-11
+harness: claude-code
+agent: claude-fable-5
+workstreams: [boardkit, wiki-system, typed-holes]
+repo: aura-orchestration-mode
+source: claude-skills feedback/2026-08-11-claude-code-dotname-docking-generalization/process-feedback.md
+```
+
+Direction from Mike after the board-consolidation close: move the wiki
+and rust-holes to the `.<name>` docking structure `.boardkit/` proved
+out. What generalizes: resolution is computed, not stored; consumer
+posture is per-repo (committed / gitignored / invisible via
+info/exclude); the resolution order (flag, env, walk-up, common-dir
+fallback, legacy) is kit-agnostic. Candidates: a wiki docking dir
+replacing the CLAUDE.local.md symlink + render-script reach (same
+stored-link fragility the board symlinks had), and a rust-holes docking
+dir for the hole ledger. Proposal: extract the resolver into a documented
+docking convention or small shared library the sibling kits vendor - one
+spec, not three divergent walk-ups. A planned notanton bootstrap will
+cold-test the setup recipe against whatever shape this takes. Proposes;
+the maintainer disposes.
+
+## 2026-08-11 wip-limit-config-in-code
+
+```yaml
+date: 2026-08-11
+harness: claude-code
+agent: claude-fable-5
+workstreams: [boardkit]
+repo: boardkit (found at Mike's S13/S24 U(code-review))
+source: docs/board/cards/s13-board-discovery.md 2026-08-11 Gate U log entry
+```
+
+Review finding from Mike at the S13/S24 code review: board.py carries
+`WIP_LIMIT = 2` as a code constant citing PROCESS.md prose - config
+living in code. R1 gave per-lane `wip` a boardkit.toml home; the global
+cap never migrated. Proposal: a `[board] wip` key defaulting to 2, with
+the constant retired. The adjacent `X | None` optionality in config.py
+was reviewed and judged correct (file-may-omit semantics R4 requires).
+Proposes; the maintainer disposes.
