@@ -77,3 +77,26 @@ direct
 - 2026-08-09 In-review; commit-range 62e5ea1..d059160.
 - 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
   Session B boundary; packets present at the Gate B user gate).
+- 2026-08-16 Gate A ran (resolving the deferral): reviewer gpt-5.6-sol
+  via codex exec, author claude-fable-5 (whole wave); codex fallback
+  after the opencode lane stalled its read probe. Verdict FAIL, two
+  findings. The reviewer confirmed no scheduling leak: readiness
+  consumes only depends.
+  1. BLOCKING every non-prefix id downgraded to a warning, against the
+     acceptance's prefix-mismatch errors. Confirmed, with the build
+     log's stated premise (sentinels not knowable from the row) holding
+     only for unresolvable boards. Fixed in 99cfd4a: a resolvable
+     board's own config names its sentinels, so a sentinel passes clean
+     and anything else errors; the warning stays where the board is
+     unreachable or its config unreadable.
+  2. BLOCKING cards carrying refs validated as a silent pass when no
+     registry was reachable. Confirmed against the deliverable
+     (resolution goes through the registry). Fixed in 99cfd4a: that
+     state is now an error naming the carded files.
+  Reviewer-reported UNVERIFIED (sandbox): pytest, ruff, check, doctor -
+  run board-owner-side instead: 348 pytest green and ruff clean;
+  boardkit check OK. Fix
+  commit 99cfd4a (shared with S19/S20, per-card trailers) sits apart
+  from the reviewed range, so commit-range stays 62e5ea1..d059160 and
+  the fix-commit re-review runs over 99cfd4a^..99cfd4a via the packet
+  override; Gate A's box stays unticked until that re-review passes.

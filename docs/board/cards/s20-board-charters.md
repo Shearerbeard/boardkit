@@ -99,3 +99,26 @@ direct
 - 2026-08-09 In-review; commit-range bb2d0f8..62e5ea1.
 - 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
   Session B boundary; packets present at the Gate B user gate).
+- 2026-08-16 Gate A ran (resolving the deferral): reviewer gpt-5.6-sol
+  via codex exec, author claude-fable-5 (whole wave); codex fallback
+  after the opencode lane stalled its read probe. Verdict FAIL, three
+  findings.
+  1. BLOCKING mirror validation skipped a chartered row whose scope was
+     absent, so deleting the mirror passed check. Confirmed. Fixed in
+     99cfd4a: absence is drift; the error names the owns line the row
+     must mirror.
+  2. BLOCKING _parse_charter defaulted a missing route key to empty, so
+     a two-key charter loaded clean against the three-key schema.
+     Confirmed. Fixed in 99cfd4a: a missing route table is refused; an
+     empty [charter.route] stays a legal explicit statement.
+  3. BLOCKING the acceptance names brief-injection test coverage and no
+     test called build_brief for the charter. Confirmed. Fixed in
+     99cfd4a: the brief test asserts owns, not-here, and route lines in
+     the generated brief.
+  Reviewer-reported UNVERIFIED (sandbox): pytest, ruff, check, doctor -
+  run board-owner-side instead: 348 pytest green and ruff clean;
+  boardkit check OK. Fix
+  commit 99cfd4a (shared with S19/S21, per-card trailers) sits apart
+  from the reviewed range, so commit-range stays bb2d0f8..62e5ea1 and
+  the fix-commit re-review runs over 99cfd4a^..99cfd4a via the packet
+  override; Gate A's box stays unticked until that re-review passes.
