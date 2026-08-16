@@ -63,6 +63,8 @@ kanban-plugin: board
 	Depends: S2. Gates: S -> A -> U. Executor: smart.
 - [ ] **S27** [Maintained architecture flowchart of the kit and its skills](s27-architecture-flowchart.md)
 	Depends: none. Gates: S -> A. Executor: any.
+- [ ] **S28** [Wire the CLI core through the CardStore seam](s28-store-seam-wiring.md)
+	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 
 ## Done
 - [ ] **S5** [Run the never-run Gate T on native opencode routing](s5-gate-t-native-opencode.md)

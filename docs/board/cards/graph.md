@@ -39,6 +39,7 @@ flowchart TD
   S25["S25 R8 fix - card titles truncated at…"]:::inreview
   S26["S26 rust-holes HOLES ledger with a ho…"]:::ready
   S27["S27 Maintained architecture flowchart…"]:::backlog
+  S28["S28 Wire the CLI core through the Car…"]:::backlog
   S1 -.- S6
   S1 -.- S9
   S2 --> S7

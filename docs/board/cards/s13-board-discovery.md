@@ -119,3 +119,34 @@ direct
   config-in-code and should migrate to a `[board] wip` key defaulting
   to 2. Routed to the drain-8 inbox. Gate A batch deferral survives
   this gate (surfaced, not absorbed).
+- 2026-08-16 Gate A ran (resolving the deferral): reviewer gpt-5.6-sol
+  via codex exec, author claude-fable-5 (whole wave); dispatched on the
+  codex fallback after the pinned opencode lane stalled its read probe
+  on two models. Verdict FAIL, four findings.
+  1. BLOCKING resolution computed which selector won and discarded it,
+     so a stale BOARDKIT_BOARD or overlay could choose silently.
+     Confirmed. Fixed in 1214b10: doctor carries the source through the
+     report ('resolved via:' / resolution_source), per the card's
+     doctor-scoped resolution-reporting promise.
+  2. BLOCKING local.toml accepted relative paths, which resolve against
+     the process cwd. Confirmed. Fixed in 1214b10: the loader refuses a
+     non-absolute overlay path loudly.
+  3. BLOCKING the .boardkit walk-up is unbounded by the repo, so a
+     submodule without its own .boardkit can select a superproject's
+     board before the common-dir fallback runs. Confirmed as behavior;
+     disposition escalated: the walk-up shape is the R5' ruled order
+     and doctor's config.repo-root already warns on the legacy variant
+     of this crossing. Whether the .boardkit walk-up should stop at a
+     repo boundary is Mike's call - surfaced at the next user gate
+     with the batch-2 packets.
+  4. BLOCKING the CardStore seam is unused by production code and lacks
+     the board-metadata surface; put is absent. Split: the put half
+     rejected as already ruled (deferral and reason logged 2026-08-09);
+     the wiring and metadata halves confirmed and minted as S28 rather
+     than patched mid-review.
+  Reviewer-reported UNVERIFIED (sandbox): pytest and writable-fixture
+  acceptance runs - run board-owner-side: 341 pytest green, ruff clean.
+  Fix commit 1214b10 sits apart from the reviewed range with foreign
+  commits between, so commit-range stays 8bd2624..deb9c2b and the
+  fix-commit re-review runs over 1214b10^..1214b10 via the packet
+  override; Gate A's box stays unticked until that re-review passes.
