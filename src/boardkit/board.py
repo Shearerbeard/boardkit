@@ -111,7 +111,10 @@ INLINE_CODE_RE = re.compile(r"`[^`]*`")
 # consumer of the frontmatter (views, canary key, briefs) sees the
 # truncated title. The fix is loud validation at parse, not renderer
 # patching: compare the parsed title against the raw line and refuse.
-TITLE_LINE_RE = re.compile(r"^title:[ \t]*(.*?)[ \t]*$", re.MULTILINE)
+# The matcher tolerates the key shapes YAML itself tolerates (leading
+# indent, space before the colon), so those spellings cannot slip past
+# the guard and truncate anyway.
+TITLE_LINE_RE = re.compile(r"^[ \t]*title[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE)
 
 
 class BoardError(Exception):
@@ -196,9 +199,19 @@ def parse_card(path: Path, id_re: re.Pattern[str], errors: list[str]) -> dict | 
     title_line = TITLE_LINE_RE.search(text[4:end])
     if title_line is not None:
         raw_title = title_line.group(1)
-        if raw_title and raw_title[0] not in "'\"" and "#" in raw_title:
-            parsed_title = str(meta.get("title", ""))
-            if parsed_title != raw_title:
+        if "#" in raw_title:
+            # The truncation signature: the parsed value is a prefix of the
+            # raw line and the remainder begins at a '#'. A quoted or
+            # anchored title never matches (the raw line starts with the
+            # quote or anchor, not the parsed text), so legitimate YAML
+            # passes; a comment-eaten title always does.
+            parsed_title = str(meta.get("title") or "")
+            remainder = raw_title[len(parsed_title) :].lstrip()
+            if (
+                parsed_title != raw_title
+                and raw_title.startswith(parsed_title)
+                and remainder.startswith("#")
+            ):
                 errors.append(
                     f"{path.name}: title is cut at '#' by YAML comment parsing "
                     f"(parsed as '{parsed_title}'); quote the whole title"

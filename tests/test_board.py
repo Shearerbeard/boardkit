@@ -255,6 +255,33 @@ def test_unquoted_hash_title_refuses_instead_of_truncating(tmp_path: Path) -> No
     result = build_board(load_config(tmp_path / "boardkit.toml"))
     assert "Record the #398 follow-up" in result.views["INDEX.md"]
 
+    # YAML tolerates a space before the colon; the guard must too, or the
+    # spelling slips past it and truncates anyway.
+    spaced = card.replace(
+        "title: Record the #398 follow-up", "title : Record the #398 follow-up"
+    )
+    (cards / "s1-a.md").write_text(spaced, encoding="utf-8")
+    with pytest.raises(BoardError, match="quote the whole title"):
+        build_board(load_config(tmp_path / "boardkit.toml"))
+
+    # A uniformly indented frontmatter block is valid YAML; the guard must
+    # still see its title line.
+    body_start = card.index("---\n", 4)
+    front = "".join("  " + line + "\n" for line in card[4:body_start].splitlines())
+    indented = "---\n" + front + card[body_start:]
+    (cards / "s1-a.md").write_text(indented, encoding="utf-8")
+    with pytest.raises(BoardError, match="quote the whole title"):
+        build_board(load_config(tmp_path / "boardkit.toml"))
+
+    # An anchored quoted title parses intact and must not be refused.
+    anchored = card.replace(
+        "title: Record the #398 follow-up",
+        'title: &t "Record the #398 follow-up"',
+    )
+    (cards / "s1-a.md").write_text(anchored, encoding="utf-8")
+    result = build_board(load_config(tmp_path / "boardkit.toml"))
+    assert "Record the #398 follow-up" in result.views["INDEX.md"]
+
 
 def test_gate_position_renders_for_active_cards(tmp_path: Path) -> None:
     """S16: the views carry each active card's parked gate; backlog and
