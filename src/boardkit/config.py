@@ -412,24 +412,27 @@ class RegistryRow:
     effective_prefix: str | None
 
 
-def _board_declared_prefix(root: Path) -> str | None:
-    """The id_prefix a `dir:` board's own config declares, read lightly.
+def _board_declared_prefix(root: Path) -> tuple[str | None, bool]:
+    """(declared id_prefix, readable) for a `dir:` board's own config.
 
     Light on purpose: enumeration must not fail because one board's
     delegation contract is mid-migration; the full strict load happens
-    when that board is actually used.
+    when that board is actually used. `readable` distinguishes a config
+    that simply omits the key (fine, the row's cache stands in) from one
+    that is missing or unparseable - there verification cannot run, and
+    the caller reports that instead of silently trusting the cache.
     """
     config_path = root / CONFIG_FILENAME
     if not config_path.is_file():
-        return None
+        return None, False
     try:
         with config_path.open("rb") as f:
             data = tomllib.load(f)
     except (OSError, tomllib.TOMLDecodeError):
-        return None
+        return None, False
     board = data.get("board")
     prefix = board.get("id_prefix") if isinstance(board, dict) else None
-    return prefix if isinstance(prefix, str) and prefix else None
+    return (prefix if isinstance(prefix, str) and prefix else None), True
 
 
 def registry_rows(boardkit_dir: Path) -> tuple[list[RegistryRow], list[str]]:
@@ -453,11 +456,19 @@ def registry_rows(boardkit_dir: Path) -> tuple[list[RegistryRow], list[str]]:
             resolved_root = (manifest.root / entry.location.value).resolve()
         effective_prefix = entry.id_prefix
         if entry.location.scheme == "dir" and resolved_root is not None:
-            declared = _board_declared_prefix(resolved_root)
+            declared, readable = _board_declared_prefix(resolved_root)
             if declared is None and entry.id_prefix is None:
                 errors.append(
                     f"[boards.{code}]: no id_prefix on the row and none readable from "
                     f"{resolved_root / CONFIG_FILENAME}"
+                )
+            elif not readable:
+                # The cache would win exactly when it cannot be checked;
+                # report the unverifiable state instead of trusting it.
+                errors.append(
+                    f"[boards.{code}]: cached id_prefix '{entry.id_prefix}' cannot be "
+                    f"verified - {resolved_root / CONFIG_FILENAME} is missing or "
+                    "unparseable"
                 )
             elif entry.id_prefix is not None and declared not in (None, entry.id_prefix):
                 errors.append(
@@ -481,11 +492,16 @@ def registry_rows(boardkit_dir: Path) -> tuple[list[RegistryRow], list[str]]:
     for prefix, group in sorted(by_prefix.items()):
         if len(group) > 1 and not all(r.entry.prefix_collision_ok for r in group):
             unmarked = ", ".join(r.code for r in group if not r.entry.prefix_collision_ok)
-            raise_codes = ", ".join(r.code for r in group)
-            errors.append(
-                f"id prefix '{prefix}' is claimed by {raise_codes}; collisions must be "
-                f"marked `prefix_collision_ok = true` on every row (unmarked: {unmarked})"
-            )
+            claimants = ", ".join(r.code for r in group)
+            # One error per row, each carrying its [boards.<code>] marker, so
+            # board_row_errors' per-board filter keeps the collision visible
+            # to `boardkit check` on every board it involves.
+            for row in group:
+                errors.append(
+                    f"[boards.{row.code}]: id prefix '{prefix}' is claimed by "
+                    f"{claimants}; collisions must be marked "
+                    f"`prefix_collision_ok = true` on every row (unmarked: {unmarked})"
+                )
     return rows, errors
 
 

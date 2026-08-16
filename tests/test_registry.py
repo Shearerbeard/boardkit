@@ -87,6 +87,47 @@ def test_cached_prefix_drift_is_an_error(tmp_path: Path) -> None:
     assert "declares 'E'" in errors[0]
 
 
+def test_unverifiable_cached_prefix_is_an_error(tmp_path: Path) -> None:
+    """S18 Gate A: the cache must not win exactly when it cannot be checked.
+    A missing or unparseable board config with a cached prefix reports."""
+    repo = tmp_path / "repo"
+    board = repo / "gone"
+    board.mkdir(parents=True)
+    (board / "boardkit.toml").write_text("[board\nbroken", encoding="utf-8")
+    bk = _manifest(
+        repo,
+        'default = "bk"\n[boards.bk]\nlocation = "dir:gone"\nid_prefix = "S"\n',
+    )
+    _rows, errors = registry_rows(bk)
+    assert len(errors) == 1
+    assert "cannot be verified" in errors[0]
+
+    # A readable config that simply omits id_prefix stays clean: the
+    # row's cache legitimately stands in.
+    (board / "boardkit.toml").write_text(
+        '[board]\ncards_dir = "cards"\n', encoding="utf-8"
+    )
+    _rows, errors = registry_rows(bk)
+    assert errors == []
+
+
+def test_collision_reaches_the_involved_boards_check(tmp_path: Path) -> None:
+    """S18 Gate A: board_row_errors keeps a collision visible to the very
+    board being checked instead of dropping it at the marker filter."""
+    repo = tmp_path / "repo"
+    _board(repo / "one")
+    _board(repo / "two")
+    _manifest(
+        repo,
+        'default = "one"\n'
+        '[boards.one]\nlocation = "dir:one"\n'
+        '[boards.two]\nlocation = "dir:two"\n',
+    )
+    config = load_config(repo / "one" / "boardkit.toml")
+    errors = board_row_errors(config, repo)
+    assert any("id prefix 'S' is claimed by one, two" in e for e in errors)
+
+
 def test_unmarked_prefix_collision_is_refused(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     _board(repo / "one")
@@ -98,8 +139,12 @@ def test_unmarked_prefix_collision_is_refused(tmp_path: Path) -> None:
         '[boards.two]\nlocation = "dir:two"\n',
     )
     _rows, errors = registry_rows(bk)
-    assert len(errors) == 1
-    assert "id prefix 'S' is claimed by one, two" in errors[0]
+    # One error per involved row, each carrying its own [boards.<code>]
+    # marker so the per-board check filter keeps collisions visible.
+    assert len(errors) == 2
+    assert all("id prefix 'S' is claimed by one, two" in e for e in errors)
+    assert any(e.startswith("[boards.one]") for e in errors)
+    assert any(e.startswith("[boards.two]") for e in errors)
 
 
 def test_fully_marked_collision_is_describable(tmp_path: Path) -> None:
