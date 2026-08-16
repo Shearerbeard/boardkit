@@ -157,3 +157,99 @@ cap never migrated. Proposal: a `[board] wip` key defaulting to 2, with
 the constant retired. The adjacent `X | None` optionality in config.py
 was reviewed and judged correct (file-may-omit semantics R4 requires).
 Proposes; the maintainer disposes.
+
+## 2026-08-12 consumer-seam-and-canary-patterns
+
+```yaml
+date: 2026-08-12
+harness: opencode
+agent: opencode-go/deepseek-v4-pro
+workstreams: [boardkit, aura]
+repo: mezmo/aura (board-consistency program, reports/board-consistency-program-2026-08-12.md)
+source: reports/canary-consistency-evidence-2026-08-12.md
+```
+
+Four findings from the board-consistency program (a P19 epic-repair and
+before/after orientation-canary run across the aura board family):
+
+1. **Consumer seam for non-opencode harnesses.** opencode gets a full
+   machine-local board bootstrap via AGENTS.md (`.git/info/exclude`);
+   the tracked repo stays clean ("no process-tooling traces in tracked
+   files"). Claude Code's local channel was the wiki render's
+   permanent `Memory:` index line pointing at a
+   never-created `memory/MEMORY.md`. Creating that file activated a
+   persistent above-the-fold seam with zero renderer changes. Parallel
+   thought for S12 (public-repo seam): the kit's entry-file templates
+   could ship a per-harness machine-local pointer pattern (a permanent
+   index line to a curated consumer file) rather than expecting
+   tracked-file edits.
+2. **Entity-name collisions escape the qualify-ids rule.** Three
+   "agent-driver" entities (library / prototype spike / epic) live on
+   three boards; only canary probes caught the conflation. Card-id
+   collisions are linted; entity-name collisions are not. Candidate
+   check, adjacent to S13 board-discovery / S21 cross-board-refs.
+3. **Before/after canary pattern.** The orientation canary grades a
+   single key; measuring surface improvements over edits needed:
+   per-question grading atoms (surface-support x code-truth), surface
+   manifests pinned by commit shas, sealed-key immutability with dated
+   pre-run amendments, defect-probe questions (either canary outcome
+   evidences the defect), and an "inventing an answer when none is
+   derivable = miss" rule that classed a real model-weakness incident.
+   Offered as a reusable extension for the canary section of the kit's
+   PROCESS.md templates.
+4. **Next-id allocation raced the host repo's card minting.** Doctor's
+   `host.tree-state` warning was present, but the next free id was
+   still taken by garden-minted commits not yet pulled (P20 collision).
+   A doctor check or documented gotcha for consumers whose host repo
+   has an autonomous minting process would have caught it.
+
+Proposes; the maintainer disposes.
+
+## 2026-08-13 review-artifact-locations
+
+```yaml
+date: 2026-08-13
+harness: claude-code
+agent: claude-opus-5
+workstreams: [boardkit]
+repo: aura-orchestration-mode (aura#496 fill wave, cards P16-P18)
+source: claude-skills feedback/2026-08-13-claude-code-review-artifact-locations/process-feedback.md
+```
+
+Mike's finding at the wave's code-review gate: he does not know where the
+review artifacts live canonically, and the diffs plus the guided read order
+are not in one place he can go back through. He asked for the locations
+twice. This wave's material landed in four directories: generated per-card
+packets in the board's gitignored `reviews/P16|P17|P18`, four hand-built
+wave-level files in `reviews/496-fill-wave/`, reviewer verbatims in
+`evidence/`, and staged prompts plus the original GitHub drafts in the
+worktree's `.review-staging/`. The hand-written consolidated packet shows the
+gap from the inside: it points at "the board's reviews dir" and a handout
+"filed alongside this packet" without paths, and its one real path names a
+stale copy. Seams: `render_review()` already writes a header carrying Card,
+Repo, and Range, and it holds the output directory and the diffed repo
+(including a `--repo` worktree override) at that point; `cmd_review_packet`
+prints those paths to a stdout the reviewer never sees; the template
+PROCESS.md names `reviews/<id>-<name>` in passing and nowhere states where
+review artifacts live. Four more findings from the same wave. (1) Wave-level
+artifacts have no generator: `review-packet` is per-card, so the consolidated
+packet, findings ledger, Gate T handout, and guided review are hand-built
+every wave and their shape drifts. (2) A rebase onto a new base rewrote every
+sha and three cards' `commit-range` was hand-patched; a range whose shas
+survive as unreferenced objects still produces a packet over abandoned
+history, silently. The trailer search the missing-range error already
+recommends would support a cross-check. (3) The standing rule that every code
+card carries a `U(code-review)` gate is enforced by editing frontmatter,
+checklist, and log on each card at pull time; boardkit's own board shows seven
+cards carrying the same hand-insertion. `cmd_check` already accumulates
+findings of this class. (4) `boardkit check --config <board>/boardkit.toml`
+fails from `~/dev/boardkit` with `[charter.route]: 'adr' is not a registry
+short-code (known: aura, bk)` and passes from the aura repo: `--config` wins
+for the config load, but `charter_route_errors`, `board_row_errors`, and
+`card_ref_findings` each resolve the registry from `Path.cwd()`. Nothing in
+`--help` says so. Overlaps are cross-referenced in the source record rather
+than restated here. The gitignored packet-retention half belongs to the
+2026-08-09 review-artifact-audit-trail entry and drain 7's decision 3. The
+range-field fragility is adjacent to the 2026-08-09
+commit-range-excludes-first-commit entry. The ranked read order is S15 and the
+dangling-reference half is S8. Proposes; the maintainer disposes.

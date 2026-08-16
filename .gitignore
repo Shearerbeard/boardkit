@@ -5,3 +5,4 @@ dist/
 .vale/
 docs/board/reviews/
 .review/
+.bench-runs/
