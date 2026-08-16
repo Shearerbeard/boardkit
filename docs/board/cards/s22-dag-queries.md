@@ -101,3 +101,33 @@ direct
 - 2026-08-09 Post-R2 epic pass landed in S23's commit (epic clusters
   in graph.md, `dag --to <epic>` member-union closure). R9 is now
   COMPLETE; the shipped-incomplete marker above is closed.
+- 2026-08-16 Gate A ran (resolving the deferral): reviewer gpt-5.6-sol
+  via codex exec, author claude-fable-5 (whole wave); codex fallback
+  after the opencode lane stalled its read probe. Verdict FAIL, three
+  BLOCKING findings and one MINOR.
+  1. BLOCKING waves considered dependency edges only, so a reciprocal
+     serialize-with pair landed in one dispatchable wave against the
+     board mutex. Confirmed. Fixed in 6af06a7: the partition splits
+     mutex pairs, deferring the later-sorted member and dragging any
+     same-wave dependent down with it. The unblocked frontier stays
+     dependency-only by its documented meaning; the wave plan is where
+     dispatchability is claimed, and it now tells the truth.
+  2. BLOCKING gate state collapsed by letter, so a passed U(mockup)
+     still annotated edges as an open U beside U(launch). Confirmed
+     (the S16 review hit the absorption half of the same defect). Fixed
+     in 6af06a7: qualified occurrences track independently; views,
+     canary key, and edge annotations share the computation.
+  3. BLOCKING the graph drift test never perturbed graph.md. Confirmed.
+     Fixed in 6af06a7: the test writes the views, tampers graph.md, and
+     asserts the drift check names it.
+  4. MINOR the deliverable names stdlib graphlib and the traversal was
+     custom. Fixed in 6af06a7 rather than amended: the wave partition
+     now runs on graphlib.TopologicalSorter batches; the closure stays
+     a plain reachability walk, which graphlib does not provide.
+  Reviewer-reported UNVERIFIED (sandbox): the acceptance suite, lint,
+  board checks, Mermaid render - run board-owner-side: 355 pytest
+  green and ruff clean; boardkit check OK. Fix commit 6af06a7 (shared
+  with S23/S24, per-card trailers) sits apart from the reviewed range,
+  so commit-range stays d059160..85ab722 and the fix-commit re-review
+  runs over 6af06a7^..6af06a7 via the packet override; Gate A's box
+  stays unticked until that re-review passes.

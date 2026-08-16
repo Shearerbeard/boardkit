@@ -81,3 +81,23 @@ direct
 - 2026-08-09 In-review; commit-range 85ab722..22bd55c.
 - 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
   Session B boundary; packets present at the Gate B user gate).
+- 2026-08-16 Gate A ran (resolving the deferral): reviewer gpt-5.6-sol
+  via codex exec, author claude-fable-5 (whole wave); codex fallback
+  after the opencode lane stalled its read probe. Verdict FAIL, two
+  findings.
+  1. BLOCKING `kind: [epic]` - valid YAML - raised a TypeError from
+     hashing a list instead of a structured BoardError. Confirmed.
+     Fixed in 6af06a7: non-string kinds join the must-be-one-of
+     refusal, with the regression test the reviewer noted missing.
+  2. BLOCKING an epic could sit done with open members, while the dag
+     closure rule says finishing an epic means finishing its members -
+     the initiative rendered complete and incomplete at once.
+     Confirmed. Fixed in 6af06a7 by enforcement: check refuses a done
+     epic with open members, naming them.
+  Reviewer-reported UNVERIFIED (sandbox): pytest and the board
+  commands - run board-owner-side: 355 pytest green and ruff clean;
+  boardkit check OK. Fix commit 6af06a7 (shared with S22/S24, per-card
+  trailers) sits apart from the reviewed range, so commit-range stays
+  85ab722..22bd55c and the fix-commit re-review runs over
+  6af06a7^..6af06a7 via the packet override; Gate A's box stays
+  unticked until that re-review passes.

@@ -83,3 +83,33 @@ direct
 - 2026-08-11 Gate U(code-review) passed: Mike reviewed the packet
   (batch 1 with S13), verdict pass, no findings on this card. Gate A
   batch deferral survives this gate (surfaced, not absorbed).
+- 2026-08-16 Gate A ran (resolving the deferral): reviewer gpt-5.6-sol
+  via codex exec, author claude-fable-5 (whole wave); codex fallback
+  after the opencode lane stalled its read probe. Verdict FAIL, four
+  findings - all in the false-calm class the focus named.
+  1. BLOCKING a repo with no upstream silently passed host.tree-state,
+     missing the maximal local-only state. Confirmed. Fixed in
+     6af06a7: a missing upstream is a named problem; git-unavailable
+     still skips rather than alarming falsely.
+  2. BLOCKING one mention of AGENTS.md anywhere counted as shim proof,
+     so a divergent entry file with a shim's opening line passed
+     parity. Confirmed. Fixed in 6af06a7: a shim must name AGENTS.md
+     in its first lines and carry little else (the shipped template is
+     three lines; the bound is ten non-empty).
+  3. BLOCKING missing and unreadable shims escaped the check entirely.
+     Confirmed; dispositioned in halves: no shims at all now warns
+     (nothing points at AGENTS.md), an unreadable shim warns, and a
+     partial shim set stays legal - warning every repo that skips one
+     harness's shim would be the false alarm this card's focus warns
+     against.
+  4. BLOCKING parity read entry files from the board root, falsely
+     warning on the .boardkit/boards/<code> layout. Confirmed. Fixed
+     in 6af06a7: the git toplevel resolves the host root first, the
+     board root stands in only where git cannot answer.
+  Reviewer-reported UNVERIFIED (sandbox): pytest, check, doctor - run
+  board-owner-side: 355 pytest green and ruff clean; boardkit check
+  OK. Fix commit 6af06a7 (shared with S22/S23, per-card trailers) sits
+  apart from the reviewed range, so commit-range stays 22bd55c..028ce5d
+  and the fix-commit re-review runs over 6af06a7^..6af06a7 via the
+  packet override; Gate A's box stays unticked until that re-review
+  passes.
