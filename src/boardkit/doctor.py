@@ -713,7 +713,12 @@ def _check_host(checks: _Checks, config: Config) -> None:
     if status and status.strip():
         problems.append(f"dirty tree ({len(status.strip().splitlines())} path(s))")
     upstream = _git_text(root, "rev-parse", "--abbrev-ref", "@{u}")
-    if upstream is not None:
+    if upstream is None:
+        # Git answered above, so a missing upstream is real: the branch -
+        # and the board on it - exists only on this machine, which is the
+        # exact local-only hazard this check names.
+        problems.append("no upstream configured (this branch exists only on this machine)")
+    else:
         unpushed = _git_text(root, "rev-list", "--count", "@{u}..HEAD")
         if unpushed is not None and unpushed.strip() != "0":
             problems.append(f"{unpushed.strip()} unpushed commit(s)")
@@ -728,13 +733,30 @@ def _check_host(checks: _Checks, config: Config) -> None:
     checks.ok("host.tree-state")
 
 
+def _is_shim(text: str) -> bool:
+    """A shim is a pointer, not a second instruction set: it names
+    AGENTS.md within its first lines and carries little else. A file that
+    mentions AGENTS.md once and then supplies its own instructions is a
+    divergent entry file wearing a shim's opening line."""
+    lines = [line for line in text.splitlines() if line.strip()]
+    return "AGENTS.md" in "\n".join(lines[:5]) and len(lines) <= 10
+
+
 def _check_entry_parity(checks: _Checks, root: Path) -> None:
-    """R7: one real agent entry file; the others are shims that point at it."""
+    """R7: one real agent entry file; the others are shims that point at it.
+
+    Entry files live at the HOST repository's root, which for a
+    `.boardkit/boards/<code>` layout sits above the board root, so the git
+    toplevel resolves first and the board root stands in only where git
+    cannot answer.
+    """
+    toplevel = _git_text(root, "rev-parse", "--show-toplevel")
+    if toplevel is not None and toplevel.strip():
+        root = Path(toplevel.strip())
+    shim_names = ("CLAUDE.md", "GEMINI.md")
     agents = read_text_or_none(root / "AGENTS.md")
     shims = {
-        name: read_text_or_none(root / name)
-        for name in ("CLAUDE.md", "GEMINI.md")
-        if (root / name).is_file()
+        name: read_text_or_none(root / name) for name in shim_names if (root / name).is_file()
     }
     if agents is None and not shims:
         checks.warn(
@@ -751,15 +773,31 @@ def _check_entry_parity(checks: _Checks, root: Path) -> None:
             "make AGENTS.md the one real entry file and demote the others to shims",
         )
         return
-    divergent = [
-        name for name, text in shims.items() if text is not None and "AGENTS.md" not in text
-    ]
-    if divergent:
+    if not shims:
         checks.warn(
             "entry.parity",
-            f"{', '.join(sorted(divergent))} never mention(s) AGENTS.md, so two harnesses "
-            "follow different rules in the same checkout",
-            "demote each to a one-line shim that says to read AGENTS.md first",
+            "AGENTS.md exists but no shim points at it, so any harness that reads "
+            "only its own entry file runs blind here",
+            "add the shim files the kit templates ship (CLAUDE.md, GEMINI.md)",
+        )
+        return
+    unreadable = sorted(name for name, text in shims.items() if text is None)
+    divergent = sorted(
+        name for name, text in shims.items() if text is not None and not _is_shim(text)
+    )
+    problems = []
+    if unreadable:
+        problems.append(f"{', '.join(unreadable)} unreadable")
+    if divergent:
+        problems.append(
+            f"{', '.join(divergent)} carry instructions of their own beyond a pointer "
+            "at AGENTS.md, so two harnesses follow different rules in the same checkout"
+        )
+    if problems:
+        checks.warn(
+            "entry.parity",
+            "; ".join(problems),
+            "make each shim a short file whose first lines say to read AGENTS.md first",
         )
         return
     checks.ok("entry.parity")

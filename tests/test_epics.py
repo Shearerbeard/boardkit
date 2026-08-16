@@ -64,6 +64,27 @@ def test_epic_ref_to_missing_card_fails(tmp_path: Path) -> None:
         build_board(load_config(_board(tmp_path, cards)))
 
 
+def test_non_string_kind_is_a_board_error(tmp_path: Path) -> None:
+    """S23 Gate A: `kind: [epic]` is valid YAML and must be refused with a
+    structured error, not a TypeError from hashing a list."""
+    cards = {"s1-a.md": _card("S1", kind="[epic]")}
+    with pytest.raises(BoardError, match="'kind' must be one of"):
+        build_board(load_config(_board(tmp_path, cards)))
+
+
+def test_done_epic_with_open_members_fails(tmp_path: Path) -> None:
+    """S23 Gate A: finishing an epic means finishing its members (the dag
+    closure rule); done-with-open-members would render the initiative as
+    complete and incomplete at once."""
+    cards = {
+        "s1-epic.md": _card("S1", status="done", kind="epic"),
+        "s2-a.md": _card("S2", status="done", epic="S1"),
+        "s3-b.md": _card("S3", status="ready", depends="[S2]", epic="S1"),
+    }
+    with pytest.raises(BoardError, match="epic is done but member"):
+        build_board(load_config(_board(tmp_path, cards)))
+
+
 def test_epic_may_not_be_a_member(tmp_path: Path) -> None:
     cards = dict(EPIC_BOARD)
     cards["s5-nested.md"] = _card("S5", kind="epic", epic="S1")

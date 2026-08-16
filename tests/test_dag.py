@@ -9,7 +9,7 @@ from pathlib import Path
 
 from conftest import config_text
 
-from boardkit.board import build_board, remaining_gates
+from boardkit.board import build_board, remaining_gates, view_drift
 from boardkit.config import load_config
 from boardkit.dag import (
     ancestor_closure,
@@ -100,9 +100,50 @@ def test_graph_view_renders_and_drift_checks(tmp_path: Path) -> None:
     cards_dir.mkdir(exist_ok=True)
     (cards_dir / "s1-a.md").write_text(_card("S1", "ready", lane="kit"), encoding="utf-8")
     (cards_dir / "s2-b.md").write_text(_card("S2", "backlog", depends="[S1]"), encoding="utf-8")
-    result = build_board(load_config(tmp_path / "boardkit.toml"))
+    config = load_config(tmp_path / "boardkit.toml")
+    result = build_board(config)
     graph = result.views["graph.md"]
     assert 'subgraph lane_kit["kit"]' in graph
     assert "S1 --> S2" in graph
     assert ":::ready" in graph and ":::backlog" in graph
     assert "graph.md" in result.views  # standing view, always rendered
+
+    # S22 Gate A: drift detection must actually fire - write the views to
+    # disk, perturb graph.md, and the drift check names it.
+    for name, text in result.views.items():
+        (cards_dir / name).write_text(text, encoding="utf-8")
+    assert view_drift(config, result.views) == []
+    (cards_dir / "graph.md").write_text(graph + "\nS9[tampered]\n", encoding="utf-8")
+    drift = view_drift(config, result.views)
+    assert any(d.startswith("graph.md") for d in drift)
+
+
+def test_serialize_with_pairs_split_across_waves(tmp_path: Path) -> None:
+    """S22 Gate A: two cards sharing files may not land in one
+    dispatchable wave, and a deferral drags same-wave dependents down."""
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
+    cards_dir = tmp_path / "cards"
+    cards_dir.mkdir(exist_ok=True)
+
+    def sw_card(cid: str, serialize_with: str, depends: str = "[]", status: str = "ready") -> str:
+        return (
+            f"---\nid: {cid}\ntitle: Card {cid}\nstatus: {status}\n"
+            f"depends: {depends}\nserialize-with: {serialize_with}\n"
+            "lineage: none\nexecutor: any\n"
+            'gates: "S -> A"\nuser-gates: []\n---\n\n'
+            f"# {cid}: Card {cid}\n\n## Log\n\n- 2026-08-09 Minted.\n"
+        )
+
+    (cards_dir / "s1-a.md").write_text(sw_card("S1", "[S2]"), encoding="utf-8")
+    (cards_dir / "s2-b.md").write_text(sw_card("S2", "[S1]"), encoding="utf-8")
+    (cards_dir / "s3-c.md").write_text(
+        sw_card("S3", "[]", depends="[S2]", status="backlog"), encoding="utf-8"
+    )
+    result = build_board(load_config(tmp_path / "boardkit.toml"))
+    cards = {card["id"]: card for card in result.cards}
+    waves = wave_partition(cards, {"S1", "S2", "S3"})
+    for wave in waves:
+        assert not ({"S1", "S2"} <= set(wave)), waves
+    s2_wave = next(i for i, w in enumerate(waves) if "S2" in w)
+    s3_wave = next(i for i, w in enumerate(waves) if "S3" in w)
+    assert s2_wave < s3_wave, waves

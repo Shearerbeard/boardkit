@@ -18,6 +18,8 @@ until then.
 
 from __future__ import annotations
 
+import graphlib
+
 from boardkit.board import remaining_gates
 
 STATUS_CLASS = {
@@ -82,24 +84,45 @@ def wave_partition(cards: dict[str, dict], closure: set[str]) -> list[list[str]]
     """Remaining closure cards grouped into dispatchable waves.
 
     Wave N holds cards whose unfinished dependencies all sit in earlier
-    waves (longest-path layering). Done cards partition into no wave -
-    the plan is the work left, not the history. Cycles cannot reach here:
-    build_board rejects them before any query runs.
+    waves (stdlib `graphlib` batches), then reciprocal `serialize-with`
+    pairs split: two cards sharing files may not run together, so a wave
+    holding both would mislead a dispatcher - the later-sorted member
+    moves down, cascading with any same-wave dependent it drags along.
+    Done cards partition into no wave - the plan is the work left, not
+    the history. Cycles cannot reach here: build_board rejects them
+    before any query runs.
     """
     remaining = {cid for cid in closure if cards[cid]["status"] != "done"}
-    level: dict[str, int] = {}
-
-    def _level(cid: str) -> int:
-        if cid in level:
-            return level[cid]
-        deps = [d for d in cards[cid]["depends"] if d in remaining]
-        level[cid] = 1 + max((_level(d) for d in deps), default=0)
-        return level[cid]
-
-    waves: dict[int, list[str]] = {}
-    for cid in remaining:
-        waves.setdefault(_level(cid), []).append(cid)
-    return [sorted(waves[depth]) for depth in sorted(waves)]
+    sorter = graphlib.TopologicalSorter(
+        {cid: {d for d in cards[cid]["depends"] if d in remaining} for cid in remaining}
+    )
+    sorter.prepare()
+    waves: list[list[str]] = []
+    while sorter.is_active():
+        batch = list(sorter.get_ready())
+        waves.append(sorted(batch))
+        sorter.done(*batch)
+    index = 0
+    while index < len(waves):
+        wave_set = set(waves[index])
+        keep: list[str] = []
+        defer: list[str] = []
+        for cid in waves[index]:
+            # A dependent may not share a wave with its own dependency
+            # (a mutex deferral can drag one down), and a serialize-with
+            # pair may not dispatch together; sorted order keeps the split
+            # deterministic.
+            dragged = any(dep in wave_set for dep in cards[cid]["depends"])
+            mutex = any(other in keep for other in cards[cid]["serialize-with"])
+            (defer if dragged or mutex else keep).append(cid)
+        if defer:
+            waves[index] = keep
+            if index + 1 < len(waves):
+                waves[index + 1] = sorted(waves[index + 1] + defer)
+            else:
+                waves.append(sorted(defer))
+        index += 1
+    return waves
 
 
 def closure_edges(cards: dict[str, dict], closure: set[str]) -> list[tuple[str, str, str]]:

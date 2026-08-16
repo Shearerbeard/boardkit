@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from conftest import config_text
 
-from boardkit.board import BoardError, build_board
+from boardkit.board import BoardError, build_board, remaining_gates
 from boardkit.config import load_config
 
 CARD_FRONTMATTER = """---
@@ -334,3 +334,26 @@ def test_missing_box_for_duplicate_gate_letter_stays_open(tmp_path: Path) -> Non
     result = build_board(load_config(tmp_path / "boardkit.toml"))
     # The launch U has no box: the position parks at U, never "all ticked".
     assert "U(mockup) -> S -> U(launch) @ U |" in result.views["INDEX.md"]
+
+
+def test_qualified_gate_occurrences_track_independently(tmp_path: Path) -> None:
+    """S22 Gate A: a passed U(mockup) no longer reads as an open gate once
+    tracked per occurrence - only the truly open launch U remains."""
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
+    cards = tmp_path / "cards"
+    cards.mkdir()
+    checklist = (
+        "- [x] Gate U (mockup): shown.\n- [x] Gate S: checks.\n"
+        "- [ ] Gate U (launch): stop."
+    )
+    card = (
+        "---\nid: S1\ntitle: Card S1\nstatus: in-review\n"
+        "depends: []\nserialize-with: []\nlineage: none\nexecutor: any\n"
+        'gates: "U(mockup) -> S -> U(launch)"\nuser-gates: [mockup, launch]\n---\n\n'
+        f"# S1: Card S1\n\n## Gate checklist\n\n{checklist}\n\n"
+        "## Log\n\n- 2026-08-09 x.\n"
+    )
+    (cards / "s1-a.md").write_text(card, encoding="utf-8")
+    result = build_board(load_config(tmp_path / "boardkit.toml"))
+    parsed = {c["id"]: c for c in result.cards}
+    assert remaining_gates(parsed["S1"]) == ["U"]

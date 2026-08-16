@@ -194,7 +194,9 @@ def parse_card(path: Path, id_re: re.Pattern[str], errors: list[str]) -> dict | 
                     errors.append(
                         f"{path.name}: ref '{ref}' is not a qualified <code>/<id> reference"
                     )
-    if KIND_KEY in meta and meta[KIND_KEY] not in KINDS:
+    if KIND_KEY in meta and (
+        not isinstance(meta[KIND_KEY], str) or meta[KIND_KEY] not in KINDS
+    ):
         errors.append(f"{path.name}: '{KIND_KEY}' must be one of {sorted(KINDS)}")
     title_line = TITLE_LINE_RE.search(text[4:end])
     if title_line is not None:
@@ -281,6 +283,22 @@ def check_dag(cards: dict[str, dict], errors: list[str], lanes: dict | None = No
             errors.append(
                 f"{card['_file']}: {EPIC_KEY} target '{target_id}' is not an epic card "
                 f"(kind: epic)"
+            )
+    # Finishing an epic means finishing its members (the dag closure rule):
+    # an epic marked done with open members would render the initiative as
+    # complete and incomplete at once.
+    for card in cards.values():
+        if card.get(KIND_KEY) != "epic" or card["status"] != "done":
+            continue
+        open_members = sorted(
+            cid
+            for cid, member in cards.items()
+            if member.get(EPIC_KEY) == card["id"] and member["status"] != "done"
+        )
+        if open_members:
+            errors.append(
+                f"{card['_file']}: epic is done but member(s) "
+                f"{', '.join(open_members)} are not"
             )
     # board invariants from PROCESS.md that the views cannot show. The
     # global WIP count skips side-quest cards (user-declared) and cards in
@@ -386,33 +404,53 @@ def gate_tokens(gates: str) -> tuple[str, ...]:
 def remaining_gates(card: dict) -> list[str]:
     """The card's ladder letters whose checklist state has not cleared.
 
-    A letter clears when it carries at least as many checklist boxes as
-    the ladder declares occurrences of it and every box is ticked; a
-    letter with fewer boxes than ladder occurrences has recorded nothing
-    for the uncovered gate and stays open. Letter granularity on purpose:
-    a card with two qualified U gates holds U open until both boxes tick,
-    and a ladder gate whose box was never written cannot be absorbed by a
-    ticked sibling of the same letter.
+    Qualified occurrences are tracked independently: a box carrying a
+    qualifier - `Gate U (mockup)` - clears exactly the same-qualified
+    ladder token, so a passed `U(mockup)` no longer holds a later
+    `U(launch)` open (or the reverse). Tokens without an exact-qualified
+    box fall back to a per-letter pool: they clear only when the pool
+    holds at least as many unclaimed boxes as there are unclaimed tokens
+    of that letter and every pooled box is ticked. Either way, a ladder
+    gate whose box was never written stays open rather than being
+    absorbed by a ticked sibling of the same letter.
     """
-    ticked: dict[str, bool] = {}
-    boxes: dict[str, int] = {}
+    boxes: list[tuple[str, bool, bool]] = []  # (key, ticked, claimed)
     for line in card["_body"].splitlines():
         box = CHECKBOX_RE.match(line)
         if box is None:
             continue
-        letter = gate_key(box.group(2).removeprefix("Gate"))[:1]
-        is_ticked = box.group(1).lower() == "x"
-        ticked[letter] = ticked.get(letter, True) and is_ticked
-        boxes[letter] = boxes.get(letter, 0) + 1
-    ladder = gate_tokens(card.get("gates", ""))
-    declared: dict[str, int] = {}
-    for t in ladder:
-        declared[t] = declared.get(t, 0) + 1
-    return [
-        t
-        for t in ladder
-        if not (ticked.get(t, False) and boxes.get(t, 0) >= declared[t])
-    ]
+        key = gate_key(box.group(2).removeprefix("Gate"))
+        boxes.append((key, box.group(1).lower() == "x", False))
+    tokens: list[tuple[str, str]] = []  # (letter, key) in ladder order
+    for part in str(card.get("gates", "")).split("->"):
+        match = GATE_LETTER_RE.match(part.strip())
+        if match:
+            tokens.append((match.group(1), gate_key(part.strip())))
+
+    cleared: list[bool | None] = [None] * len(tokens)
+    for ti, (_letter, key) in enumerate(tokens):
+        if "(" not in key:
+            continue
+        exact = [bi for bi, (bkey, _, claimed) in enumerate(boxes) if bkey == key and not claimed]
+        if exact:
+            for bi in exact:
+                boxes[bi] = (boxes[bi][0], boxes[bi][1], True)
+            cleared[ti] = all(boxes[bi][1] for bi in exact)
+    for letter in {t[0] for t in tokens}:
+        open_tokens = [
+            ti for ti, (tl, _) in enumerate(tokens) if tl == letter and cleared[ti] is None
+        ]
+        if not open_tokens:
+            continue
+        pool = [
+            bi
+            for bi, (bkey, _, claimed) in enumerate(boxes)
+            if bkey[:1] == letter and not claimed
+        ]
+        state = len(pool) >= len(open_tokens) and all(boxes[bi][1] for bi in pool)
+        for ti in open_tokens:
+            cleared[ti] = state
+    return [tokens[ti][0] for ti in range(len(tokens)) if not cleared[ti]]
 
 
 def log_section_lines(body: str) -> list[str]:
