@@ -313,3 +313,24 @@ def test_gate_position_renders_for_active_cards(tmp_path: Path) -> None:
 
     key = render_canary_key(result, drift=[])
     assert "(at Gate U)" in key.split("## In Review")[1].split("##")[0]
+
+
+def test_missing_box_for_duplicate_gate_letter_stays_open(tmp_path: Path) -> None:
+    """S16 Gate A: a qualified gate whose checklist box was never written
+    must not be absorbed by a ticked sibling of the same letter."""
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
+    cards = tmp_path / "cards"
+    cards.mkdir()
+    checklist = "- [x] Gate U (mockup): shown.\n- [x] Gate S: checks."
+    card = (
+        "---\nid: S1\ntitle: Card S1\nstatus: in-review\n"
+        "depends: []\nserialize-with: []\nlineage: none\nexecutor: any\n"
+        'gates: "U(mockup) -> S -> U(launch)"\nuser-gates: [mockup, launch]\n---\n\n'
+        f"# S1: Card S1\n\n## Gate checklist\n\n{checklist}\n\n"
+        "## Log\n\n- 2026-08-09 x.\n"
+    )
+    (cards / "s1-a.md").write_text(card, encoding="utf-8")
+
+    result = build_board(load_config(tmp_path / "boardkit.toml"))
+    # The launch U has no box: the position parks at U, never "all ticked".
+    assert "U(mockup) -> S -> U(launch) @ U |" in result.views["INDEX.md"]

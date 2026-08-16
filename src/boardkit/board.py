@@ -386,12 +386,16 @@ def gate_tokens(gates: str) -> tuple[str, ...]:
 def remaining_gates(card: dict) -> list[str]:
     """The card's ladder letters whose checklist state has not cleared.
 
-    A letter clears when it has at least one checklist box and every box
-    carrying it is ticked; a letter with no box at all has recorded
-    nothing and stays open. Letter granularity on purpose: a card with
-    two qualified U gates holds U open until both boxes tick.
+    A letter clears when it carries at least as many checklist boxes as
+    the ladder declares occurrences of it and every box is ticked; a
+    letter with fewer boxes than ladder occurrences has recorded nothing
+    for the uncovered gate and stays open. Letter granularity on purpose:
+    a card with two qualified U gates holds U open until both boxes tick,
+    and a ladder gate whose box was never written cannot be absorbed by a
+    ticked sibling of the same letter.
     """
     ticked: dict[str, bool] = {}
+    boxes: dict[str, int] = {}
     for line in card["_body"].splitlines():
         box = CHECKBOX_RE.match(line)
         if box is None:
@@ -399,7 +403,16 @@ def remaining_gates(card: dict) -> list[str]:
         letter = gate_key(box.group(2).removeprefix("Gate"))[:1]
         is_ticked = box.group(1).lower() == "x"
         ticked[letter] = ticked.get(letter, True) and is_ticked
-    return [t for t in gate_tokens(card.get("gates", "")) if not ticked.get(t, False)]
+        boxes[letter] = boxes.get(letter, 0) + 1
+    ladder = gate_tokens(card.get("gates", ""))
+    declared: dict[str, int] = {}
+    for t in ladder:
+        declared[t] = declared.get(t, 0) + 1
+    return [
+        t
+        for t in ladder
+        if not (ticked.get(t, False) and boxes.get(t, 0) >= declared[t])
+    ]
 
 
 def log_section_lines(body: str) -> list[str]:
