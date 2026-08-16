@@ -39,9 +39,11 @@ computation, so the key and the views cannot disagree.
 - `uv run pytest -q` green; tests cover position rendering for
   in-progress and in-review cards, a fully unticked ladder, and the
   backlog/done suppression.
-- On the golden fixture board, an in-review card with Gate A ticked
-  renders a position of Gate U, matching the miss the epoch-board
-  tracking canary hit.
+- A constructed in-review fixture with Gate A ticked renders a
+  position of Gate U, matching the miss the epoch-board tracking
+  canary hit. (Amended at Gate A: the frozen golden aura snapshot
+  holds no in-review card, so the criterion as minted named a fixture
+  that cannot exhibit the behavior.)
 
 ## Gate checklist
 
@@ -78,3 +80,26 @@ direct
 - 2026-08-09 In-review; commit-range a95fcab..5211b1b.
 - 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
   Session B boundary; packets present at the Gate B user gate).
+- 2026-08-16 Gate A ran (resolving the deferral): reviewer gpt-5.6-sol
+  via codex exec, author claude-fable-5 (whole wave); dispatched on the
+  codex fallback after the pinned opencode lane stalled its read probe.
+  Verdict FAIL, two findings.
+  1. BLOCKING remaining_gates cleared a gate letter when any box
+     carrying it was ticked, so a qualified gate with no checklist box
+     at all - U(launch) beside a ticked U(mockup) - rendered as passed,
+     and the canary key repeated it. Confirmed by code reading. Fixed
+     in b9e74d1: a letter clears only with at least as many boxes as
+     the ladder declares occurrences, all ticked; regression test
+     covers the boxless-sibling shape.
+  2. BLOCKING the acceptance line named the golden fixture board for
+     the in-review-@ U criterion, but the frozen aura snapshot holds no
+     in-review card - the 2026-08-09 build log already recorded the
+     same gap. Dispositioned by amending the acceptance line to the
+     constructed fixture, amendment noted inline; the golden snapshot
+     stays byte-frozen.
+  Reviewer-reported UNVERIFIED (sandbox): pytest, ruff, boardkit
+  check/doctor - run board-owner-side: 339 pytest green, ruff clean,
+  check OK. Fix commit b9e74d1 sits apart from the reviewed range with
+  foreign commits between, so commit-range stays a95fcab..5211b1b and
+  the fix-commit re-review runs over b9e74d1^..b9e74d1 via the packet
+  override; Gate A's box stays unticked until that re-review passes.
