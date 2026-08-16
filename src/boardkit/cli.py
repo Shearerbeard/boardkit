@@ -144,10 +144,13 @@ def cmd_check(args: argparse.Namespace) -> int:
     errors = view_drift(config, result.views)
     # A board reachable through a manifest must agree with its registry row,
     # a charter's route targets must resolve to registry short-codes, and
-    # qualified refs must name real boards.
-    errors += board_row_errors(config, Path.cwd())
-    errors += charter_route_errors(config, Path.cwd())
-    ref_errors, ref_warnings = card_ref_findings(result.cards, Path.cwd())
+    # qualified refs must name real boards. The registry resolves from the
+    # BOARD's root, not the process cwd: `check --config <elsewhere>` must
+    # judge the selected board against its own family, not against whatever
+    # registry happens to sit above the shell.
+    errors += board_row_errors(config, config.root)
+    errors += charter_route_errors(config, config.root)
+    ref_errors, ref_warnings = card_ref_findings(result.cards, config.root)
     errors += ref_errors
     if errors:
         return _fail(errors)

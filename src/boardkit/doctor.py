@@ -734,12 +734,16 @@ def _check_host(checks: _Checks, config: Config) -> None:
 
 
 def _is_shim(text: str) -> bool:
-    """A shim is a pointer, not a second instruction set: it names
-    AGENTS.md within its first lines and carries little else. A file that
-    mentions AGENTS.md once and then supplies its own instructions is a
-    divergent entry file wearing a shim's opening line."""
-    lines = [line for line in text.splitlines() if line.strip()]
-    return "AGENTS.md" in "\n".join(lines[:5]) and len(lines) <= 10
+    """A shim is a pointer, not a second instruction set. Every paragraph
+    must be a heading, a comment stamp, or name AGENTS.md; a paragraph
+    carrying directives of its own makes the file a divergent entry file
+    wearing a shim's opening line. Known limit of a text check: a
+    conflicting clause inside the pointer paragraph itself is out of
+    reach - the paragraph rule keeps that surface one sentence wide."""
+    paragraphs = [p.strip() for p in re.split(r"\n[ \t]*\n", text) if p.strip()]
+    return any("AGENTS.md" in p for p in paragraphs) and all(
+        p.startswith("#") or p.startswith("<!--") or "AGENTS.md" in p for p in paragraphs
+    )
 
 
 def _check_entry_parity(checks: _Checks, root: Path) -> None:

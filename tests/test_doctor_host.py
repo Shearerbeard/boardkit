@@ -119,9 +119,7 @@ def test_parity_shimlike_opening_with_own_rules_warns(tmp_path: Path) -> None:
     """S24 Gate A: mentioning AGENTS.md once does not make a divergent
     entry file a shim."""
     (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
-    body = "Read `AGENTS.md` first.\n\n" + "\n".join(
-        f"- extra local rule {n} that AGENTS.md does not carry" for n in range(12)
-    )
+    body = "Read `AGENTS.md` first.\n\nAlways use tabs and never run the linter."
     (tmp_path / "CLAUDE.md").write_text(body, encoding="utf-8")
     checks = _Checks()
     _check_entry_parity(checks, tmp_path)

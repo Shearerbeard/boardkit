@@ -111,10 +111,31 @@ INLINE_CODE_RE = re.compile(r"`[^`]*`")
 # consumer of the frontmatter (views, canary key, briefs) sees the
 # truncated title. The fix is loud validation at parse, not renderer
 # patching: compare the parsed title against the raw line and refuse.
-# The matcher tolerates the key shapes YAML itself tolerates (leading
-# indent, space before the colon), so those spellings cannot slip past
-# the guard and truncate anyway.
-TITLE_LINE_RE = re.compile(r"^[ \t]*title[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE)
+# The matcher tolerates the key shapes YAML itself tolerates (space
+# before the colon, a uniformly indented mapping), and anchors/tags are
+# stripped before comparing so `&t "quoted"` passes while `&t unquoted
+# #comment` is still caught.
+YAML_ANCHOR_RE = re.compile(r"^(?:[&!]\S+[ \t]+)+")
+
+
+def _raw_title_line(front: str) -> str | None:
+    """The raw value of the frontmatter's own `title` key, or None.
+
+    Only keys at the mapping's base indentation count: the base is read
+    off the first non-empty line, so a nested `title:` deeper in some
+    sub-table can neither satisfy nor falsely trip the guard.
+    """
+    base: str | None = None
+    for line in front.splitlines():
+        if not line.strip():
+            continue
+        if base is None:
+            match = re.match(r"[ \t]*", line)
+            base = match.group(0) if match else ""
+        found = re.match(rf"^{re.escape(base)}title[ \t]*:[ \t]*(.*?)[ \t]*$", line)
+        if found:
+            return found.group(1)
+    return None
 
 
 class BoardError(Exception):
@@ -198,20 +219,23 @@ def parse_card(path: Path, id_re: re.Pattern[str], errors: list[str]) -> dict | 
         not isinstance(meta[KIND_KEY], str) or meta[KIND_KEY] not in KINDS
     ):
         errors.append(f"{path.name}: '{KIND_KEY}' must be one of {sorted(KINDS)}")
-    title_line = TITLE_LINE_RE.search(text[4:end])
-    if title_line is not None:
-        raw_title = title_line.group(1)
-        if "#" in raw_title:
+    raw_title = _raw_title_line(text[4:end])
+    if raw_title is not None:
+        # Anchors and tags precede the scalar without being part of it, so
+        # strip them before comparing: `&t "quoted"` must pass while
+        # `&t unquoted #comment` still truncates and must be caught.
+        raw_scalar = YAML_ANCHOR_RE.sub("", raw_title)
+        if "#" in raw_scalar:
             # The truncation signature: the parsed value is a prefix of the
-            # raw line and the remainder begins at a '#'. A quoted or
-            # anchored title never matches (the raw line starts with the
-            # quote or anchor, not the parsed text), so legitimate YAML
-            # passes; a comment-eaten title always does.
+            # raw scalar and the remainder begins at a '#'. A quoted title
+            # never matches (the raw scalar starts with the quote, not the
+            # parsed text), so legitimate YAML passes; a comment-eaten
+            # title always does.
             parsed_title = str(meta.get("title") or "")
-            remainder = raw_title[len(parsed_title) :].lstrip()
+            remainder = raw_scalar[len(parsed_title) :].lstrip()
             if (
-                parsed_title != raw_title
-                and raw_title.startswith(parsed_title)
+                parsed_title != raw_scalar
+                and raw_scalar.startswith(parsed_title)
                 and remainder.startswith("#")
             ):
                 errors.append(

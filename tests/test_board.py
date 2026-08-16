@@ -282,6 +282,26 @@ def test_unquoted_hash_title_refuses_instead_of_truncating(tmp_path: Path) -> No
     result = build_board(load_config(tmp_path / "boardkit.toml"))
     assert "Record the #398 follow-up" in result.views["INDEX.md"]
 
+    # An anchored UNQUOTED title still truncates and must still be caught:
+    # the anchor precedes the scalar without being part of it.
+    anchored_bare = card.replace(
+        "title: Record the #398 follow-up",
+        "title: &t Record the #398 follow-up",
+    )
+    (cards / "s1-a.md").write_text(anchored_bare, encoding="utf-8")
+    with pytest.raises(BoardError, match="quote the whole title"):
+        build_board(load_config(tmp_path / "boardkit.toml"))
+
+    # A nested `title` key inside a sub-table is not the card title and
+    # must neither trip nor satisfy the guard.
+    nested = card.replace(
+        "title: Record the #398 follow-up",
+        'metadata:\n  title: Inner # note\ntitle: "Record the #398 follow-up"',
+    )
+    (cards / "s1-a.md").write_text(nested, encoding="utf-8")
+    result = build_board(load_config(tmp_path / "boardkit.toml"))
+    assert "Record the #398 follow-up" in result.views["INDEX.md"]
+
 
 def test_gate_position_renders_for_active_cards(tmp_path: Path) -> None:
     """S16: the views carry each active card's parked gate; backlog and
@@ -357,3 +377,24 @@ def test_qualified_gate_occurrences_track_independently(tmp_path: Path) -> None:
     result = build_board(load_config(tmp_path / "boardkit.toml"))
     parsed = {c["id"]: c for c in result.cards}
     assert remaining_gates(parsed["S1"]) == ["U"]
+
+
+def test_passed_qualified_gate_does_not_mask_the_true_position(tmp_path: Path) -> None:
+    """S16 fix re-review: with U(mockup) ticked, S unticked, and launch's
+    box missing, the position is S - a ticked first U must not eclipse it."""
+    (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
+    cards = tmp_path / "cards"
+    cards.mkdir()
+    checklist = "- [x] Gate U (mockup): shown.\n- [ ] Gate S: checks."
+    card = (
+        "---\nid: S1\ntitle: Card S1\nstatus: in-review\n"
+        "depends: []\nserialize-with: []\nlineage: none\nexecutor: any\n"
+        'gates: "U(mockup) -> S -> U(launch)"\nuser-gates: [mockup, launch]\n---\n\n'
+        f"# S1: Card S1\n\n## Gate checklist\n\n{checklist}\n\n"
+        "## Log\n\n- 2026-08-09 x.\n"
+    )
+    (cards / "s1-a.md").write_text(card, encoding="utf-8")
+    result = build_board(load_config(tmp_path / "boardkit.toml"))
+    parsed = {c["id"]: c for c in result.cards}
+    assert remaining_gates(parsed["S1"]) == ["S", "U"]
+    assert "U(mockup) -> S -> U(launch) @ S |" in result.views["INDEX.md"]

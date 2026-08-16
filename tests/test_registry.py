@@ -110,6 +110,15 @@ def test_unverifiable_cached_prefix_is_an_error(tmp_path: Path) -> None:
     _rows, errors = registry_rows(bk)
     assert errors == []
 
+    # A present-but-invalid id_prefix is not an absent key: the cache
+    # must not win against garbage (S18 fix re-review).
+    (board / "boardkit.toml").write_text(
+        '[board]\ncards_dir = "cards"\nid_prefix = 5\n', encoding="utf-8"
+    )
+    _rows, errors = registry_rows(bk)
+    assert len(errors) == 1
+    assert "cannot be verified" in errors[0]
+
 
 def test_collision_reaches_the_involved_boards_check(tmp_path: Path) -> None:
     """S18 Gate A: board_row_errors keeps a collision visible to the very

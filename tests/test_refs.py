@@ -97,6 +97,34 @@ def test_refs_never_affect_readiness(tmp_path: Path) -> None:
     assert result.cards[0]["status"] == "ready"
 
 
+def test_check_judges_refs_against_the_boards_own_registry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """S21 fix re-review: `check --config <board>` run from an unrelated
+    cwd must resolve the registry from the board's root, not the shell's."""
+    from boardkit.cli import main
+
+    board_repo = tmp_path / "boarded"
+    board_repo.mkdir()
+    config_path = _board(board_repo, {"s1-a.md": _card("S1", refs="[tb/T91]")})
+    _manifest(
+        board_repo,
+        'default = "bk"\n'
+        '[boards.bk]\nlocation = "dir:."\n'
+        '[boards.tb]\nlocation = "external"\nid_prefix = "T"\n',
+    )
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)
+    for command in ("render", "check"):
+        monkeypatch.setattr(
+            "sys.argv", ["boardkit", "--config", str(config_path), command]
+        )
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        assert excinfo.value.code == 0, capsys.readouterr().err
+
+
 def test_refs_without_registry_fail_loudly(tmp_path: Path) -> None:
     """S21 Gate A: resolution goes through the registry, so a card that
     carries refs with no registry reachable is an error, never a pass."""

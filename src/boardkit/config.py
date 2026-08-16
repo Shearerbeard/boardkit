@@ -419,8 +419,10 @@ def _board_declared_prefix(root: Path) -> tuple[str | None, bool]:
     delegation contract is mid-migration; the full strict load happens
     when that board is actually used. `readable` distinguishes a config
     that simply omits the key (fine, the row's cache stands in) from one
-    that is missing or unparseable - there verification cannot run, and
-    the caller reports that instead of silently trusting the cache.
+    where verification cannot run or would run against garbage: a
+    missing or unparseable file, a `board` key that is not a table, or
+    an `id_prefix` present with an invalid value. In each of those the
+    caller reports rather than silently trusting the cache.
     """
     config_path = root / CONFIG_FILENAME
     if not config_path.is_file():
@@ -428,11 +430,17 @@ def _board_declared_prefix(root: Path) -> tuple[str | None, bool]:
     try:
         with config_path.open("rb") as f:
             data = tomllib.load(f)
-    except (OSError, tomllib.TOMLDecodeError):
+    except (OSError, tomllib.TOMLDecodeError, UnicodeDecodeError):
         return None, False
     board = data.get("board")
+    if board is not None and not isinstance(board, dict):
+        return None, False
     prefix = board.get("id_prefix") if isinstance(board, dict) else None
-    return (prefix if isinstance(prefix, str) and prefix else None), True
+    if prefix is None:
+        return None, True
+    if not isinstance(prefix, str) or not prefix:
+        return None, False
+    return prefix, True
 
 
 def _board_declared_sentinels(root: Path) -> list[str] | None:
@@ -446,7 +454,7 @@ def _board_declared_sentinels(root: Path) -> list[str] | None:
     try:
         with config_path.open("rb") as f:
             data = tomllib.load(f)
-    except (OSError, tomllib.TOMLDecodeError):
+    except (OSError, tomllib.TOMLDecodeError, UnicodeDecodeError):
         return None
     board = data.get("board")
     sentinels = board.get("sentinel_ids") if isinstance(board, dict) else None
