@@ -118,6 +118,23 @@ def test_index_lane_column_is_opt_in(tmp_path: Path) -> None:
     assert "| Lane |" not in result.views["INDEX.md"]
 
 
+def test_lane_declaration_validation_fails_loudly(tmp_path: Path) -> None:
+    """S19 Gate A: every declaration branch refuses - missing name,
+    duplicate name, bad wip, bad exempt, unknown key."""
+    cases = {
+        "[[board.lanes]]\nwip = 1\n": r"'name' must be a non-empty string",
+        '[[board.lanes]]\nname = "kit"\n[[board.lanes]]\nname = "kit"\n': "duplicate lane",
+        '[[board.lanes]]\nname = "kit"\nwip = -1\n': "'wip' must be a non-negative integer",
+        '[[board.lanes]]\nname = "kit"\nwip = true\n': "'wip' must be a non-negative integer",
+        '[[board.lanes]]\nname = "kit"\nexempt = "yes"\n': "'exempt' must be true or false",
+        '[[board.lanes]]\nname = "kit"\ncolor = "red"\n': "unknown key",
+    }
+    for block, match in cases.items():
+        config_path = _board(tmp_path, {}, "\n" + block)
+        with pytest.raises(ValueError, match=match):
+            load_config(config_path)
+
+
 def test_charter_parses_and_renders_atop_views(tmp_path: Path) -> None:
     config_path = _board(tmp_path, {"s1-a.md": _card("S1")}, CHARTER_BLOCK)
     config = load_config(config_path)
@@ -137,6 +154,28 @@ def test_charter_missing_owns_fails(tmp_path: Path) -> None:
     config_path = _board(tmp_path, {}, bad)
     with pytest.raises(ValueError, match=r"\[charter\]: 'owns'"):
         load_config(config_path)
+
+
+def test_charter_missing_route_fails(tmp_path: Path) -> None:
+    """S20 Gate A: the charter schema is three keys; a missing route table
+    would send a dispatch a refusal with no destination."""
+    bad = "\n[charter]\nowns = 'x'\nnot = 'y'\n"
+    config_path = _board(tmp_path, {}, bad)
+    with pytest.raises(ValueError, match=r"\[charter\]: missing 'route'"):
+        load_config(config_path)
+
+
+def test_chartered_board_requires_the_scope_mirror(tmp_path: Path) -> None:
+    """S20 Gate A: deleting the mirror is drift, not a pass."""
+    config_path = _board(tmp_path, {"s1-a.md": _card("S1")}, CHARTER_BLOCK)
+    config = load_config(config_path)
+    bk = tmp_path / ".boardkit"
+    bk.mkdir()
+    (bk / "manifest.toml").write_text(
+        'default = "bk"\n[boards.bk]\nlocation = "dir:."\n', encoding="utf-8"
+    )
+    errors = board_row_errors(config, tmp_path)
+    assert any("no scope on the row" in e for e in errors)
 
 
 def test_charter_route_errors_need_a_registry(tmp_path: Path) -> None:

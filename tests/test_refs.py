@@ -68,10 +68,26 @@ def test_ref_prefix_mismatch_and_unreachable_are_warnings(tmp_path: Path) -> Non
     cards = build_board(load_config(config_path)).cards
     errors, warnings = card_ref_findings(cards, tmp_path)
     assert errors == []
-    # W4 does not fit tb's S<n> scheme (could be a sentinel): warn.
+    # tb is unresolvable here, so its sentinels are unknowable and W4
+    # stays a warning rather than a blind judgment.
     assert any("prefix scheme" in w and "tb/W4" in w for w in warnings)
     # tb is external with no overlay on this machine: warn, never error.
     assert any("does not resolve" in w for w in warnings)
+
+
+def test_resolvable_board_sentinels_split_error_from_pass(tmp_path: Path) -> None:
+    """S21 Gate A: where the target board's own config is readable, a
+    non-prefix id is judged against its declared sentinels - a sentinel
+    passes clean, anything else is the prefix-mismatch error."""
+    config_path = _board(
+        tmp_path, {"s1-a.md": _card("S1", refs="[bk/MILESTONE, bk/W4]")}
+    )
+    _manifest(tmp_path, TWO_BOARDS)
+    cards = build_board(load_config(config_path)).cards
+    errors, warnings = card_ref_findings(cards, tmp_path)
+    assert any("neither" in e and "bk/W4" in e for e in errors)
+    assert not any("bk/MILESTONE" in e for e in errors)
+    assert not any("bk/MILESTONE" in w for w in warnings)
 
 
 def test_refs_never_affect_readiness(tmp_path: Path) -> None:
@@ -81,7 +97,13 @@ def test_refs_never_affect_readiness(tmp_path: Path) -> None:
     assert result.cards[0]["status"] == "ready"
 
 
-def test_refs_without_registry_stay_prose(tmp_path: Path) -> None:
+def test_refs_without_registry_fail_loudly(tmp_path: Path) -> None:
+    """S21 Gate A: resolution goes through the registry, so a card that
+    carries refs with no registry reachable is an error, never a pass."""
     config_path = _board(tmp_path, {"s1-a.md": _card("S1", refs="[tb/S91]")})
     cards = build_board(load_config(config_path)).cards
-    assert card_ref_findings(cards, tmp_path) == ([], [])
+    errors, warnings = card_ref_findings(cards, tmp_path)
+    assert warnings == []
+    assert len(errors) == 1
+    assert "carry refs but no .boardkit/manifest.toml is reachable" in errors[0]
+    assert "s1-a.md" in errors[0]

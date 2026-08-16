@@ -435,6 +435,26 @@ def _board_declared_prefix(root: Path) -> tuple[str | None, bool]:
     return (prefix if isinstance(prefix, str) and prefix else None), True
 
 
+def _board_declared_sentinels(root: Path) -> list[str] | None:
+    """The sentinel_ids a resolvable board's own config declares, read
+    lightly. None when the config is missing or unparseable - sentinel
+    membership cannot be established and the caller falls back to a
+    warning rather than judging blind."""
+    config_path = root / CONFIG_FILENAME
+    if not config_path.is_file():
+        return None
+    try:
+        with config_path.open("rb") as f:
+            data = tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError):
+        return None
+    board = data.get("board")
+    sentinels = board.get("sentinel_ids") if isinstance(board, dict) else None
+    if isinstance(sentinels, list) and all(isinstance(s, str) for s in sentinels):
+        return sentinels
+    return None
+
+
 def registry_rows(boardkit_dir: Path) -> tuple[list[RegistryRow], list[str]]:
     """Every registry row plus the validation errors over the family.
 
@@ -521,7 +541,14 @@ def board_row_errors(config: Config, cwd: Path) -> list[str]:
     found = [e for e in errors if any(f"[boards.{row.code}]" in e for row in mine)]
     if config.charter is not None:
         for row in mine:
-            if row.entry.scope is not None and row.entry.scope != config.charter.owns:
+            if row.entry.scope is None:
+                # Absence is drift too: deleting the mirror must not read
+                # as a pass on a chartered board.
+                found.append(
+                    f"[boards.{row.code}]: no scope on the row; a chartered board "
+                    f"mirrors its charter `owns` line here ('{config.charter.owns}')"
+                )
+            elif row.entry.scope != config.charter.owns:
                 found.append(
                     f"[boards.{row.code}]: scope is the charter `owns` mirror and they "
                     f"differ (row: '{row.entry.scope}'; charter: '{config.charter.owns}')"
@@ -535,16 +562,25 @@ def card_ref_findings(
     """(errors, warnings) for the cards' qualified cross-board refs (R3).
 
     The short-code must be a registry row and the id must fit that row's
-    prefix scheme when one is known. A board this machine cannot reach is
-    a warning, not an error: the ref is informational and the registry row
-    proves the code is real. With no registry reachable, refs stay prose.
+    prefix scheme when one is known. A non-prefix id against a board whose
+    own config this machine can read is judged against that board's
+    declared sentinel ids - a sentinel passes, anything else is an error.
+    Where the board is unreachable or its config unreadable, sentinel
+    membership cannot be established and the mismatch stays a warning.
+    Cards that carry refs with no registry reachable at all are an error:
+    resolution goes through the registry, so its absence must not read as
+    a pass.
     """
     with_refs = [(card, card.get("refs")) for card in cards if card.get("refs")]
     if not with_refs:
         return [], []
     boardkit_dir = find_boardkit(cwd) or git_common_boardkit(cwd)
     if boardkit_dir is None:
-        return [], []
+        carded = ", ".join(sorted({card["_file"] for card, _ in with_refs}))
+        return [
+            f"cards carry refs but no {BOARDKIT_DIRNAME}/{MANIFEST_FILENAME} is "
+            f"reachable from {cwd.resolve()} to validate them against ({carded})"
+        ], []
     rows, _errors = registry_rows(boardkit_dir)
     by_code = {row.code: row for row in rows}
     errors: list[str] = []
@@ -563,12 +599,23 @@ def card_ref_findings(
             if prefix is not None and not re.fullmatch(
                 re.escape(prefix) + r"\d+", ref_id
             ):
-                # Sentinel ids of another board are not knowable from the
-                # row, so a non-prefix id is a warning, never an error.
-                warnings.append(
-                    f"{card['_file']}: ref '{ref}' does not match board '{code}' "
-                    f"prefix scheme '{prefix}<n>' (a sentinel id is fine; check the spelling)"
+                sentinels = (
+                    _board_declared_sentinels(row.resolved_root)
+                    if row.resolved_root is not None
+                    else None
                 )
+                if sentinels is None:
+                    # The board is unreachable or its config unreadable, so
+                    # sentinel membership is not knowable here; warn.
+                    warnings.append(
+                        f"{card['_file']}: ref '{ref}' does not match board '{code}' "
+                        f"prefix scheme '{prefix}<n>' (a sentinel id is fine; check the spelling)"
+                    )
+                elif ref_id not in sentinels:
+                    errors.append(
+                        f"{card['_file']}: ref '{ref}' matches neither board '{code}' "
+                        f"prefix scheme '{prefix}<n>' nor its declared sentinel ids"
+                    )
             if row.resolved_root is None:
                 warnings.append(
                     f"{card['_file']}: ref '{ref}' points at a board this machine "
@@ -694,6 +741,15 @@ def _parse_charter(charter_data: object) -> CharterConfig:
     for key in ("owns", "not"):
         if not isinstance(data.get(key), str) or not data[key]:
             raise ValueError(f"[charter]: '{key}' must be a non-empty string")
+    if "route" not in data:
+        # The charter schema is three keys; a charter that refuses work
+        # with no routing table sends a dispatch a refusal and no
+        # destination. An empty [charter.route] is an explicit statement;
+        # a missing one is a hole.
+        raise ValueError(
+            "[charter]: missing 'route' table; map refused work to registry "
+            "short-codes ([charter.route])"
+        )
     route_data = require_table("charter.route", data.get("route", {}))
     for code, description in route_data.items():
         if not isinstance(description, str) or not description:

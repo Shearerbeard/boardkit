@@ -162,6 +162,23 @@ def test_the_provenance_footer_says_to_regenerate(tmp_path: Path) -> None:
 # --- determinism and digest -------------------------------------------------
 
 
+def test_the_brief_carries_the_charter(tmp_path: Path) -> None:
+    """S20 Gate A: charter injection is asserted at the brief itself, not
+    only at the parser and the views."""
+    config_path = _board(tmp_path)
+    config_path.write_text(
+        config_text(cards_dir="docs/board/cards")
+        + "\n[charter]\nowns = 'the kit family'\nnot = 'consumer fixes'\n"
+        + "\n[charter.route]\naura = 'aura-family work'\n",
+        encoding="utf-8",
+    )
+    brief = build_brief(load_config(config_path), "S1")
+    assert "## Board charter" in brief
+    assert "- owns: the kit family" in brief
+    assert "- not here: consumer fixes" in brief
+    assert "- route aura -> aura-family work" in brief
+
+
 def test_the_brief_carries_no_timestamp(tmp_path: Path) -> None:
     """A timestamp would make every regeneration a diff, and a diff nobody
     reads is a diff that hides a real change."""
