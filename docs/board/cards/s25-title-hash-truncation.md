@@ -74,3 +74,24 @@ direct
 - 2026-08-09 In-review; commit-range 028ce5d..a95fcab.
 - 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
   Session B boundary; packets present at the Gate B user gate).
+- 2026-08-16 Gate A ran (resolving the deferral): reviewer gpt-5.6-sol
+  via codex exec, author claude-fable-5 (whole wave); the pinned
+  opencode lane stalled its read probe on two models and the declared
+  codex fallback took the dispatch. Verdict FAIL, two findings, both
+  confirmed by reproduction before fixing.
+  1. BLOCKING board.py title guard falsely refused an anchored quoted
+     title (raw line starts with '&', read as unquoted). Fixed in
+     fa9db37: the guard now fires on the truncation signature (parsed
+     value a prefix of the raw line, remainder at '#') instead of the
+     first-char-quote heuristic.
+  2. BLOCKING TITLE_LINE_RE only matched an unindented exact 'title:'
+     key, so YAML-tolerated spellings (space before colon, indented
+     frontmatter) truncated silently past the guard. Fixed in fa9db37:
+     the matcher tolerates what YAML tolerates; regression tests cover
+     both spellings plus the anchor pass-through.
+  Reviewer-reported UNVERIFIED (sandbox): pytest, ruff - run
+  board-owner-side instead: 338 pytest green, ruff clean. Fix commit
+  fa9db37 sits apart from the card's reviewed range with foreign
+  commits between, so commit-range stays 028ce5d..a95fcab and the
+  fix-commit re-review runs over fa9db37^..fa9db37 via the packet
+  override; Gate A's box stays unticked until that re-review passes.
