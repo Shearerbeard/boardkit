@@ -288,12 +288,15 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     # config-absent finding path rather than a traceback; a malformed
     # manifest still refuses loudly (ValueError reaches main's handler).
     config_arg = args.config
+    resolution_source = None if config_arg is None else "--config"
     if config_arg is None:
         try:
-            config_arg = str(resolve_board(Path.cwd(), board=args.board).config_path)
+            resolution = resolve_board(Path.cwd(), board=args.board)
+            config_arg = str(resolution.config_path)
+            resolution_source = resolution.source
         except FileNotFoundError:
             config_arg = None
-    report = run_doctor(config_arg, Path.cwd())
+    report = run_doctor(config_arg, Path.cwd(), resolution_source=resolution_source)
     print(render_json(report) if args.json else render_text(report), end="")
     return 1 if report.errors else 0
 

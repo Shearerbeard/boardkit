@@ -260,7 +260,18 @@ def load_overlay(boardkit_dir: Path) -> dict[str, Path]:
             raise ValueError(f"{path}: [boards.{code}]: unknown key(s): {sorted(unknown_row)}")
         if not isinstance(row_data.get("path"), str) or not row_data["path"]:
             raise ValueError(f"{path}: [boards.{code}]: 'path' must be a non-empty string")
-        overlay[code] = Path(row_data["path"]).expanduser()
+        overlay_path = Path(row_data["path"]).expanduser()
+        if not overlay_path.is_absolute():
+            # A relative overlay path would resolve against whatever cwd the
+            # process happens to run from, silently landing on any directory
+            # that holds a boardkit.toml. The overlay's contract is absolute
+            # machine-local paths; refuse the relative form loudly.
+            raise ValueError(
+                f"{path}: [boards.{code}]: 'path' must be absolute "
+                f"(got {row_data['path']!r}); a relative path resolves "
+                "against the process working directory, not this file"
+            )
+        overlay[code] = overlay_path
     return overlay
 
 

@@ -133,6 +133,7 @@ class DoctorReport:
     config_path: Path | None
     contract_version: int | None
     digest: str | None
+    resolution_source: str | None
     findings: tuple[Finding, ...]
     skipped: tuple[Skip, ...]
     passed: tuple[str, ...]
@@ -317,13 +318,18 @@ class _Checks:
                 self.skip(check, reason)
 
     def report(
-        self, config_path: Path | None, version: int | None, digest: str | None = None
+        self,
+        config_path: Path | None,
+        version: int | None,
+        digest: str | None = None,
+        resolution_source: str | None = None,
     ) -> DoctorReport:
         order = {check: index for index, check in enumerate(ALL_CHECKS)}
         return DoctorReport(
             config_path=config_path,
             contract_version=version,
             digest=digest,
+            resolution_source=resolution_source,
             findings=tuple(sorted(self.findings, key=lambda f: order[f.check])),
             skipped=tuple(sorted(self.skipped, key=lambda s: order[s.check])),
             passed=tuple(sorted(self.passed, key=lambda c: order[c])),
@@ -759,11 +765,18 @@ def _check_entry_parity(checks: _Checks, root: Path) -> None:
     checks.ok("entry.parity")
 
 
-def run_doctor(config_arg: str | None, cwd: Path, home: Path | None = None) -> DoctorReport:
+def run_doctor(
+    config_arg: str | None,
+    cwd: Path,
+    home: Path | None = None,
+    resolution_source: str | None = None,
+) -> DoctorReport:
     """Diagnose the whole installation. Reports failures; never raises them.
 
     `home` is a parameter so the skills quadrant is testable end to end; it
     defaults to the real home directory, which is what the CLI passes.
+    `resolution_source` names the resolution step that selected the config,
+    so the report says which selector won rather than only where it landed.
     """
     checks = _Checks()
     home = Path.home() if home is None else home
@@ -771,14 +784,14 @@ def run_doctor(config_arg: str | None, cwd: Path, home: Path | None = None) -> D
     config_path = _check_config_present(checks, config_arg, cwd)
     if config_path is None:
         checks.skip_remaining("no config file was found")
-        return checks.report(None, None)
+        return checks.report(None, None, resolution_source=resolution_source)
 
     _check_repo_root(checks, config_path, cwd)
     version_known = _check_version_known(checks, config_path)
     config = _check_config_loads(checks, config_path, version_known)
     if config is None:
         checks.skip_remaining("the config could not be loaded")
-        return checks.report(config_path, None)
+        return checks.report(config_path, None, resolution_source=resolution_source)
 
     version = config.contract.version
     root = config.root
@@ -800,7 +813,9 @@ def run_doctor(config_arg: str | None, cwd: Path, home: Path | None = None) -> D
     _check_entry_parity(checks, root)
 
     checks.skip_remaining("not reached")
-    return checks.report(config_path, version, contract_digest(config))
+    return checks.report(
+        config_path, version, contract_digest(config), resolution_source=resolution_source
+    )
 
 
 def render_text(report: DoctorReport) -> str:
@@ -813,6 +828,8 @@ def render_text(report: DoctorReport) -> str:
         lines.append(f"contract: v{report.contract_version}")
     if report.digest is not None:
         lines.append(f"digest: {report.digest}")
+    if report.resolution_source is not None:
+        lines.append(f"resolved via: {report.resolution_source}")
     lines.append("")
     for finding in report.findings:
         lines.append(f"{finding.severity.upper()}: {finding.check}: {finding.message}")
@@ -835,6 +852,7 @@ def render_json(report: DoctorReport) -> str:
         "config_path": str(report.config_path) if report.config_path is not None else None,
         "contract_version": report.contract_version,
         "digest": report.digest,
+        "resolution_source": report.resolution_source,
         "ok": not report.errors,
         "findings": [
             {

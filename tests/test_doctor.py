@@ -292,6 +292,18 @@ def test_text_output_names_the_check_and_a_remedy(tmp_path: Path) -> None:
     assert text.rstrip().endswith("skipped")
 
 
+def test_report_names_the_resolution_step_that_won(tmp_path: Path) -> None:
+    """S13 Gate A: the report says which selector chose the board, so a
+    stale BOARDKIT_BOARD or overlay checkout cannot win silently."""
+    root = _fresh_board(tmp_path)
+    report = run_doctor(str(root / "boardkit.toml"), root, resolution_source="BOARDKIT_BOARD")
+    assert report.resolution_source == "BOARDKIT_BOARD"
+    assert "resolved via: BOARDKIT_BOARD" in render_text(report)
+    # Absent a source, the line stays out rather than printing a blank.
+    silent = run_doctor(str(root / "boardkit.toml"), root)
+    assert "resolved via" not in render_text(silent)
+
+
 # --- stamps and views -------------------------------------------------------
 
 

@@ -140,6 +140,18 @@ def test_external_without_overlay_names_the_fix(tmp_path: Path) -> None:
         resolve_board(repo, env={})
 
 
+def test_relative_overlay_path_refuses_loudly(tmp_path: Path) -> None:
+    """S13 Gate A: a relative overlay path would resolve against the process
+    cwd and silently land on whatever board sits there; refuse it."""
+    repo = tmp_path / "repo"
+    bk = _manifest(repo, 'default = "aura"\n[boards.aura]\nlocation = "external"\n')
+    (bk / "local.toml").write_text(
+        '[boards.aura]\npath = "../wiki/boards/aura"\n', encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="must be absolute"):
+        resolve_board(repo, env={})
+
+
 def test_common_dir_fallback_from_linked_worktree(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     _board(repo)
