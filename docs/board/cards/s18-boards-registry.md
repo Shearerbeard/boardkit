@@ -30,8 +30,11 @@ dogfood rows), docs, tests.
 The `.boardkit/manifest.toml` from S13 grows into the family registry.
 Each `[boards.<code>]` row carries `location` (scheme-prefixed),
 `engine`, `id_prefix`, and `scope` (one line; the charter `owns` mirror
-once S20 lands). Optional `status` marks a row `transitioning`,
-`external`, or `archived`. Engine heterogeneity is data: pre-boardkit,
+once S20 lands). Optional `status` marks a row `transitioning` or
+`archived`, with `active` the default; externality is the `location`
+scheme plus the overlay, per the R4 scheme-prefixed ruling, not a
+status. (Amended at Gate A: the minted line listed `external` in the
+status vocabulary.) Engine heterogeneity is data: pre-boardkit,
 hand-maintained, and TODO-file surfaces are first-class rows, so the
 registry can describe a family before it is uniform.
 
@@ -99,3 +102,35 @@ direct
 - 2026-08-09 In-review; commit-range deb9c2b..bb2d0f8.
 - 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
   Session B boundary; packets present at the Gate B user gate).
+- 2026-08-16 Gate A ran (resolving the deferral): reviewer gpt-5.6-sol
+  via codex exec, author claude-fable-5 (whole wave); codex fallback
+  after the opencode lane stalled its read probe. Verdict FAIL, four
+  findings.
+  1. BLOCKING a cached id_prefix was accepted exactly when the board's
+     config was missing or unparseable - the cache won when it could
+     not be checked. Confirmed. Fixed in fe308d0: unverifiable caches
+     report; a readable config that merely omits the key stays clean.
+  2. BLOCKING a new row can self-mark prefix_collision_ok and join an
+     existing collision group. Rejected as designed, with the reason
+     recorded: the registry holds no history, so old and new claims
+     are indistinguishable in data; the mark is a deliberate reviewed
+     manifest edit. The stronger shape (marks naming the codes they
+     collide with, forcing edits to every existing row) is noted for
+     drain 8. Surfaced at the next user gate.
+  3. BLOCKING collision errors carried no [boards.<code>] marker, so
+     board_row_errors' filter dropped them all and check never saw a
+     collision involving its own board. Confirmed. Fixed in fe308d0:
+     per-row emission with markers; regression test drives check-level
+     visibility.
+  4. BLOCKING ROW_STATUSES omits the 'external' status the deliverable
+     listed. Dispositioned by amending the deliverable line: the R4
+     ruling made externality a location scheme resolved through the
+     overlay, and the implementation followed the ruling; a status
+     duplicating the scheme would give one fact two homes. Amendment
+     noted inline on the card.
+  Reviewer-reported UNVERIFIED (sandbox): pytest, check, doctor - run
+  board-owner-side: 343 pytest green, ruff clean, check OK. Fix commit
+  fe308d0 sits apart from the reviewed range with foreign commits
+  between, so commit-range stays deb9c2b..bb2d0f8 and the fix-commit
+  re-review runs over fe308d0^..fe308d0 via the packet override; Gate
+  A's box stays unticked until that re-review passes.
