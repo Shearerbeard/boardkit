@@ -751,21 +751,15 @@ def _is_shim(text: str) -> bool:
     false alarm costs a one-line edit while a false calm costs two
     harnesses silently following different rules.
     """
+    # Strip comment spans, not comment lines: a stamp may open and close
+    # mid-line, and the text on either side of it is ordinary prose. An
+    # unterminated comment runs to the end of the file.
+    stripped = re.sub(r"<!--.*?-->", " ", text, flags=re.DOTALL)
+    stripped = re.sub(r"<!--.*\Z", " ", stripped, flags=re.DOTALL)
     body: list[str] = []
-    in_comment = False
-    for raw in text.splitlines():
+    for raw in stripped.splitlines():
         line = raw.strip()
-        if in_comment:
-            # A stamp may span lines; everything up to its close is
-            # boilerplate, not a directive with unlucky punctuation.
-            if "-->" in line:
-                in_comment = False
-            continue
         if not line:
-            continue
-        if line.startswith("<!--"):
-            if "-->" not in line:
-                in_comment = True
             continue
         if line.startswith("#"):
             # A title is boilerplate; a directive wearing heading syntax

@@ -136,6 +136,8 @@ def test_parity_short_divergent_shim_warns(tmp_path: Path) -> None:
         "# CLAUDE.md\nAlways use tabs.\n",
         # A directive wearing heading syntax is still a directive.
         "Read `AGENTS.md` first.\n# Always use tabs\n",
+        # Text after a stamp that closes mid-line is prose, not stamp.
+        "Read `AGENTS.md` first.\n<!-- stamp\nstamp --> Always use tabs.\n",
     ):
         (tmp_path / "CLAUDE.md").write_text(body, encoding="utf-8")
         checks = _Checks()
