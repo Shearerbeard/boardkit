@@ -96,8 +96,8 @@ direct
   lane clusters only; epic clustering and `--to <epic>` land at the
   post-R2 pass.
 - 2026-08-09 In-review; commit-range d059160..85ab722.
-- 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
-  Session B boundary; packets present at the Gate B user gate).
+- 2026-08-09 Gate A deferred, superseded 2026-08-16: adversarial reviews batch at the
+  Session B boundary; packets present at the Gate B user gate.
 - 2026-08-09 Post-R2 epic pass landed in S23's commit (epic clusters
   in graph.md, `dag --to <epic>` member-union closure). R9 is now
   COMPLETE; the shipped-incomplete marker above is closed.
@@ -131,3 +131,18 @@ direct
   so commit-range stays d059160..85ab722 and the fix-commit re-review
   runs over 6af06a7^..6af06a7 via the packet override; Gate A's box
   stays unticked until that re-review passes.
+- 2026-08-16 Gate A review cycle closed by ruling; full round ledger in
+  [2026-08-16-gate-a-review-cycle.md](../evidence/2026-08-16-gate-a-review-cycle.md).
+  Rounds 2 to 5 re-reviewed the fix commits. Round 5 confirms every
+  recorded fix and every round-4 residue resolved; from round 3 on, the
+  findings were confined to `_is_shim` in the S24 fix code, one narrower
+  evasion per round, and that hardening is carded as S29 rather than
+  patched a sixth time. Every finding against this card's own reviewed
+  diff is resolved. The reviewer never issued an explicit sign-off, so
+  the box stays unticked, because a failed return is never a pass. The
+  2026-08-09 batch deferral is superseded - the batch ran, on the codex
+  fallback after the opencode lane failed its read probe four times.
+- 2026-08-16 Gate A open: deferred (review cycle closed by ruling after five
+  rounds with every card-diff finding resolved and no explicit reviewer
+  sign-off; the pass decision is the user's at U code-review, on the ledger
+  in docs/board/evidence/2026-08-16-gate-a-review-cycle.md)

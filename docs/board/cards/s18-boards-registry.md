@@ -100,8 +100,8 @@ direct
   `test_cross_board_resolution_lands_each_code_on_its_own_config`
   passes.
 - 2026-08-09 In-review; commit-range deb9c2b..bb2d0f8.
-- 2026-08-09 Gate A open: deferred (adversarial reviews batch at the
-  Session B boundary; packets present at the Gate B user gate).
+- 2026-08-09 Gate A deferred, superseded 2026-08-16: adversarial reviews batch at the
+  Session B boundary; packets present at the Gate B user gate.
 - 2026-08-16 Gate A ran (resolving the deferral): reviewer gpt-5.6-sol
   via codex exec, author claude-fable-5 (whole wave); codex fallback
   after the opencode lane stalled its read probe. Verdict FAIL, four
@@ -134,3 +134,18 @@ direct
   between, so commit-range stays deb9c2b..bb2d0f8 and the fix-commit
   re-review runs over fe308d0^..fe308d0 via the packet override; Gate
   A's box stays unticked until that re-review passes.
+- 2026-08-16 Gate A review cycle closed by ruling; full round ledger in
+  [2026-08-16-gate-a-review-cycle.md](../evidence/2026-08-16-gate-a-review-cycle.md).
+  Rounds 2 to 5 re-reviewed the fix commits. Round 5 confirms every
+  recorded fix and every round-4 residue resolved; from round 3 on, the
+  findings were confined to `_is_shim` in the S24 fix code, one narrower
+  evasion per round, and that hardening is carded as S29 rather than
+  patched a sixth time. Every finding against this card's own reviewed
+  diff is resolved. The reviewer never issued an explicit sign-off, so
+  the box stays unticked, because a failed return is never a pass. The
+  2026-08-09 batch deferral is superseded - the batch ran, on the codex
+  fallback after the opencode lane failed its read probe four times.
+- 2026-08-16 Gate A open: deferred (review cycle closed by ruling after five
+  rounds with every card-diff finding resolved and no explicit reviewer
+  sign-off; the pass decision is the user's at U code-review, on the ledger
+  in docs/board/evidence/2026-08-16-gate-a-review-cycle.md)

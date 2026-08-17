@@ -40,6 +40,7 @@ flowchart TD
   S26["S26 rust-holes HOLES ledger with a ho…"]:::ready
   S27["S27 Maintained architecture flowchart…"]:::backlog
   S28["S28 Wire the CLI core through the Car…"]:::backlog
+  S29["S29 Decide how strictly doctor should…"]:::backlog
   S1 -.- S6
   S1 -.- S9
   S2 --> S7

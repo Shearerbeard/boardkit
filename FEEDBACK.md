@@ -253,3 +253,159 @@ than restated here. The gitignored packet-retention half belongs to the
 range-field fragility is adjacent to the 2026-08-09
 commit-range-excludes-first-commit entry. The ranked read order is S15 and the
 dangling-reference half is S8. Proposes; the maintainer disposes.
+
+## 2026-08-16 packet-carries-no-review-scope-guide
+
+```yaml
+date: 2026-08-16
+harness: opencode
+agent: kimi-for-coding/k3
+workstreams: [boardkit]
+repo: chore-lottery
+source: docs/board/reviews/S8/REVIEW.md plus the hand-written REVIEW-GUIDE.md companion
+```
+
+At S8's U(code-review) the user opened the generated packet and asked
+where "the auto 80/20 guide" was: they could not tell what the scope of
+their review was. The packet (REVIEW.md plus per-commit diffs) is
+complete as evidence but carries no orientation: what to read closely,
+what the gates already covered, what is skim-safe. The board owner
+hand-wrote a REVIEW-GUIDE.md companion (the risky 20%, the skim-safe
+rest, the parked decisions) to unblock the review. Adjacent to the
+existing entry's "guided review is hand-built every wave" finding, but
+this one is per-card and user-facing: the reader at a U gate is the
+user, not an agent, and the packet is their only map. A generated
+"review focus" section (risky files from the diff stats, gate coverage
+from the card, open questions from the log) would remove the
+hand-writing. Proposes; the maintainer disposes.
+
+## 2026-08-16 parallel-same-crate-fills-see-each-others-mid-flight-state
+
+```yaml
+date: 2026-08-16
+harness: opencode
+agent: kimi-for-coding/k3
+workstreams: [boardkit]
+repo: chore-lottery
+source: docs/board/retro/2026-08-16-s8-implementation-close.md
+```
+
+Five rust-write fills dispatched in parallel against disjoint files of
+one new crate each reported the siblings' half-written files as compile
+errors and lint failures, and their reports cross-described transient
+states that no longer existed at collection time. Every fill landed
+clean in the end; the cost was report noise and one wasted round of
+"is my file the broken one" per executor. The briefs scoped cargo test
+with name filters, which helped, but cargo still compiles the whole
+crate. Candidate directions: a dispatch-brief note that parallel fills
+in one crate should expect cross-file interference and report it as
+such, or a sequencing rule (skeleton-critical files first, leaf fills
+parallel). Proposes; the maintainer disposes.
+
+## 2026-08-16 review-cycle-had-no-termination-rule
+
+```yaml
+date: 2026-08-16
+harness: claude-code
+agent: claude-fable-5
+workstreams: [boardkit]
+repo: boardkit (its own board, the R-wave Gate A)
+source: docs/board/evidence/2026-08-16-gate-a-review-cycle.md
+```
+
+The batched Gate A over ten cards ran, then its fix commits were
+re-reviewed four more times. Rounds 1 and 2 found real defects in the
+cards' diffs. From round 3 on, every finding was in one text heuristic
+inside a fix commit, and each round returned exactly one new evasion
+narrower than the last. A bare mention of the target file counted as
+proof; the next round got past that with a directive wearing heading
+syntax; the round after that used prose trailing a mid-line comment
+close. All of them were real and all were fixed, with nothing in the kit
+saying when to stop. The
+board owner ended it by writing a ruling and carding the residue as S29.
+The three-attempt cap in REVIEW-TOOLING governs dispatch attempts against
+a stalled transport, not iteration depth against a reviewer that is
+working correctly. S14 owns the convergence rule and now has a worked
+example to build from; two shapes the session would have used: stop when
+a round's findings no longer touch the reviewed diff, and stop when
+round N+1's findings are strictly narrower instances of round N's class.
+Proposes; the maintainer disposes.
+
+## 2026-08-16 deferral-reason-cannot-be-superseded
+
+```yaml
+date: 2026-08-16
+harness: claude-code
+agent: claude-fable-5
+workstreams: [boardkit]
+repo: boardkit (its own board, closing the R-wave)
+source: docs/board/cards/deferred.md and src/boardkit/board.py deferred_gates
+```
+
+A gate can stay open for a new reason after its original deferral
+condition is met, and the card log has no way to say so. `deferred_gates`
+collapses repeat deferrals by reason and treats a new reason as a new
+entry, so logging the current reason rendered two rows per card in
+`deferred.md` - one of them a condition that had already been satisfied.
+Only ticking the box clears the old row, and ticking asserts a pass the
+reviewer never gave. The board owner annotated the ten resolved markers
+in place (`Gate A open: deferred (` became `Gate A deferred, superseded
+<date>:`), which keeps the historical text and date while removing the
+shape boardkit reads as live. That worked, but it is an invented
+convention: the kit has no supersession vocabulary, and a false row in the
+deferred view is exactly the ambiguity the orientation canary is supposed
+to catch. Candidate fixes: a `resolved`/`superseded` marker the parser
+understands, or letting the newest deferral for a gate win with the older
+ones kept as history. Proposes; the maintainer disposes.
+
+## 2026-08-16 canary-role-has-no-fallback-route
+
+```yaml
+date: 2026-08-16
+harness: claude-code
+agent: claude-fable-5
+workstreams: [boardkit]
+repo: boardkit (its own board, session close)
+source: boardkit.toml [roles.canary] and docs/board/evidence/2026-08-16-gate-a-review-cycle.md
+```
+
+`board-hygiene` calls the orientation canary a hard stop before session
+close, and the scaffolded contract binds `roles.canary` to a single route
+with no fallback. When that transport went down - four failed read probes
+across three models, while `opencode models` still answered - the canary
+could not run, and the only contract-conformant move was to defer a step
+the hygiene skill calls a hard stop. `code-review` survived the same
+outage because it declares a fallback. Two candidates, not exclusive:
+scaffold `roles.canary` with the same fallback shape the review roles get,
+and have `board-hygiene` say what a session close looks like when the
+canary transport is unreachable, so the answer is not improvised at the
+one moment the board is about to be left alone. Related: a board owner
+must not substitute a transport the contract does not name, so the gap
+cannot be closed session-side. Proposes; the maintainer disposes.
+
+## 2026-08-16 review-packet-range-and-verdict-reading-hazards
+
+```yaml
+date: 2026-08-16
+harness: claude-code
+agent: claude-fable-5
+workstreams: [boardkit]
+repo: boardkit (its own board, the R-wave Gate A)
+source: docs/board/evidence/2026-08-16-gate-a-review-cycle.md
+```
+
+Three smaller frictions from the same wave. First, `review-packet
+--commit-range` rejects anything that is not two hex shas, so the natural
+`<sha>^..<sha>` for a single fix commit fails and the caller has to
+pre-resolve the parent with `git rev-parse`; git revision expressions
+would cost nothing to accept. Second, the fix-commit re-review duty says
+the card's `commit-range` extends to include the fix commit, but a fix
+commit separated from the reviewed range by other cards' commits cannot be
+expressed as `A..B` at all; this wave reviewed each fix through its own
+`--suffix` packet instead, which works and is undocumented. Third, a
+reviewer that reads other cards' review outputs quotes their verdict lines
+into its own transcript, so the obvious `grep 'VERDICT:' <output> |
+tail -1` reports a verdict belonging to a different review - it misread one
+FAIL as this review's own mid-session. A packet-side verdict field, or a
+documented rule to read the reviewer's own final message, would remove the
+trap. Proposes; the maintainer disposes.

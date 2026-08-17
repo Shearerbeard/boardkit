@@ -7,13 +7,13 @@ properly; the next user gate surfaces it rather than absorbing it.
 
 | Card | Gate | Waiting on |
 |---|---|---|
-| [S13](s13-board-discovery.md) | Gate A | adversarial reviews batch at the Session B boundary so the reviewer sees the whole wave; packets present at the Gate B user gate |
-| [S16](s16-gate-position-in-views.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
-| [S18](s18-boards-registry.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
-| [S19](s19-lanes-first-class.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
-| [S20](s20-board-charters.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
-| [S21](s21-cross-board-refs.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
-| [S22](s22-dag-queries.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
-| [S23](s23-epic-grouping.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
-| [S24](s24-doctor-host-hazards.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
-| [S25](s25-title-hash-truncation.md) | Gate A | adversarial reviews batch at the Session B boundary; packets present at the Gate B user gate |
+| [S13](s13-board-discovery.md) | Gate A | review cycle closed by ruling after five rounds with every card-diff finding resolved and no explicit reviewer sign-off; the pass decision is the user's at U code-review, on the ledger in docs/board/evidence/2026-08-16-gate-a-review-cycle.md |
+| [S16](s16-gate-position-in-views.md) | Gate A | review cycle closed by ruling after five rounds with every card-diff finding resolved and no explicit reviewer sign-off; the pass decision is the user's at U code-review, on the ledger in docs/board/evidence/2026-08-16-gate-a-review-cycle.md |
+| [S18](s18-boards-registry.md) | Gate A | review cycle closed by ruling after five rounds with every card-diff finding resolved and no explicit reviewer sign-off; the pass decision is the user's at U code-review, on the ledger in docs/board/evidence/2026-08-16-gate-a-review-cycle.md |
+| [S19](s19-lanes-first-class.md) | Gate A | review cycle closed by ruling after five rounds with every card-diff finding resolved and no explicit reviewer sign-off; the pass decision is the user's at U code-review, on the ledger in docs/board/evidence/2026-08-16-gate-a-review-cycle.md |
+| [S20](s20-board-charters.md) | Gate A | review cycle closed by ruling after five rounds with every card-diff finding resolved and no explicit reviewer sign-off; the pass decision is the user's at U code-review, on the ledger in docs/board/evidence/2026-08-16-gate-a-review-cycle.md |
+| [S21](s21-cross-board-refs.md) | Gate A | review cycle closed by ruling after five rounds with every card-diff finding resolved and no explicit reviewer sign-off; the pass decision is the user's at U code-review, on the ledger in docs/board/evidence/2026-08-16-gate-a-review-cycle.md |
+| [S22](s22-dag-queries.md) | Gate A | review cycle closed by ruling after five rounds with every card-diff finding resolved and no explicit reviewer sign-off; the pass decision is the user's at U code-review, on the ledger in docs/board/evidence/2026-08-16-gate-a-review-cycle.md |
+| [S23](s23-epic-grouping.md) | Gate A | review cycle closed by ruling after five rounds with every card-diff finding resolved and no explicit reviewer sign-off; the pass decision is the user's at U code-review, on the ledger in docs/board/evidence/2026-08-16-gate-a-review-cycle.md |
+| [S24](s24-doctor-host-hazards.md) | Gate A | review cycle closed by ruling after five rounds with every card-diff finding resolved and no explicit reviewer sign-off; the pass decision is the user's at U code-review, on the ledger in docs/board/evidence/2026-08-16-gate-a-review-cycle.md |
+| [S25](s25-title-hash-truncation.md) | Gate A | review cycle closed by ruling after five rounds with every card-diff finding resolved and no explicit reviewer sign-off; the pass decision is the user's at U code-review, on the ledger in docs/board/evidence/2026-08-16-gate-a-review-cycle.md |

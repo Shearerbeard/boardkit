@@ -64,3 +64,16 @@ direct
 
 - 2026-08-05 Minted by the fifth feedback drain from the Epoch
   five-round review-cycle finding.
+- 2026-08-16 Second worked example, on this board's own R-wave:
+  [2026-08-16-gate-a-review-cycle.md](../evidence/2026-08-16-gate-a-review-cycle.md).
+  Five rounds again. Rounds 1 and 2 found defects in the reviewed diffs;
+  rounds 3 to 5 each returned one further evasion of a single text
+  heuristic living in a fix commit, each narrower than the one before,
+  and the cycle ended by a board-owner ruling rather than by a rule.
+  Two candidate termination conditions the session would have used, both
+  checkable from the review records this card already has to read: stop
+  when a round's findings no longer touch the reviewed diff, and stop
+  when round N+1's findings are strictly narrower instances of round N's
+  class. The ruling also had to answer what happens to the gate when a
+  cycle ends without a pass, which is the half the Epoch example did not
+  reach: it stays open-deferred and the user decides at the user gate.

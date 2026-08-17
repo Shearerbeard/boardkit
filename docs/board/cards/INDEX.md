@@ -41,3 +41,4 @@ Admission test: where does the diff land.
 | [S26](s26-rust-holes-ledger.md) | rust-holes HOLES ledger with a hook-grade check | ready | - | smart | S -> A -> U(code-review) @ S |
 | [S27](s27-architecture-flowchart.md) | Maintained architecture flowchart of the kit and its skills | backlog | - | any | S -> A |
 | [S28](s28-store-seam-wiring.md) | Wire the CLI core through the CardStore seam | backlog | - | smart | S -> A -> U(code-review) |
+| [S29](s29-shim-classification-hardening.md) | Decide how strictly doctor should classify an entry-file shim | backlog | - | smart | S -> A -> U(code-review) |

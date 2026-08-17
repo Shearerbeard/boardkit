@@ -65,6 +65,8 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A. Executor: any.
 - [ ] **S28** [Wire the CLI core through the CardStore seam](s28-store-seam-wiring.md)
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
+- [ ] **S29** [Decide how strictly doctor should classify an entry-file shim](s29-shim-classification-hardening.md)
+	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 
 ## Done
 - [ ] **S5** [Run the never-run Gate T on native opencode routing](s5-gate-t-native-opencode.md)
