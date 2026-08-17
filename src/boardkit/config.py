@@ -315,6 +315,11 @@ class BoardResolution(NamedTuple):
     config_path: Path
     source: str  # which resolution step answered, for reporting
     code: str | None  # the board short-code, when one was involved
+    # The `.boardkit/` whose manifest chose this board, when one did. The
+    # registry that validates a board is the one that resolved it: for an
+    # `external` board the manifest lives in the consuming repo, so neither
+    # the board root nor the process cwd finds it reliably.
+    boardkit_dir: Path | None = None
 
 
 def _resolve_code(boardkit_dir: Path, code: str, source: str) -> BoardResolution:
@@ -341,7 +346,9 @@ def _resolve_code(boardkit_dir: Path, code: str, source: str) -> BoardResolution
         raise ValueError(
             f"board '{code}' resolved to {root}, but there is no {CONFIG_FILENAME} there"
         )
-    return BoardResolution(config_path=config_path, source=source, code=code)
+    return BoardResolution(
+        config_path=config_path, source=source, code=code, boardkit_dir=boardkit_dir
+    )
 
 
 def _looks_like_path(selector: str) -> bool:
@@ -533,15 +540,17 @@ def registry_rows(boardkit_dir: Path) -> tuple[list[RegistryRow], list[str]]:
     return rows, errors
 
 
-def board_row_errors(config: Config, cwd: Path) -> list[str]:
+def board_row_errors(config: Config, cwd: Path, boardkit_dir: Path | None = None) -> list[str]:
     """Registry errors that concern the board `config` describes, for `check`.
 
     Covers cached-field drift on this board's row and the R10 mirror rule:
     a chartered board's registry `scope` is the charter's `owns` one-liner,
     so the two must match byte for byte. Empty when no manifest is
     reachable from `cwd`: an unported repo has no registry to drift from.
+    `boardkit_dir` names the registry that resolved this board; without one
+    the search falls back to `cwd`.
     """
-    boardkit_dir = find_boardkit(cwd) or git_common_boardkit(cwd)
+    boardkit_dir = boardkit_dir or find_boardkit(cwd) or git_common_boardkit(cwd)
     if boardkit_dir is None:
         return []
     rows, errors = registry_rows(boardkit_dir)
@@ -565,7 +574,7 @@ def board_row_errors(config: Config, cwd: Path) -> list[str]:
 
 
 def card_ref_findings(
-    cards: list[dict], cwd: Path
+    cards: list[dict], cwd: Path, boardkit_dir: Path | None = None
 ) -> tuple[list[str], list[str]]:
     """(errors, warnings) for the cards' qualified cross-board refs (R3).
 
@@ -582,7 +591,7 @@ def card_ref_findings(
     with_refs = [(card, card.get("refs")) for card in cards if card.get("refs")]
     if not with_refs:
         return [], []
-    boardkit_dir = find_boardkit(cwd) or git_common_boardkit(cwd)
+    boardkit_dir = boardkit_dir or find_boardkit(cwd) or git_common_boardkit(cwd)
     if boardkit_dir is None:
         carded = ", ".join(sorted({card["_file"] for card, _ in with_refs}))
         return [
@@ -632,7 +641,9 @@ def card_ref_findings(
     return errors, warnings
 
 
-def charter_route_errors(config: Config, cwd: Path) -> list[str]:
+def charter_route_errors(
+    config: Config, cwd: Path, boardkit_dir: Path | None = None
+) -> list[str]:
     """Charter route targets that do not resolve to a registry short-code.
 
     Validation needs a registry; with no manifest reachable there is
@@ -641,7 +652,7 @@ def charter_route_errors(config: Config, cwd: Path) -> list[str]:
     """
     if config.charter is None or not config.charter.route:
         return []
-    boardkit_dir = find_boardkit(cwd) or git_common_boardkit(cwd)
+    boardkit_dir = boardkit_dir or find_boardkit(cwd) or git_common_boardkit(cwd)
     if boardkit_dir is None:
         return []
     manifest = load_manifest(boardkit_dir)

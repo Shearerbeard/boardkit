@@ -126,6 +126,21 @@ def test_parity_shimlike_opening_with_own_rules_warns(tmp_path: Path) -> None:
     assert "follow different rules" in _findings(checks)["entry.parity"]
 
 
+def test_parity_short_divergent_shim_warns(tmp_path: Path) -> None:
+    """Fix re-review round 3: a one-line pointer with a directive glued to
+    it - or hidden behind a heading - is not a shim."""
+    (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
+    (tmp_path / "GEMINI.md").write_text("Read `AGENTS.md` first.\n", encoding="utf-8")
+    for body in (
+        "Read `AGENTS.md` first. Always use tabs.\n",
+        "# CLAUDE.md\nAlways use tabs.\n",
+    ):
+        (tmp_path / "CLAUDE.md").write_text(body, encoding="utf-8")
+        checks = _Checks()
+        _check_entry_parity(checks, tmp_path)
+        assert "follow different rules" in _findings(checks)["entry.parity"], body
+
+
 def test_parity_resolves_the_host_root_above_a_docked_board(tmp_path: Path) -> None:
     """S24 Gate A: for a .boardkit/boards/<code> layout the entry files
     live at the host repo root, not the board root."""

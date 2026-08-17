@@ -125,6 +125,39 @@ def test_check_judges_refs_against_the_boards_own_registry(
         assert excinfo.value.code == 0, capsys.readouterr().err
 
 
+def test_external_board_is_judged_by_the_registry_that_resolved_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Fix re-review round 3: an external board's manifest lives in the
+    CONSUMING repo, so validation must use the registry that resolved the
+    board, not a fresh search from the board root (which holds none)."""
+    from boardkit.cli import main
+
+    consumer = tmp_path / "consumer"
+    consumer.mkdir()
+    board = tmp_path / "external-board"
+    board.mkdir()
+    config_path = _board(board, {"s1-a.md": _card("S1", refs="[tb/T91]")})
+    bk = consumer / ".boardkit"
+    bk.mkdir()
+    (bk / "manifest.toml").write_text(
+        'default = "far"\n'
+        '[boards.far]\nlocation = "external"\n'
+        '[boards.tb]\nlocation = "external"\nid_prefix = "T"\n',
+        encoding="utf-8",
+    )
+    (bk / "local.toml").write_text(
+        f'[boards.far]\npath = "{board}"\n', encoding="utf-8"
+    )
+    monkeypatch.chdir(consumer)
+    for command in ("render", "check"):
+        monkeypatch.setattr("sys.argv", ["boardkit", command])
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        assert excinfo.value.code == 0, capsys.readouterr().err
+    assert config_path.is_file()
+
+
 def test_refs_without_registry_fail_loudly(tmp_path: Path) -> None:
     """S21 Gate A: resolution goes through the registry, so a card that
     carries refs with no registry reachable is an error, never a pass."""

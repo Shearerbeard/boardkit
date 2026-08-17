@@ -292,6 +292,13 @@ def test_unquoted_hash_title_refuses_instead_of_truncating(tmp_path: Path) -> No
     with pytest.raises(BoardError, match="quote the whole title"):
         build_board(load_config(tmp_path / "boardkit.toml"))
 
+    # An indented leading comment must not set the mapping's base indent
+    # and hide every real key behind it (fix re-review, round 3).
+    commented = card.replace("---\n", "---\n  # a note about this card\n", 1)
+    (cards / "s1-a.md").write_text(commented, encoding="utf-8")
+    with pytest.raises(BoardError, match="quote the whole title"):
+        build_board(load_config(tmp_path / "boardkit.toml"))
+
     # A nested `title` key inside a sub-table is not the card title and
     # must neither trip nor satisfy the guard.
     nested = card.replace(

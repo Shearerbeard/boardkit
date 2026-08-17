@@ -120,22 +120,34 @@ def _fail(errors: list[str]) -> int:
     return 1
 
 
-def _resolve_config(args: argparse.Namespace) -> Config:
-    """Load the board this invocation targets.
+def _resolve_board_context(args: argparse.Namespace) -> tuple[Config, Path | None]:
+    """The board this invocation targets, plus the registry that chose it.
 
     `--config` names a boardkit.toml directly and wins outright; otherwise
     the R5' resolution order runs: `--board`, then BOARDKIT_BOARD, then the
     `.boardkit/` walk-up with its git common-dir fallback, then the legacy
     walk-up.
+
+    The second element is the `.boardkit/` whose manifest resolved the
+    board. Validation needs it rather than a fresh search: an `external`
+    board's manifest sits in the consuming repo, so searching from the
+    board root finds nothing and searching from the process cwd finds
+    whatever happens to sit above the shell. `--config` carries no such
+    provenance, so it falls back to a search from the board root.
     """
     if args.config is not None:
-        return load_config(Path(args.config).resolve())
+        config = load_config(Path(args.config).resolve())
+        return config, find_boardkit(config.root) or git_common_boardkit(config.root)
     resolution = resolve_board(Path.cwd(), board=args.board)
-    return load_config(resolution.config_path)
+    return load_config(resolution.config_path), resolution.boardkit_dir
+
+
+def _resolve_config(args: argparse.Namespace) -> Config:
+    return _resolve_board_context(args)[0]
 
 
 def cmd_check(args: argparse.Namespace) -> int:
-    config = _resolve_config(args)
+    config, registry_dir = _resolve_board_context(args)
     try:
         result = build_board(config)
     except BoardError as exc:
@@ -144,13 +156,12 @@ def cmd_check(args: argparse.Namespace) -> int:
     errors = view_drift(config, result.views)
     # A board reachable through a manifest must agree with its registry row,
     # a charter's route targets must resolve to registry short-codes, and
-    # qualified refs must name real boards. The registry resolves from the
-    # BOARD's root, not the process cwd: `check --config <elsewhere>` must
-    # judge the selected board against its own family, not against whatever
-    # registry happens to sit above the shell.
-    errors += board_row_errors(config, config.root)
-    errors += charter_route_errors(config, config.root)
-    ref_errors, ref_warnings = card_ref_findings(result.cards, config.root)
+    # qualified refs must name real boards. All three judge the board
+    # against the registry that resolved it, never against whatever sits
+    # above the process cwd.
+    errors += board_row_errors(config, config.root, registry_dir)
+    errors += charter_route_errors(config, config.root, registry_dir)
+    ref_errors, ref_warnings = card_ref_findings(result.cards, config.root, registry_dir)
     errors += ref_errors
     if errors:
         return _fail(errors)

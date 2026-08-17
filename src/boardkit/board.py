@@ -121,17 +121,22 @@ YAML_ANCHOR_RE = re.compile(r"^(?:[&!]\S+[ \t]+)+")
 def _raw_title_line(front: str) -> str | None:
     """The raw value of the frontmatter's own `title` key, or None.
 
-    Only keys at the mapping's base indentation count: the base is read
-    off the first non-empty line, so a nested `title:` deeper in some
-    sub-table can neither satisfy nor falsely trip the guard.
+    Only keys at the mapping's base indentation count, so a nested
+    `title:` in some sub-table can neither satisfy nor falsely trip the
+    guard. Comment lines are skipped entirely rather than setting that
+    base: a comment carries no mapping entry, and an indented one ahead
+    of the keys would otherwise hide every real key behind an
+    indentation the mapping never uses.
     """
-    base: str | None = None
-    for line in front.splitlines():
-        if not line.strip():
-            continue
-        if base is None:
-            match = re.match(r"[ \t]*", line)
-            base = match.group(0) if match else ""
+    lines = [
+        line
+        for line in front.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    if not lines:
+        return None
+    base = re.match(r"[ \t]*", lines[0]).group(0)  # type: ignore[union-attr]
+    for line in lines:
         found = re.match(rf"^{re.escape(base)}title[ \t]*:[ \t]*(.*?)[ \t]*$", line)
         if found:
             return found.group(1)

@@ -734,16 +734,32 @@ def _check_host(checks: _Checks, config: Config) -> None:
 
 
 def _is_shim(text: str) -> bool:
-    """A shim is a pointer, not a second instruction set. Every paragraph
-    must be a heading, a comment stamp, or name AGENTS.md; a paragraph
-    carrying directives of its own makes the file a divergent entry file
-    wearing a shim's opening line. Known limit of a text check: a
-    conflicting clause inside the pointer paragraph itself is out of
-    reach - the paragraph rule keeps that surface one sentence wide."""
-    paragraphs = [p.strip() for p in re.split(r"\n[ \t]*\n", text) if p.strip()]
-    return any("AGENTS.md" in p for p in paragraphs) and all(
-        p.startswith("#") or p.startswith("<!--") or "AGENTS.md" in p for p in paragraphs
-    )
+    """A shim is a pointer, not a second instruction set.
+
+    Headings and comment stamps are boilerplate and drop out line by line
+    (a heading glued to the next line must not shelter it). Every
+    remaining sentence has to name AGENTS.md, so a file that points at it
+    and then adds directives of its own - "Read AGENTS.md first. Always
+    use tabs." - is not a shim.
+
+    Two known limits, both deliberate. A single sentence naming AGENTS.md
+    while contradicting it reads exactly like a pointer to any text
+    check, so this bounds the divergence surface rather than proving it
+    empty. And an elaboration that drops the name ("Read AGENTS.md first.
+    It is the handoff.") is flagged, which is why the remedy says to fold
+    elaboration into the pointer sentence: the check is a warning, and a
+    false alarm costs a one-line edit while a false calm costs two
+    harnesses silently following different rules.
+    """
+    body = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip()
+        and not line.lstrip().startswith("#")
+        and not line.lstrip().startswith("<!--")
+    ]
+    sentences = [s for s in re.split(r"(?<=[.!?])\s+", " ".join(body)) if s.strip()]
+    return bool(sentences) and all("AGENTS.md" in s for s in sentences)
 
 
 def _check_entry_parity(checks: _Checks, root: Path) -> None:
@@ -801,7 +817,8 @@ def _check_entry_parity(checks: _Checks, root: Path) -> None:
         checks.warn(
             "entry.parity",
             "; ".join(problems),
-            "make each shim a short file whose first lines say to read AGENTS.md first",
+            "reduce each shim to sentences that name AGENTS.md, folding any "
+            "elaboration into the pointer sentence",
         )
         return
     checks.ok("entry.parity")
