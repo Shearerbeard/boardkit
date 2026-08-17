@@ -271,7 +271,11 @@ def load_overlay(boardkit_dir: Path) -> dict[str, Path]:
                 f"(got {row_data['path']!r}); a relative path resolves "
                 "against the process working directory, not this file"
             )
-        overlay[code] = overlay_path
+        # Canonicalize: board roots are compared against `config.root`,
+        # which is resolved, so an unresolved overlay path (a symlink, or
+        # /tmp against /private/tmp) would silently match nothing and drop
+        # this board's registry findings on the floor.
+        overlay[code] = overlay_path.resolve()
     return overlay
 
 

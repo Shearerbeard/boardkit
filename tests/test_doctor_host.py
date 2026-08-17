@@ -134,11 +134,28 @@ def test_parity_short_divergent_shim_warns(tmp_path: Path) -> None:
     for body in (
         "Read `AGENTS.md` first. Always use tabs.\n",
         "# CLAUDE.md\nAlways use tabs.\n",
+        # A directive wearing heading syntax is still a directive.
+        "Read `AGENTS.md` first.\n# Always use tabs\n",
     ):
         (tmp_path / "CLAUDE.md").write_text(body, encoding="utf-8")
         checks = _Checks()
         _check_entry_parity(checks, tmp_path)
         assert "follow different rules" in _findings(checks)["entry.parity"], body
+
+
+def test_parity_accepts_a_multiline_stamp(tmp_path: Path) -> None:
+    """Round 4: a stamp spanning lines is boilerplate throughout, not
+    substantive prose whose punctuation reads as directives."""
+    (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
+    (tmp_path / "GEMINI.md").write_text("Read `AGENTS.md` first.\n", encoding="utf-8")
+    (tmp_path / "CLAUDE.md").write_text(
+        "# CLAUDE.md\n\n<!-- boardkit-contract: v2.\nGenerated stamp. -->\n\n"
+        "Read `AGENTS.md` first; it is the stable agent handoff for this repo.\n",
+        encoding="utf-8",
+    )
+    checks = _Checks()
+    _check_entry_parity(checks, tmp_path)
+    assert "entry.parity" in checks.passed
 
 
 def test_parity_resolves_the_host_root_above_a_docked_board(tmp_path: Path) -> None:

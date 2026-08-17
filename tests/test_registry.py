@@ -120,6 +120,23 @@ def test_unverifiable_cached_prefix_is_an_error(tmp_path: Path) -> None:
     assert "cannot be verified" in errors[0]
 
 
+def test_overlay_paths_canonicalize_for_row_matching(tmp_path: Path) -> None:
+    """Round 4: board roots are matched against the resolved config.root,
+    so an unresolved overlay path would silently drop this board's rows."""
+    repo = tmp_path / "repo"
+    real = tmp_path / "real-board"
+    _board(real)
+    link = tmp_path / "linked-board"
+    link.symlink_to(real, target_is_directory=True)
+    bk = _manifest(
+        repo,
+        'default = "far"\n[boards.far]\nlocation = "external"\nscope = "x"\n',
+    )
+    (bk / "local.toml").write_text(f'[boards.far]\npath = "{link}"\n', encoding="utf-8")
+    rows, _errors = registry_rows(bk)
+    assert rows[0].resolved_root == real.resolve()
+
+
 def test_collision_reaches_the_involved_boards_check(tmp_path: Path) -> None:
     """S18 Gate A: board_row_errors keeps a collision visible to the very
     board being checked instead of dropping it at the marker filter."""

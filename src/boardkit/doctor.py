@@ -751,13 +751,30 @@ def _is_shim(text: str) -> bool:
     false alarm costs a one-line edit while a false calm costs two
     harnesses silently following different rules.
     """
-    body = [
-        line.strip()
-        for line in text.splitlines()
-        if line.strip()
-        and not line.lstrip().startswith("#")
-        and not line.lstrip().startswith("<!--")
-    ]
+    body: list[str] = []
+    in_comment = False
+    for raw in text.splitlines():
+        line = raw.strip()
+        if in_comment:
+            # A stamp may span lines; everything up to its close is
+            # boilerplate, not a directive with unlucky punctuation.
+            if "-->" in line:
+                in_comment = False
+            continue
+        if not line:
+            continue
+        if line.startswith("<!--"):
+            if "-->" not in line:
+                in_comment = True
+            continue
+        if line.startswith("#"):
+            # A title is boilerplate; a directive wearing heading syntax
+            # is not, so only a bare file-name title drops out.
+            if re.fullmatch(r"#+\s*[\w.-]+\.md\s*", line):
+                continue
+            body.append(line.lstrip("# ").strip())
+            continue
+        body.append(line)
     sentences = [s for s in re.split(r"(?<=[.!?])\s+", " ".join(body)) if s.strip()]
     return bool(sentences) and all("AGENTS.md" in s for s in sentences)
 
