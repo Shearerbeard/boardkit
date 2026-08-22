@@ -47,3 +47,7 @@ direct
 
 - 2026-08-22 Minted at the wave-2 Gate U (Phase 0) from the approved
   spread-readiness action list.
+- 2026-08-22 Phase 0 close evidence linked:
+  [2026-08-22-phase0-close.md](../evidence/2026-08-22-phase0-close.md)
+  (Gate D 2 findings fixed; orientation canary 4/4; dag frontier
+  recorded).
