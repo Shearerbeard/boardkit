@@ -6,7 +6,21 @@ phase changes state. `EXTRACTION.md` holds the per-artifact source map.
 
 ## Current state (update every session)
 
-Last updated: 2026-07-21, after the audit-remediation wave.
+Last updated: 2026-08-22, at the wave-2 Gate U close.
+
+**This file's phase narrative is historical; the kit's own board is the
+live tracker** (41 cards, `docs/board/cards/INDEX.md`). Since the
+2026-07-21 entry below: Phase 3 shipped (board and delegation skills),
+the kit dogfoods its own board, the R-wave (S13-S25 registry and view
+features) closed at the 2026-08-22 user gate on the 2026-08-16 ruling
+record, feedback drain 8 executed, and the approved wave-2 plan
+(`docs/plans/2026-08-19-wave-2-plan.md`) governs the next cycle. The
+S41 epic (co-worker consumption readiness) is the goal-directed frame;
+`boardkit dag --to S41` computes the plan. The north-star conversion
+run's trigger is an open user decision recorded at that gate.
+
+The section below is the 2026-07-21 state, kept as the record of the
+extraction phases.
 
 **An audit-remediation wave has landed on top of the Gate F fixes** (commits
 c83076a..dec0775). A three-worker audit against the source repo found six
