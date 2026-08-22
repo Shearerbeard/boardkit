@@ -107,6 +107,13 @@ their verdict lines into its own transcript, so
 `grep 'VERDICT:' <output> | tail -1` can report a verdict that belongs to
 a different review. Read the reviewer's own final message instead.
 
+> Addendum 2026-08-19: the deferred canary below ran once the opencode
+> transport recovered. Pre-vet nonce read-back passed under the
+> working-dir staging contract, and the canary answered 4/4 against
+> `boardkit canary-key`, with citations and no invented answers. Output:
+> `docs/board/reviews/canary-2026-08-19/canary-output.txt` (machine-local).
+> The deferral this section records is resolved.
+
 ## Session close: the orientation canary did not run
 
 `board-hygiene` makes the canary a hard stop before close. The board's
