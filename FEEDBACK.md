@@ -409,3 +409,30 @@ tail -1` reports a verdict belonging to a different review - it misread one
 FAIL as this review's own mid-session. A packet-side verdict field, or a
 documented rule to read the reviewer's own final message, would remove the
 trap. Proposes; the maintainer disposes.
+
+## 2026-08-22 opencode-exit0-truncation-not-in-stall-protocol
+
+```yaml
+date: 2026-08-22
+harness: claude-code
+agent: claude-fable-5
+workstreams: [boardkit, claude-skills]
+repo: boardkit (its own board, the spread-readiness review panel)
+source: claude-skills feedback/2026-08-22-claude-code-opencode-exit0-truncation/process-feedback.md
+```
+
+REVIEW-TOOLING's stall protocol names one stall signature (a quiet
+process at near-zero CPU) plus the empty-return rule, but the failure
+this session hit four times is neither: `opencode run` exited 0
+mid-review with the trace cut at a tool call and no final message,
+after minutes of real, billed work - the three failed runs on one
+provider lane cost more than the successful review on another. The
+template carries no probe ladder (nonce read-back, then a bounded
+dispatch-shaped smoke, then the full run) and no
+second-truncation-switch-lanes rule, and the pre-vet's read probe
+cannot catch a failure that only appears at full run length. Candidate
+fix: the stall protocol names this second signature with its
+discriminator (real tokens billed, versus the hang's zero), and the
+pre-vet section gains the ladder with the caveat that a passing smoke
+does not clear a lane for long runs. Proposes; the maintainer
+disposes.
