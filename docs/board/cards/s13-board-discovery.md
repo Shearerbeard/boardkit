@@ -1,7 +1,7 @@
 ---
 id: S13
 title: R5' .boardkit resolution with the CardStore seam
-status: in-review
+status: done
 depends: []
 serialize-with: []
 lineage: primary
@@ -79,7 +79,7 @@ yet, and the card log says so.
 
 - [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
-- [ ] Gate A: adversarial review, focus: can the resolution order
+- [x] Gate A: adversarial review, focus: can the resolution order
   silently target the wrong board (stale `BOARDKIT_BOARD`, overlay
   pointing at a moved checkout, common-dir fallback in a submodule or
   bare-repo layout)?
@@ -165,3 +165,11 @@ direct
   rounds with every card-diff finding resolved and no explicit reviewer
   sign-off; the pass decision is the user's at U code-review, on the ledger
   in docs/board/evidence/2026-08-16-gate-a-review-cycle.md)
+- 2026-08-22 Gate A PASS: Mike accepted the R-wave on the 2026-08-16
+  ruling record at the wave-2 Gate U (runbook and packet-companion
+  artifacts), per ruling point 5. The box ticks on that acceptance,
+  resolving the 2026-08-16 deferral. Board-side re-check at close:
+  pytest green, ruff clean, boardkit check clean.
+- 2026-08-22 Done: every gate passed. Verified by Mike's Gate U
+  approval and the board owner's re-run of the deterministic checks
+  at close.

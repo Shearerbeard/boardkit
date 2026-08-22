@@ -8,6 +8,7 @@ lineage: primary
 executor: smart
 gates: "S -> A"
 user-gates: []
+epic: S41
 ---
 
 # S12: Public-repo seam for contract docs and generated views
@@ -66,3 +67,5 @@ direct
 
 - 2026-08-05 Minted by the fourth feedback drain from the Epoch
   public-repo bootstrap findings.
+- 2026-08-22 Joined epic S41 (co-worker consumption readiness) at
+  the wave-2 Gate U (Phase 0). Grouping only; readiness unchanged.

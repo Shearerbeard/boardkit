@@ -1,7 +1,7 @@
 ---
 id: S23
 title: R2 epic cards and epic membership
-status: in-review
+status: done
 depends: []
 serialize-with: []
 lineage: primary
@@ -54,10 +54,10 @@ S22.
 
 - [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
-- [ ] Gate A: adversarial review, focus: epic cycles (an epic member of
+- [x] Gate A: adversarial review, focus: epic cycles (an epic member of
   itself or of another epic), status semantics of an epic card with
   open members.
-- [ ] Gate U (code-review): present the review packet; stop.
+- [x] Gate U (code-review): present the review packet; stop.
 
 ## Branch
 
@@ -116,3 +116,14 @@ direct
   rounds with every card-diff finding resolved and no explicit reviewer
   sign-off; the pass decision is the user's at U code-review, on the ledger
   in docs/board/evidence/2026-08-16-gate-a-review-cycle.md)
+- 2026-08-22 Gate A PASS: Mike accepted the R-wave on the 2026-08-16
+  ruling record at the wave-2 Gate U (runbook and packet-companion
+  artifacts), per ruling point 5. The box ticks on that acceptance,
+  resolving the 2026-08-16 deferral. Board-side re-check at close:
+  pytest green, ruff clean, boardkit check clean.
+- 2026-08-22 Gate U(code-review) passed: Mike approved the batched
+  R-wave packets at the wave-2 Gate U with the packet companion; his
+  design-read stands as the substance per wave-2 decision 1.
+- 2026-08-22 Done: every gate passed. Verified by Mike's Gate U
+  approval and the board owner's re-run of the deterministic checks
+  at close.

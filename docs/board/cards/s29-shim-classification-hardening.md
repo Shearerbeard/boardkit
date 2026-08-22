@@ -1,7 +1,7 @@
 ---
 id: S29
 title: Decide how strictly doctor should classify an entry-file shim
-status: backlog
+status: ready
 depends: []
 serialize-with: []
 lineage: primary
@@ -77,3 +77,5 @@ direct
   concrete evasions found so far are listed in the acceptance criteria
   above and are already covered by regression tests, so this card is a
   design decision, not a bug queue.
+- 2026-08-22 Promoted to ready at the wave-2 Gate U (Phase 0); the
+  wave plan pulls this ruling residue in Phase 2.

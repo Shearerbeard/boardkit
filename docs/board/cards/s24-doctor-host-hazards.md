@@ -1,7 +1,7 @@
 ---
 id: S24
 title: R6/R7 doctor checks - host-repo hazards and harness parity
-status: in-review
+status: done
 depends: []
 serialize-with: []
 lineage: primary
@@ -51,7 +51,7 @@ warns; a repo with no entry file at all warns.
 
 - [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
-- [ ] Gate A: adversarial review, focus: false calm (a hazard the
+- [x] Gate A: adversarial review, focus: false calm (a hazard the
   check silently skips) and false alarm (a legitimate layout the
   parity check flags).
 - [x] Gate U (code-review): present the review packet; stop.
@@ -128,3 +128,11 @@ direct
   rounds with every card-diff finding resolved and no explicit reviewer
   sign-off; the pass decision is the user's at U code-review, on the ledger
   in docs/board/evidence/2026-08-16-gate-a-review-cycle.md)
+- 2026-08-22 Gate A PASS: Mike accepted the R-wave on the 2026-08-16
+  ruling record at the wave-2 Gate U (runbook and packet-companion
+  artifacts), per ruling point 5. The box ticks on that acceptance,
+  resolving the 2026-08-16 deferral. Board-side re-check at close:
+  pytest green, ruff clean, boardkit check clean.
+- 2026-08-22 Done: every gate passed. Verified by Mike's Gate U
+  approval and the board owner's re-run of the deterministic checks
+  at close.

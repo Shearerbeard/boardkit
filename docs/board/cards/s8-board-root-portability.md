@@ -8,6 +8,7 @@ lineage: primary
 executor: smart
 gates: "S -> A"
 user-gates: []
+epic: S41
 ---
 
 # S8: Board-root portability and checkout-independent references
@@ -59,3 +60,5 @@ direct
 
 - 2026-08-04 Minted by the second feedback drain; claims verified
   against the same-day board unwind evidence.
+- 2026-08-22 Joined epic S41 (co-worker consumption readiness) at
+  the wave-2 Gate U (Phase 0). Grouping only; readiness unchanged.

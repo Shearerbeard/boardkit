@@ -25,20 +25,36 @@ Admission test: where does the diff land.
 | [S10](s10-prose-reviewer-bench.md) | Prose-reviewer bench over snapshotted external prose | ready | - | any | S -> A -> M -> U @ S |
 | [S11](s11-vale-tiering.md) | Tier the vale prose gate by artifact class | done | - | any | S -> A |
 | [S12](s12-public-repo-seam.md) | Public-repo seam for contract docs and generated views | ready | - | smart | S -> A @ S |
-| [S13](s13-board-discovery.md) | R5' .boardkit resolution with the CardStore seam | in-review | - | smart | S -> A -> U(code-review) @ A |
+| [S13](s13-board-discovery.md) | R5' .boardkit resolution with the CardStore seam | done | - | smart | S -> A -> U(code-review) |
 | [S14](s14-review-cycle-convergence.md) | Bound the adversarial review cycle with a convergence rule | ready | - | smart | S -> A @ S |
 | [S15](s15-review-packet-guide.md) | Restore the human review guide to generated packets | ready | - | smart | S -> A @ S |
-| [S16](s16-gate-position-in-views.md) | Render each card's current gate position in the generated views | in-review | - | smart | S -> A -> U(code-review) @ A |
+| [S16](s16-gate-position-in-views.md) | Render each card's current gate position in the generated views | done | - | smart | S -> A -> U(code-review) |
 | [S17](s17-satellite-repo-convention.md) | Satellite-repo convention - no canonical-looking TODO beside a board | ready | - | smart | S -> A @ S |
-| [S18](s18-boards-registry.md) | R4 boards registry - the manifest is the registry | in-review | S13 | smart | S -> A -> U(code-review) @ A |
-| [S19](s19-lanes-first-class.md) | R1 lanes as first-class card data | in-review | - | smart | S -> A -> U(code-review) @ A |
-| [S20](s20-board-charters.md) | R10 board charters with the bk dogfood charter | in-review | S18 | smart | S -> A -> U(code-review) @ A |
-| [S21](s21-cross-board-refs.md) | R3 qualified cross-board references | in-review | S18 | smart | S -> A -> U(code-review) @ A |
-| [S22](s22-dag-queries.md) | R9 goal-directed dag queries with Mermaid renders | in-review | S13, S19 | smart | S -> A -> U(code-review) @ A |
-| [S23](s23-epic-grouping.md) | R2 epic cards and epic membership | in-review | - | smart | S -> A -> U(code-review) @ A |
-| [S24](s24-doctor-host-hazards.md) | R6/R7 doctor checks - host-repo hazards and harness parity | in-review | - | smart | S -> A -> U(code-review) @ A |
-| [S25](s25-title-hash-truncation.md) | R8 fix - card titles truncated at an inline hash | in-review | - | any | S -> A -> U(code-review) @ A |
+| [S18](s18-boards-registry.md) | R4 boards registry - the manifest is the registry | done | S13 | smart | S -> A -> U(code-review) |
+| [S19](s19-lanes-first-class.md) | R1 lanes as first-class card data | done | - | smart | S -> A -> U(code-review) |
+| [S20](s20-board-charters.md) | R10 board charters with the bk dogfood charter | done | S18 | smart | S -> A -> U(code-review) |
+| [S21](s21-cross-board-refs.md) | R3 qualified cross-board references | done | S18 | smart | S -> A -> U(code-review) |
+| [S22](s22-dag-queries.md) | R9 goal-directed dag queries with Mermaid renders | done | S13, S19 | smart | S -> A -> U(code-review) |
+| [S23](s23-epic-grouping.md) | R2 epic cards and epic membership | done | - | smart | S -> A -> U(code-review) |
+| [S24](s24-doctor-host-hazards.md) | R6/R7 doctor checks - host-repo hazards and harness parity | done | - | smart | S -> A -> U(code-review) |
+| [S25](s25-title-hash-truncation.md) | R8 fix - card titles truncated at an inline hash | done | - | any | S -> A -> U(code-review) |
 | [S26](s26-rust-holes-ledger.md) | rust-holes HOLES ledger with a hook-grade check | ready | - | smart | S -> A -> U(code-review) @ S |
 | [S27](s27-architecture-flowchart.md) | Maintained architecture flowchart of the kit and its skills | backlog | - | any | S -> A |
 | [S28](s28-store-seam-wiring.md) | Wire the CLI core through the CardStore seam | backlog | - | smart | S -> A -> U(code-review) |
-| [S29](s29-shim-classification-hardening.md) | Decide how strictly doctor should classify an entry-file shim | backlog | - | smart | S -> A -> U(code-review) |
+| [S29](s29-shim-classification-hardening.md) | Decide how strictly doctor should classify an entry-file shim | ready | - | smart | S -> A -> U(code-review) @ S |
+| [S30](s30-small-fix-batch.md) | Wave-2 small-fix batch with the ignore and doctor truthing items | ready | - | smart | S -> A -> D -> U(code-review) @ S |
+| [S31](s31-docking-convention-spec.md) | Versioned docking-convention spec with the three consumer postures | ready | - | smart | S -> A -> D -> U(code-review) @ S |
+| [S32](s32-artifact-store-adr.md) | ArtifactStore ADR - receipts, postures, sidecar mechanics | backlog | S28 | smart | S -> A -> D -> U |
+| [S33](s33-receipts-and-sidecar.md) | Receipts and sidecar implementation per the ADR | backlog | S32 | smart | S -> A -> M -> D -> U(code-review) |
+| [S34](s34-wave-gate-design.md) | Decide whether the wave-level Gate F packet is worth generating | backlog | S32 | smart | S -> A -> D -> U |
+| [S35](s35-before-after-canary.md) | Before/after canary extension for the PROCESS templates | backlog | S34 | smart | S -> A |
+| [S36](s36-rust-holes-docking.md) | rust-holes adopts the docking convention as second consumer | backlog | S31 | smart | S -> A -> U(code-review) |
+| [S37](s37-view-freshness-stamp.md) | Recomputable freshness stamp on the generated views | backlog | S28 | smart | S -> A -> U(code-review) |
+| [S38](s38-visual-surface-decision.md) | Pick the board's visual home | ready | S16 | smart | S -> A -> D -> U @ S |
+| [S39](s39-machine-bootstrap-recipe.md) | Machine-bootstrap recipe and account inventory | ready | - | smart | S -> A -> D -> U @ S |
+| [S40](s40-readme-developer-path.md) | README developer path, canary brief template, plan navigation | ready | - | any | S -> A @ S |
+| [S41](s41-co-worker-consumption.md) | Co-worker consumption readiness | backlog | - | smart | S -> U |
+
+## Epics
+
+- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 0/12 done - S8 (ready), S12 (ready), S15 (ready), S30 (ready), S31 (ready), S32 (backlog), S33 (backlog), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready)

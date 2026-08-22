@@ -8,6 +8,7 @@ lineage: primary
 executor: smart
 gates: "S -> A"
 user-gates: []
+epic: S41
 ---
 
 # S15: Restore the human review guide to generated packets
@@ -81,3 +82,5 @@ direct
   the ruled ephemeral-retention contract (the D4 kit-contract half,
   interview decision 3 in
   [2026-08-09-feedback-drain-7.md](../../plans/2026-08-09-feedback-drain-7.md)).
+- 2026-08-22 Joined epic S41 (co-worker consumption readiness) at
+  the wave-2 Gate U (Phase 0). Grouping only; readiness unchanged.
