@@ -14,6 +14,7 @@ import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import unquote
 
 import pytest
 from conftest import config_text
@@ -362,6 +363,49 @@ def test_binary_file_reports_no_line_counts_and_is_never_superseded(env: Env) ->
     assert text_sha != binary_sha
 
 
+def test_a_binary_file_added_and_removed_again_reads_as_undone(env: Env) -> None:
+    """Binary-ness qualifies the net diff's counts, so a file absent from the
+    net diff is not binary work that survived - it is work the range undid."""
+    config = env.write_config()
+    (env.repo / "asset.bin").write_bytes(bytes(range(256)))
+    _commit(env.repo, "C3 add a binary file")
+    (env.repo / "asset.bin").unlink()
+    removed_sha = _commit(env.repo, "C4 remove it again")
+    _valid_card(env, commit_range=f"{env.last_sha}..{removed_sha}")
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    assert "every line this range moves is undone again" in review
+    assert "Binary content is why" not in review
+    assert "binary, no line counts" not in _entry_for(review, "asset.bin")
+
+
+def test_a_file_binary_only_mid_range_keeps_the_net_counts(env: Env) -> None:
+    """The net diff is text at both ends, so its line counts are real and the
+    intermediate binary commit must not suppress them."""
+    config = env.write_config()
+    swing = env.repo / "swing.txt"
+    swing.write_text("one\ntwo\n", encoding="utf-8")
+    start_sha = _commit(env.repo, "C3 add swing.txt as text")
+    swing.write_bytes(bytes(range(256)))
+    _commit(env.repo, "C4 make swing.txt binary")
+    swing.write_text("one\ntwo\nthree\nfour\n", encoding="utf-8")
+    end_sha = _commit(env.repo, "C5 make swing.txt text again")
+    _valid_card(env, commit_range=f"{start_sha}..{end_sha}")
+
+    build_review_packet(config, CARD_ID)
+    entry = _entry_for(_review(env), "swing.txt")
+
+    assert "2 lines net" in entry
+    assert "binary" not in entry
+    assert "SUPERSEDED" not in entry
+    # the raw count is understated by the binary commits, so it is dropped
+    # rather than printed as a figure smaller than the net one
+    assert "touched across" not in entry
+    assert "changed across 2 commits" in entry
+
+
 def test_a_binary_only_range_does_not_claim_its_work_was_undone(env: Env) -> None:
     config = env.write_config()
     (env.repo / "asset.bin").write_bytes(bytes(range(256)))
@@ -612,6 +656,48 @@ def test_lifted_design_record_links_are_rebased_onto_the_packet(env: Env) -> Non
     assert "[spec](https://example.com/spec)" in review
     assert "[fill order](#fill-order)" in review
     assert "[hosts](/etc/hosts)" in review
+
+
+def test_lifted_record_link_with_a_title_rebases_and_keeps_the_title(env: Env) -> None:
+    """A title's leading space ends the destination, so a titled link went
+    unrewritten and stayed pointed at the record's directory."""
+    config = env.write_config()
+    env.plans_dir.mkdir(exist_ok=True)
+    (env.plans_dir / "ledger.md").write_text("# Holes ledger\n", encoding="utf-8")
+    record = env.write_record(
+        "# Type surface\n\n## Type relationships\n\n"
+        'Titled [ledger](ledger.md "Holes ledger"), plain [ledger](ledger.md).\n'
+    )
+    env.write_card(
+        "s2-example.md",
+        f"id: {CARD_ID}\ntitle: Example card\ncommit-range: {env.range}\n",
+        body=f"# S2\n\n## Design record\n\n[{record.name}](../plans/{record.name})\n",
+    )
+
+    outdir = build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    assert '[ledger](../../plans/ledger.md "Holes ledger")' in review
+    assert "[ledger](../../plans/ledger.md)" in review
+    assert "(ledger.md" not in review
+    assert (outdir / "../../plans/ledger.md").exists()
+
+
+def test_a_hash_in_a_path_is_percent_encoded_not_left_as_a_fragment(env: Env) -> None:
+    """Angle brackets fix markdown parsing; they do not stop a follower from
+    reading `#draft.txt` as an anchor on a file called `notes`."""
+    config = env.write_config()
+    (env.repo / "notes#draft.txt").write_text("draft\n", encoding="utf-8")
+    sha = _commit(env.repo, "C3 add a file with a hash in its name")
+    _valid_card(env, commit_range=f"{env.last_sha}..{sha}")
+
+    outdir = build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    assert "[notes#draft.txt](../../repo/notes%23draft.txt)" in review
+    assert "[notes#draft.txt:1](../../repo/notes%23draft.txt)" in review
+    # decoded, the destination is the file itself
+    assert (outdir / unquote("../../repo/notes%23draft.txt")).is_file()
 
 
 def test_links_escape_paths_a_commonmark_parser_would_misread(env: Env) -> None:

@@ -20,6 +20,8 @@ carries every commit and every file, for a reader who works the range
 commit by commit. A card that supplies its own reading order takes the
 entry point back, and the churn concentration then reports rather than
 instructs - one guide never gives two contradictory places to start.
+Where the net diff is binary there are no line counts to rank on, and
+the guide says so rather than letting absent counts read as zero.
 
 Two card-body conventions feed the packet, both read from the card the
 packet covers:
@@ -45,11 +47,13 @@ its `path:line` token as the link text, because that token is what an
 editor and a terminal jump on. A file the range deletes has no
 working-tree target and renders as inline code instead of a link that
 would not resolve. Every link this module writes goes out through
-`markdown_link`, which escapes the label and picks the destination form,
-since a git path may legally hold brackets, spaces, parentheses, or `#`.
+`markdown_link`, because a git path may legally hold brackets, spaces,
+parentheses, or `#`: it escapes the label, percent-encodes a `#` in the
+path (angle brackets fix how markdown parses that, never the fragment a
+follower would then read), and picks the destination form for the rest.
 A section lifted out of a design record has its own relative targets
-rebased the same way, because they were written against the record's
-directory rather than this one.
+rebased through the same function, because they were written against the
+record's directory rather than this one.
 
 The repo diffed against and the output directory come from the loaded
 Config's [review] section; there is no hardcoded default repo.
@@ -98,13 +102,22 @@ BULLET_RE = re.compile(r"^\s*[-*]\s+(.*)$")
 INLINE_CODE_RE = re.compile(r"`([^`]+)`")
 # Link emission. Brackets in a label end it early, so they are escaped;
 # destinations holding any of these need CommonMark's angle-bracket form.
+# `#` is not among them: a `#` in a path is percent-encoded before this
+# runs, and a `#` that reaches here is a fragment separator doing its job.
 LABEL_ESCAPE_RE = re.compile(r"([\[\]])")
-ANGLE_DESTINATION_RE = re.compile(r"[ ()#<>\\]")
+ANGLE_DESTINATION_RE = re.compile(r"[ ()<>\\]")
 # An inline markdown link (image links included) in a lifted design-record
-# section, split so only its destination is rewritten. Reference-style
+# section, split so only its destination is rewritten: group 3 carries any
+# title and the closing paren through byte-for-byte. All three CommonMark
+# title quotings are matched, since a title's leading space would otherwise
+# end the destination and leave the link record-relative. Reference-style
 # links and link-definition lines are left alone: this rewrites what it can
 # parse with certainty and nothing else.
-RECORD_LINK_RE = re.compile(r"(!?\[[^\]]*\]\()(<[^<>]*>|[^()\s]+)(\))")
+RECORD_LINK_RE = re.compile(
+    r"(!?\[[^\]]*\]\()"
+    r"(<[^<>]*>|[^()\s]+)"
+    r"((?:(?:[ \t]+|[ \t]*\n[ \t]*)(?:\"[^\"]*\"|'[^']*'|\([^()]*\)))?[ \t]*\))"
+)
 SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
 
 
@@ -121,9 +134,18 @@ class FileChurn(NamedTuple):
     an earlier one wrote, raw exceeds net and the difference is the part a
     reader can take from the net diff instead of hunk by hunk.
 
-    `binary` marks a file git reports no line counts for. Both counts read
-    zero there, which is not the same fact as zero lines changed, so every
-    reader of the counts has to check this flag first.
+    `binary` marks a file the range's NET diff is binary for, which is the
+    diff both counts describe. Git reports no line counts there, and zero
+    counts are not the same fact as zero lines changed, so every reader of
+    the counts checks this flag first. A file binary only in some
+    intermediate commit is not marked: its net diff has real counts, and
+    those are what the guide reports.
+
+    One consequence rides in `raw`: a binary commit contributes no lines
+    to it, so the raw count of a file that was binary at any point in the
+    range is understated, and can even fall below `net`. Nothing invents
+    numbers to cover that - the guide drops the raw figure from an entry
+    where it cannot account for the net one.
     """
 
     path: str
@@ -289,17 +311,22 @@ def file_churn(repo: Path, commit_range: str) -> list[FileChurn]:
     guide is deterministic. Renames are off in both passes: a rename read
     as a delete plus an add keeps the two numbers comparable, which is
     what the supersession flag is computed from.
+
+    Binary-ness comes from the net pass alone, because it qualifies the
+    numbers the guide reports and those are the net diff's. A file the
+    range adds and removes again is absent from the net diff, binary or
+    not, and reads as work the range undid - which is what happened. A
+    file binary only in an intermediate commit keeps the real counts its
+    net diff carries.
     """
     raw: dict[str, int] = {}
     commits: dict[str, int] = {}
-    binary: set[str] = set()
     log = git(repo, "log", "--reverse", "--numstat", "--no-renames", "--format=%H", commit_range)
-    for added, deleted, path, is_binary in _numstat_rows(log):
+    for added, deleted, path, _is_binary in _numstat_rows(log):
         raw[path] = raw.get(path, 0) + added + deleted
         commits[path] = commits.get(path, 0) + 1
-        if is_binary:
-            binary.add(path)
     net: dict[str, int] = {}
+    binary: set[str] = set()
     for added, deleted, path, is_binary in _numstat_rows(
         git(repo, "diff", "--numstat", "--no-renames", commit_range)
     ):
@@ -437,18 +464,27 @@ def rel(target: Path, outdir: Path) -> str:
     return Path(os.path.relpath(target, outdir)).as_posix()
 
 
-def destination(target: str) -> str:
-    """One link destination, in the form CommonMark reads it back whole.
+def destination(target: str, fragment: str = "") -> str:
+    """One link destination: `target` as a path, plus an optional fragment.
 
-    Git filenames legally carry spaces, parentheses, and `#`, none of
-    which survive a bare destination: the space ends it, the parentheses
-    close it early, the `#` reads as a fragment. The angle-bracket form
-    takes all three literally, and inside it only `<`, `>`, and the
-    escape character itself need escaping.
+    Two different problems, in order. A `#` inside a path is a URI
+    problem that no markdown quoting solves: angle brackets make the
+    parser read `notes#draft.txt` as one destination, and the follower
+    then still opens `notes` at anchor `draft.txt`. Percent-encoding is
+    the only form that survives, and `%` itself is encoded first so the
+    encoding stays reversible. A caller's own `fragment` is appended
+    afterwards, unencoded, because there the `#` is meant.
+
+    Spaces and parentheses are the markdown problem, and CommonMark's
+    angle-bracket destination is their answer; inside it, only `<`, `>`,
+    and the escape character itself need escaping.
     """
-    if not ANGLE_DESTINATION_RE.search(target):
-        return target
-    escaped = target.replace("\\", "\\\\").replace("<", "\\<").replace(">", "\\>")
+    encoded = target.replace("%", "%25").replace("#", "%23")
+    if fragment:
+        encoded = f"{encoded}#{fragment}"
+    if not ANGLE_DESTINATION_RE.search(encoded):
+        return encoded
+    escaped = encoded.replace("\\", "\\\\").replace("<", "\\<").replace(">", "\\>")
     return f"<{escaped}>"
 
 
@@ -494,9 +530,18 @@ def _guide_entry(entry: FileChurn, packet: Packet) -> str:
     ref = file_ref(entry.path, packet.repo, packet.outdir)
     if entry.binary:
         # A binary file has no line counts to do arithmetic on, so it gets
-        # no counts and no supersession verdict here. Its size is in the
-        # commit listing's shortstat and in the patch itself.
+        # no counts and no supersession verdict here. Its size lives in the
+        # patch, which a binary diff reports in its own terms.
         return f"{ref} - binary, no line counts, changed in {_count(entry.commits, 'commit')}"
+    if entry.raw < entry.net:
+        # A binary commit contributes no lines to the raw count, so a file
+        # binary partway through the range can carry a raw count below its
+        # net one. Print only what is countable, rather than a figure that
+        # cannot account for the lines standing next to it.
+        return (
+            f"{ref} - {_count(entry.net, 'line')} net, changed across "
+            f"{_count(entry.commits, 'commit')}"
+        )
     text = (
         f"{ref} - {_count(entry.net, 'line')} net, {entry.raw} touched across "
         f"{_count(entry.commits, 'commit')}"
@@ -588,7 +633,8 @@ def rebase_links(body: str, source_dir: Path, outdir: Path) -> str:
     directory, not the packet's. Every relative inline target is resolved
     where it was written and re-emitted relative to the packet. Absolute
     paths, targets carrying a URI scheme, and bare `#anchor`s are left
-    exactly as they were, as is everything outside a link.
+    exactly as they were, as are link titles and everything outside a
+    link.
     """
 
     def rewrite(match: re.Match[str]) -> str:
@@ -599,10 +645,9 @@ def rebase_links(body: str, source_dir: Path, outdir: Path) -> str:
         path, _, fragment = raw.partition("#")
         if not path:
             return match.group(0)
-        rebased = rel(source_dir / path, outdir)
-        if fragment:
-            rebased = f"{rebased}#{fragment}"
-        return f"{prefix}{destination(rebased)}{close}"
+        # The fragment stays a fragment: it goes to `destination` as one,
+        # so the path's own encoding never swallows the separator.
+        return f"{prefix}{destination(rel(source_dir / path, outdir), fragment)}{close}"
 
     return RECORD_LINK_RE.sub(rewrite, body)
 

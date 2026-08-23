@@ -75,6 +75,36 @@ direct
 
 ## Log
 
+- 2026-08-22 Fix round 2 landed by the same Claude executor: the
+  binary flag now derives from the net pass alone (a transient binary
+  reads as undone work, a binary-to-text file keeps its real net
+  counts, and an entry whose understated raw count cannot account for
+  its net one drops the raw figure rather than printing it); the
+  rebase regex carries CommonMark link titles through byte-for-byte;
+  and destinations percent-encode `%` and `#` in the path while a
+  real fragment stays a fragment. Four new tests pin the reviewer's
+  scenarios. Board owner re-ran the checks: `uv run pytest -q` (411
+  passed), `uv run ruff check` (clean), `uv run ruff format --check`
+  on touched Python (clean). Board owner also ruled on the executor's
+  double-encoding flag: record link targets are literal relative
+  paths, and percent-encoding round-trips them; URI-encoded author
+  intent was never a supported contract.
+- 2026-08-22 Gate A round 2 returned VERDICT: FAIL, in convergence:
+  finding 1 verified RESOLVED with evidence; findings 2, 3, and 4
+  re-raised as narrower residuals with three BLOCKING findings and no
+  new scope. The residuals: the binary flag accumulates across all
+  commits, so a transient binary (added then deleted) wrongly renders
+  as surviving change and a binary-to-text file suppresses valid net
+  counts; a title-carrying inline link does not match the rebase regex
+  and stays record-relative; an angle-bracketed destination leaves `#`
+  un-encoded, so a filename containing it resolves as path plus
+  fragment. Reviewer: GPT 5.6-sol via the codex CLI; round spend
+  100,439 tokens, cumulative 217,558. Reviewer unverified checks:
+  pytest, ruff, boardkit check and doctor (sandbox denies uv cache and
+  temp writes); the board owner's Gate S runs stand for them. Board
+  owner accepted all three residuals; fix round 2 dispatched to the
+  authoring executor. The round bound applies after this fix round: a
+  written ruling precedes any further cycle.
 - 2026-08-22 Commit-range extended to 23dea92..d01c3a1 to cover the
   fix commit per the fix-commit re-review duty; the packet regenerated
   over the full range and Gate A round 2 dispatched to the same
