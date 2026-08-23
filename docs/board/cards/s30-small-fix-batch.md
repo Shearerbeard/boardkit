@@ -1,13 +1,14 @@
 ---
 id: S30
 title: Wave-2 small-fix batch with the ignore and doctor truthing items
-status: in-progress
+status: in-review
 depends: []
 serialize-with: []
 lineage: primary
 executor: smart
 gates: "S -> A -> D -> U(code-review)"
 user-gates: [code-review]
+commit-range: "f8488de..23dea92"
 epic: S41
 ---
 
@@ -70,6 +71,12 @@ direct
 
 ## Log
 
+- 2026-08-22 Entered in-review for the batched user gate: commit-range
+  f8488de..23dea92 recovered by the trailer search (the prior session
+  committed the card's work without setting the range) and the review
+  packet generated. The single commit bundles S14's landed process
+  prose, so the packet shows that too; S14 is done with its own
+  acceptance verified on its card.
 - 2026-08-22 Gate D passed via the batched Phase 2 drift audit: a
   fresh small-class Claude auditor checked the living documents'
   claims and anchors against the repo and board and returned DRIFT
