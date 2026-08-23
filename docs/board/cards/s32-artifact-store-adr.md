@@ -1,7 +1,7 @@
 ---
 id: S32
 title: ArtifactStore ADR - receipts, postures, sidecar mechanics
-status: backlog
+status: in-progress
 depends: [S28]
 serialize-with: []
 lineage: primary
@@ -53,5 +53,13 @@ direct
 
 ## Log
 
+- 2026-08-23 Board owner pulled S32 for wave-2 Phase 4 on S28's close
+  (the dependency's user gate passed the same day). Board owner
+  ruling at pull: the ADR home is `docs/adr/`, numbered from 0001,
+  since the gate-probes routing already names that path and future
+  ADRs join it. Gate A runs on the codex lane (GPT 5.6-sol) per this
+  session's provider authorization; the metered lane is not proposed.
+  The executor dispatch continues the leaner point-at-the-card brief
+  under the dispatch-verbosity watch.
 - 2026-08-22 Minted at the wave-2 Gate U (Phase 0) per the plan's
   card map; Mike approved the plan and its dispositions that day.

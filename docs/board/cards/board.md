@@ -35,10 +35,10 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A @ S. Executor: any.
 
 ## In Progress
+- [ ] **S32** [ArtifactStore ADR - receipts, postures, sidecar mechanics](s32-artifact-store-adr.md)
+	Depends: S28. Gates: S -> A -> D -> U @ S. Executor: smart.
 
 ## In Review
-- [ ] **S28** [Wire the CLI core through the CardStore seam](s28-store-seam-wiring.md)
-	Depends: none. Gates: S -> A -> D -> U(code-review) @ U. Executor: smart.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)
@@ -47,8 +47,6 @@ kanban-plugin: board
 	Depends: S2. Gates: S -> A -> U. Executor: smart.
 - [ ] **S27** [Maintained architecture flowchart of the kit and its skills](s27-architecture-flowchart.md)
 	Depends: none. Gates: S -> A. Executor: any.
-- [ ] **S32** [ArtifactStore ADR - receipts, postures, sidecar mechanics](s32-artifact-store-adr.md)
-	Depends: S28. Gates: S -> A -> D -> U. Executor: smart.
 - [ ] **S33** [Receipts and sidecar implementation per the ADR](s33-receipts-and-sidecar.md)
 	Depends: S32. Gates: S -> A -> M -> D -> U(code-review). Executor: smart.
 - [ ] **S34** [Decide whether the wave-level Gate F packet is worth generating](s34-wave-gate-design.md)
@@ -95,6 +93,8 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 - [ ] **S25** [R8 fix - card titles truncated at an inline hash](s25-title-hash-truncation.md)
 	Depends: none. Gates: S -> A -> U(code-review). Executor: any.
+- [ ] **S28** [Wire the CLI core through the CardStore seam](s28-store-seam-wiring.md)
+	Depends: none. Gates: S -> A -> D -> U(code-review). Executor: smart.
 - [ ] **S29** [Decide how strictly doctor should classify an entry-file shim](s29-shim-classification-hardening.md)
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 - [ ] **S30** [Wave-2 small-fix batch with the ignore and doctor truthing items](s30-small-fix-batch.md)

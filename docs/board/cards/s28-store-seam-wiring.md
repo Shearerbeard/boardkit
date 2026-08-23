@@ -1,7 +1,7 @@
 ---
 id: S28
 title: Wire the CLI core through the CardStore seam
-status: in-review
+status: done
 commit-range: "9b1c158..decedc3"
 depends: []
 serialize-with: []
@@ -56,7 +56,7 @@ caller; if it stays deferred, this card's log says so and why.
   traversal directly?
 - [x] Gate D: drift audit of the living documents that describe the
   store seam before the user gate.
-- [ ] Gate U (code-review): packet to Mike; stop.
+- [x] Gate U (code-review): packet to Mike; stop.
 
 ## Branch
 
@@ -64,6 +64,9 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate U (code-review) passed: Mike reviewed the Phase 3
+  packet and accepted the card with a plain pass; the four
+  board-owner rulings stand as logged. Card done.
 - 2026-08-23 Gate D passed: a fresh small-class Claude auditor with
   no implementation context swept DOCKING.md, REVIEW-TOOLING.md,
   PROCESS.md, AGENTS.md, and README.md against the seam change and

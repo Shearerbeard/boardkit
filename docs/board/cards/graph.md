@@ -19,7 +19,7 @@ flowchart TD
     S15["S15 Restore the human review guide to…"]:::done
     S30["S30 Wave-2 small-fix batch with the i…"]:::done
     S31["S31 Versioned docking-convention spec…"]:::done
-    S32["S32 ArtifactStore ADR - receipts, pos…"]:::backlog
+    S32["S32 ArtifactStore ADR - receipts, pos…"]:::inprogress
     S33["S33 Receipts and sidecar implementati…"]:::backlog
     S36["S36 rust-holes adopts the docking con…"]:::backlog
     S37["S37 Recomputable freshness stamp on t…"]:::backlog
@@ -51,7 +51,7 @@ flowchart TD
   S25["S25 R8 fix - card titles truncated at…"]:::done
   S26["S26 rust-holes HOLES ledger with a ho…"]:::ready
   S27["S27 Maintained architecture flowchart…"]:::backlog
-  S28["S28 Wire the CLI core through the Car…"]:::inreview
+  S28["S28 Wire the CLI core through the Car…"]:::done
   S29["S29 Decide how strictly doctor should…"]:::done
   S34["S34 Decide whether the wave-level Gat…"]:::backlog
   S35["S35 Before/after canary extension for…"]:::backlog
