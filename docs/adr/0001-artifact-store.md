@@ -227,13 +227,11 @@ into.
 This board sets `sidecar`, per decision 2.
 
 `sidecar` splits by backend, and the split matters to a reader choosing one.
-Both locators carry a path that addresses and an anchor that identifies, but
-the anchors differ in kind. A `git:` sidecar anchors on a commit sha, which
-pins the bytes independently of any digest the receipt carries. A `dir:`
-sidecar anchors on a prefix of the receipt's own manifest root, which
-identifies the publication and detects a change without pinning anything, so
-a mismatch never says which side moved. Section 5 gives both backends their
-semantics.
+A `git:` sidecar anchors on a commit sha, which pins the bytes independently
+of any digest the receipt carries. A `dir:` sidecar has no such anchor: its
+locator carries a prefix of the manifest root that identifies which
+publication is meant, and verification is the full root, so a mismatch never
+says which side moved. Section 5 gives both backends their semantics.
 
 The table above is the posture table `DOCKING.md` set the precedent for, and
 it carries the same property: the CLI reads the posture, and no resolution
@@ -411,11 +409,17 @@ covers which gates get one at all.
 
 ### 4. The receipt lifecycle
 
-No CLI command closes a gate today, so the ordering below is a contract S33
-implements rather than a description of something running. It exists because
-the alternative is S33 inventing transactional behavior under deadline.
+This section governs `kind: review` receipts. No CLI command closes a gate
+today, so the ordering below is a contract S33 implements rather than a
+description of something running. It exists because the alternative is S33
+inventing transactional behavior under deadline.
 
-**When a receipt is written.** One per round, at the moment the round
+A `ruling` or `decision` receipt is written once, at the event it records,
+in the same commit as its card-log line. It has no publish phase and no
+`published` flip, because it names no packet to publish, and its digest rows
+attest tracked documents.
+
+**When a review receipt is written.** One per round, at the moment the round
 concludes, which is when the reviewer's final message yields a verdict.
 A FAIL receipt is written the same as a PASS: the fix-round duty makes
 failed rounds part of the record, and the 2026-08-16 cycle is five rounds
@@ -502,12 +506,14 @@ is the receipt's own manifest root, which pins nothing and only detects.
   about which one moved, since a directory keeps no history to consult.
   Under `git:` that question has an answer; under `dir:` it does not, and
   that is the whole of the weaker guarantee.
-- **Collision.** A publish whose target directory exists refuses and says
-  so. The store is append-only (plan, Rollback), so an existing directory
-  means either a republish of the same round, whose root prefix matches and
-  which needs no write, or a real collision, which is a defect.
-  Overwriting would silently invalidate every receipt already naming that
-  path.
+- **Collision.** A publish whose target directory exists compares full
+  roots, never prefixes: the root being written against the root read from
+  the existing target's own manifest file. Equal roots are an idempotent
+  republish of the same bytes, which needs no write. Different roots are a
+  refusal, and the store is append-only (plan, Rollback), so overwriting
+  would silently invalidate every receipt already naming that path. Two
+  distinct roots can share a 12-hex prefix, so the prefix is never the
+  operand here.
 - **Fetch.** Copy the directory back out to a caller-named destination.
   There is no revision to check out, so a fetch that finds nothing is
   indistinguishable from a packet that was never archived; the receipt's
@@ -900,8 +906,11 @@ receipt: v1
 kind: check                  # the fourth kind, adopted only under OQ4's literal branch
 card: S32
 gate: S                      # S | D | M
+round: 1                     # the filename grammar needs it; gates repeat
 verdict: PASS                # PASS | FAIL | DEFERRED
 dated: 2026-08-23
+author_models:               # driver 9; the same models a review would name
+  - <model string>
 ran_by: <the model or session that ran the gate>
 packets: []
 ---
