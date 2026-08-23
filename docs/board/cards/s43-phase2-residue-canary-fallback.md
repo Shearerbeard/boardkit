@@ -60,7 +60,7 @@ decisions:
 - [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `boardkit check`, `boardkit render --check`,
   `boardkit doctor`; `vale` on touched markdown.
-- [ ] Gate A: adversarial review of the diff against the plan's
+- [x] Gate A: adversarial review of the diff against the plan's
   decision-5 wording and the shipped resolver of `resolve-route`.
 - [ ] Gate U (code-review): packet to Mike, batched with the Phase 2
   window; stop.
@@ -71,6 +71,21 @@ direct
 
 ## Log
 
+- 2026-08-22 Gate A passed. Round 3 verified the round-2 disposition
+  RESOLVED with the section's temporal claims checked against the
+  shipped review_packet.py behavior and returned an explicit
+  zero-findings VERDICT: PASS. Cycle shape: round 1 FAIL (1 BLOCKING,
+  the rest of the card verified), round 2 FAIL in convergence (the
+  fix verified, one fix-introduced regression), round 3 PASS - closed
+  at the two-fix-round bound with no ruling needed. Author of the
+  reviewed range: Claude (claude-opus executor under a claude-fable-5
+  board owner). Reviewer all rounds: GPT 5.6-sol via the codex CLI,
+  read-only sandbox. Reviewer spend: 132,723 + 97,285 + 84,749 =
+  314,757 tokens. Unverified in round 3: full pytest (sandbox temp
+  denial); the board owner's own run stands (424 passed). Review
+  record: prompts and outputs for all three rounds in the packet
+  directory. The card now waits at U(code-review), batched with the
+  Phase 2 window.
 - 2026-08-22 Commit-range extended to f769416..6bd4d25 over the second
   fix commit, the packet regenerated, and Gate A round 3 dispatched.
   Two fix rounds are spent: a round 3 short of a clean pass requires a
