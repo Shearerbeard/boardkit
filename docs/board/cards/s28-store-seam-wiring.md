@@ -50,7 +50,7 @@ caller; if it stays deferred, this card's log says so and why.
 - [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `boardkit check`, `boardkit render --check`,
   `boardkit doctor`; golden-view comparison.
-- [ ] Gate A: adversarial review, focus: does the seam actually
+- [x] Gate A: adversarial review, focus: does the seam actually
   invert the dependency (could a second driver be written without
   touching board.py), or does every caller still reach the markdown
   traversal directly?
@@ -64,6 +64,21 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate A passed. Round 2 verified the disposition RESOLVED
+  with file:line evidence (the store passed at cli.py:486-495,
+  id-only resolution through store.load_cards, the substitute-store
+  pin, and an in-memory handoff probe the reviewer ran itself) and
+  returned an explicit zero-findings VERDICT: PASS. Cycle shape:
+  round 1 FAIL (1 BLOCKING), round 2 PASS - closed inside the
+  two-fix-round bound. Author of the reviewed range: Claude
+  (claude-opus executor under a claude-fable-5 board owner). Reviewer
+  both rounds: GPT 5.6-sol via the codex CLI, read-only sandbox,
+  under the leaner round prompts of the dispatch-verbosity watch.
+  Reviewer spend: 97,427 + 92,424 = 189,851 tokens. Unverified in
+  round 2: pytest, ruff, boardkit check and doctor (sandbox limits);
+  the board owner's runs stand (430 passed). Review record: prompts
+  and outputs for both rounds in the packet directory. Gate D follows
+  before the user gate.
 - 2026-08-23 Commit-range extended to 9b1c158..decedc3 over the fix
   commit and the packet regenerated over the full range; Gate A
   round 2 dispatched with the convergence discipline.
