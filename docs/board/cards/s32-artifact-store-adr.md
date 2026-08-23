@@ -54,6 +54,38 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate A round 1 returned VERDICT: FAIL with ten BLOCKING
+  findings, all accepted by the board owner: the verification stamp
+  names 23dea92 while the anchors match the working HEAD (the
+  premises were checked live; the stamp is wrong, the checks were
+  not); the manifest root overclaims tamper-evidence, since it binds
+  only the digest table and an editor can recompute it; the
+  tracked-only vetter path says "establishes" where the design
+  supports attestation; the ruling receipt cannot encode ten cards
+  and five rounds in a singular schema; author_model is singular
+  against multi-author ranges; PacketRef carries a suffix the
+  receipt filename and schema drop; the receipt lifecycle (write
+  timing, ordering against publish and log, the
+  unpublished-to-published transition) is unspecified; the machine
+  overlay's strict parser accepts no store keys, so the sidecar
+  location has no schema to live in; the dir: transport gets none of
+  the semantics the git transport gets; and OQ4 narrows decision 2's
+  "per gate" without naming the departure while requiring a reviewer
+  model Gate U cannot supply. Reviewer: GPT 5.6-sol via the codex
+  CLI; round spend 132,320 tokens. Unverified: the uv-backed
+  commands (sandbox limits); the board owner's runs stand. Board
+  owner dispositions for the fix round: the stamp corrects to the
+  sha actually verified with anchors re-checked there; the manifest
+  restates as transcription integrity, tamper-evidence assigned to
+  git history, commit signing kept as the named upgrade; ruling
+  receipts take a cards list; author_models becomes a list; the
+  suffix joins the filename and schema; a lifecycle section lands;
+  the overlay gains a stated [stores.<name>] schema extension; dir:
+  gets its semantics with the weaker guarantee stated; and receipts
+  split kind review|ruling|decision with reviewer_model required
+  only where a reviewer exists, the per-gate narrowing named as an
+  explicit departure for Gate U to approve. Fix round dispatched to
+  the authoring executor.
 - 2026-08-23 Entered in-review: commit-range 3435716..ce38986 recorded
   and the review packet generated. Gate A prose review dispatches to
   the codex lane under the leaner round prompt.
