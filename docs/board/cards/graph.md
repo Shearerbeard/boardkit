@@ -16,7 +16,7 @@ flowchart TD
     S41["S41 Co-worker consumption readiness"]:::backlog
     S8["S8 Board-root portability and checko…"]:::ready
     S12["S12 Public-repo seam for contract doc…"]:::ready
-    S15["S15 Restore the human review guide to…"]:::inprogress
+    S15["S15 Restore the human review guide to…"]:::inreview
     S30["S30 Wave-2 small-fix batch with the i…"]:::inprogress
     S31["S31 Versioned docking-convention spec…"]:::ready
     S32["S32 ArtifactStore ADR - receipts, pos…"]:::backlog

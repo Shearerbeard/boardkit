@@ -1,7 +1,8 @@
 ---
 id: S15
 title: Restore the human review guide to generated packets
-status: in-progress
+status: in-review
+commit-range: "23dea92..21b6c33"
 depends: []
 serialize-with: []
 lineage: primary
@@ -74,6 +75,11 @@ direct
 
 ## Log
 
+- 2026-08-22 Entered in-review: commit-range 23dea92..21b6c33 recorded
+  and the review packet generated with the card's own new pipeline
+  (first dogfood of the ranked guide on a live gate). Gate A dispatch
+  to the code-review fallback lane follows; the packet presentation to
+  Mike stays batched with the Phase 2 window.
 - 2026-08-22 Gate S passed, run by the board owner after a two-round
   Claude-subagent execution (initial implementation, then an amendment
   round for the path:line anchor text and the card-body convention
