@@ -1,7 +1,7 @@
 ---
 id: S30
 title: Wave-2 small-fix batch with the ignore and doctor truthing items
-status: in-review
+status: done
 depends: []
 serialize-with: []
 lineage: primary
@@ -63,7 +63,7 @@ none of them design-bearing:
 - [x] Gate A: opencode-lane review of the diff, fresh context, packet
   staged per the working-dir contract.
 - [x] Gate D: drift audit of the living documents before the user gate.
-- [ ] Gate U (code-review): batched packet to Mike; stop.
+- [x] Gate U (code-review): batched packet to Mike; stop.
 
 ## Branch
 
@@ -71,6 +71,12 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate U (code-review) passed: Mike reviewed the batched
+  Phase 2 window and accepted the batch. Two notes from his read are
+  logged at the gate: the repeated path literals across `src/boardkit`
+  consolidate into a constants hierarchy (minted as S44), and dispatch
+  instruction volume gets a watch over the next runs (FEEDBACK.md,
+  dispatch-briefs-may-over-instruct). Card done.
 - 2026-08-22 Entered in-review for the batched user gate: commit-range
   f8488de..23dea92 recovered by the trailer search (the prior session
   committed the card's work without setting the range) and the review

@@ -1,7 +1,7 @@
 ---
 id: S15
 title: Restore the human review guide to generated packets
-status: in-review
+status: done
 commit-range: "23dea92..2b29e0e"
 depends: []
 serialize-with: []
@@ -66,7 +66,7 @@ in nvim/LazyVim) jump straight from a log line to the diff it names.
 - [x] Gate A: adversarial review, focus: does the generated guide
   mislead (supersession flag hiding a hunk that still matters, rank
   order implying reviewed-first equals safe-to-skim-later)?
-- [ ] Gate U (code-review): review packet to Mike, batched with the
+- [x] Gate U (code-review): review packet to Mike, batched with the
   wave-2 Phase 2 window; stop.
 
 ## Branch
@@ -75,6 +75,12 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate U (code-review) passed: Mike reviewed the batched
+  Phase 2 window and accepted the batch. Two notes from his read are
+  logged at the gate: the repeated path literals across `src/boardkit`
+  consolidate into a constants hierarchy (minted as S44), and dispatch
+  instruction volume gets a watch over the next runs (FEEDBACK.md,
+  dispatch-briefs-may-over-instruct). Card done.
 - 2026-08-22 Gate A passed. Round 3 verified all three round-2
   residual dispositions RESOLVED with file:line evidence, found no
   fix-introduced regressions, and returned an explicit zero-findings

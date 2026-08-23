@@ -16,9 +16,9 @@ flowchart TD
     S41["S41 Co-worker consumption readiness"]:::backlog
     S8["S8 Board-root portability and checko…"]:::ready
     S12["S12 Public-repo seam for contract doc…"]:::ready
-    S15["S15 Restore the human review guide to…"]:::inreview
-    S30["S30 Wave-2 small-fix batch with the i…"]:::inreview
-    S31["S31 Versioned docking-convention spec…"]:::inreview
+    S15["S15 Restore the human review guide to…"]:::done
+    S30["S30 Wave-2 small-fix batch with the i…"]:::done
+    S31["S31 Versioned docking-convention spec…"]:::done
     S32["S32 ArtifactStore ADR - receipts, pos…"]:::backlog
     S33["S33 Receipts and sidecar implementati…"]:::backlog
     S36["S36 rust-holes adopts the docking con…"]:::backlog
@@ -52,11 +52,12 @@ flowchart TD
   S26["S26 rust-holes HOLES ledger with a ho…"]:::ready
   S27["S27 Maintained architecture flowchart…"]:::backlog
   S28["S28 Wire the CLI core through the Car…"]:::backlog
-  S29["S29 Decide how strictly doctor should…"]:::inreview
+  S29["S29 Decide how strictly doctor should…"]:::done
   S34["S34 Decide whether the wave-level Gat…"]:::backlog
   S35["S35 Before/after canary extension for…"]:::backlog
   S42["S42 Fix doctor host checks that misfi…"]:::backlog
-  S43["S43 Land the phase 2 residue - canary…"]:::inreview
+  S43["S43 Land the phase 2 residue - canary…"]:::done
+  S44["S44 Consolidate the repeated path lit…"]:::backlog
   S1 -.- S6
   S1 -.- S9
   S2 --> S7

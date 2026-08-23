@@ -1,7 +1,7 @@
 ---
 id: S43
 title: Land the phase 2 residue - canary fallback, degraded close, review notes
-status: in-review
+status: done
 depends: []
 serialize-with: []
 lineage: primary
@@ -62,7 +62,7 @@ decisions:
   `boardkit doctor`; `vale` on touched markdown.
 - [x] Gate A: adversarial review of the diff against the plan's
   decision-5 wording and the shipped resolver of `resolve-route`.
-- [ ] Gate U (code-review): packet to Mike, batched with the Phase 2
+- [x] Gate U (code-review): packet to Mike, batched with the Phase 2
   window; stop.
 
 ## Branch
@@ -71,6 +71,12 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate U (code-review) passed: Mike reviewed the batched
+  Phase 2 window and accepted the batch. Two notes from his read are
+  logged at the gate: the repeated path literals across `src/boardkit`
+  consolidate into a constants hierarchy (minted as S44), and dispatch
+  instruction volume gets a watch over the next runs (FEEDBACK.md,
+  dispatch-briefs-may-over-instruct). Card done.
 - 2026-08-22 Gate A passed. Round 3 verified the round-2 disposition
   RESOLVED with the section's temporal claims checked against the
   shipped review_packet.py behavior and returned an explicit

@@ -1,7 +1,7 @@
 ---
 id: S31
 title: Versioned docking-convention spec with the three consumer postures
-status: in-review
+status: done
 depends: []
 serialize-with: []
 lineage: primary
@@ -50,7 +50,7 @@ copy diverges.
 - [x] Gate A: adversarial review of the spec against the shipped
   resolver's actual behavior.
 - [x] Gate D: drift audit before the user gate.
-- [ ] Gate U (code-review): packet to Mike; stop.
+- [x] Gate U (code-review): packet to Mike; stop.
 
 ## Branch
 
@@ -58,6 +58,12 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate U (code-review) passed: Mike reviewed the batched
+  Phase 2 window and accepted the batch. Two notes from his read are
+  logged at the gate: the repeated path literals across `src/boardkit`
+  consolidate into a constants hierarchy (minted as S44), and dispatch
+  instruction volume gets a watch over the next runs (FEEDBACK.md,
+  dispatch-briefs-may-over-instruct). Card done.
 - 2026-08-22 Gate D passed via the batched Phase 2 drift audit (DRIFT
   AUDIT: CLEAN, zero findings): the spec's cross-references, stamps,
   and one-fact-one-place ownership of the resolution order all held.

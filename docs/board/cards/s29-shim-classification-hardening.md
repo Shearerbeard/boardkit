@@ -1,7 +1,7 @@
 ---
 id: S29
 title: Decide how strictly doctor should classify an entry-file shim
-status: in-review
+status: done
 depends: []
 serialize-with: []
 lineage: primary
@@ -64,6 +64,7 @@ shim, never a false failure of a legitimate board.
   `vale` on touched markdown.
 - [x] Gate A: adversarial review, focus: does the chosen shape stop the
   evasion treadmill, or does it just move the next evasion one step out?
+- [x] Gate U (code-review): batched packet to Mike; stop.
 
 ## Branch
 
@@ -71,6 +72,14 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate U (code-review) passed: Mike reviewed the batched
+  Phase 2 window and accepted the batch. Two notes from his read are
+  logged at the gate: the repeated path literals across `src/boardkit`
+  consolidate into a constants hierarchy (minted as S44), and dispatch
+  instruction volume gets a watch over the next runs (FEEDBACK.md,
+  dispatch-briefs-may-over-instruct). The U checklist line, missing
+  since minting while the gates field declared it, was added ticked at
+  close. Card done.
 - 2026-08-22 Gate A passed. Round 3 verified both round-2 residual
   dispositions RESOLVED with file:line evidence and returned an
   explicit zero-findings VERDICT: PASS. Cycle shape: round 1 FAIL (1

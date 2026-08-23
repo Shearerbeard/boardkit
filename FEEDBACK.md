@@ -94,3 +94,29 @@ round, not just `in-progress` status; or entry-file doc pairs get a
 kit-side sync check so a pair edit collision surfaces as a
 deterministic failure instead of a silent revert. Proposes; the
 maintainer disposes.
+
+## 2026-08-23 dispatch-briefs-may-over-instruct
+
+```yaml
+date: 2026-08-23
+harness: claude-code
+agent: claude-fable-5
+workstreams: [boardkit]
+repo: boardkit (its own board, wave-2 Phase 2 user gate)
+source: docs/board/cards/s43-phase2-residue-canary-fallback.md log; the Phase 2 Gate A round prompts (regenerable, packet directories)
+```
+
+At the Phase 2 U(code-review) gate Mike read the batch output and
+flagged verbosity: the process may be over-instructing its agents.
+The observable shape: Gate A dispatch prompts this wave ran about
+sixty lines each, restating cycle state, materials, duties, and a
+report contract, and executor briefs restated card content the card
+already states. The cost signature is real - a full three-round cycle
+ran 304k to 383k reviewer tokens per card, and every round's prompt
+rebuilds context a pointer could carry. Candidate fix, to be tested
+over the next runs rather than ruled now: briefs and review prompts
+point at the card, the packet, and the canonical docs instead of
+restating them, keeping only the report contract and the round's
+delta inline; measure prompt size and reviewer spend against review
+quality over a few cards before changing any template. Proposes; the
+maintainer disposes.

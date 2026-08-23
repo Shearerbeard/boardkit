@@ -27,7 +27,7 @@ Admission test: where does the diff land.
 | [S12](s12-public-repo-seam.md) | Public-repo seam for contract docs and generated views | ready | - | smart | S -> A @ S |
 | [S13](s13-board-discovery.md) | R5' .boardkit resolution with the CardStore seam | done | - | smart | S -> A -> U(code-review) |
 | [S14](s14-review-cycle-convergence.md) | Bound the adversarial review cycle with a convergence rule | done | - | smart | S -> A |
-| [S15](s15-review-packet-guide.md) | Restore the human review guide to generated packets | in-review | - | smart | S -> A -> U(code-review) @ U |
+| [S15](s15-review-packet-guide.md) | Restore the human review guide to generated packets | done | - | smart | S -> A -> U(code-review) |
 | [S16](s16-gate-position-in-views.md) | Render each card's current gate position in the generated views | done | - | smart | S -> A -> U(code-review) |
 | [S17](s17-satellite-repo-convention.md) | Satellite-repo convention - no canonical-looking TODO beside a board | ready | - | smart | S -> A @ S |
 | [S18](s18-boards-registry.md) | R4 boards registry - the manifest is the registry | done | S13 | smart | S -> A -> U(code-review) |
@@ -41,9 +41,9 @@ Admission test: where does the diff land.
 | [S26](s26-rust-holes-ledger.md) | rust-holes HOLES ledger with a hook-grade check | ready | - | smart | S -> A -> U(code-review) @ S |
 | [S27](s27-architecture-flowchart.md) | Maintained architecture flowchart of the kit and its skills | backlog | - | any | S -> A |
 | [S28](s28-store-seam-wiring.md) | Wire the CLI core through the CardStore seam | backlog | - | smart | S -> A -> U(code-review) |
-| [S29](s29-shim-classification-hardening.md) | Decide how strictly doctor should classify an entry-file shim | in-review | - | smart | S -> A -> U(code-review) @ U |
-| [S30](s30-small-fix-batch.md) | Wave-2 small-fix batch with the ignore and doctor truthing items | in-review | - | smart | S -> A -> D -> U(code-review) @ U |
-| [S31](s31-docking-convention-spec.md) | Versioned docking-convention spec with the three consumer postures | in-review | - | smart | S -> A -> D -> U(code-review) @ U |
+| [S29](s29-shim-classification-hardening.md) | Decide how strictly doctor should classify an entry-file shim | done | - | smart | S -> A -> U(code-review) |
+| [S30](s30-small-fix-batch.md) | Wave-2 small-fix batch with the ignore and doctor truthing items | done | - | smart | S -> A -> D -> U(code-review) |
+| [S31](s31-docking-convention-spec.md) | Versioned docking-convention spec with the three consumer postures | done | - | smart | S -> A -> D -> U(code-review) |
 | [S32](s32-artifact-store-adr.md) | ArtifactStore ADR - receipts, postures, sidecar mechanics | backlog | S28 | smart | S -> A -> D -> U |
 | [S33](s33-receipts-and-sidecar.md) | Receipts and sidecar implementation per the ADR | backlog | S32 | smart | S -> A -> M -> D -> U(code-review) |
 | [S34](s34-wave-gate-design.md) | Decide whether the wave-level Gate F packet is worth generating | backlog | S32 | smart | S -> A -> D -> U |
@@ -55,8 +55,9 @@ Admission test: where does the diff land.
 | [S40](s40-readme-developer-path.md) | README developer path, canary brief template, plan navigation | ready | - | any | S -> A @ S |
 | [S41](s41-co-worker-consumption.md) | Co-worker consumption readiness | backlog | - | smart | S -> U |
 | [S42](s42-doctor-docked-board-misfires.md) | Fix doctor host checks that misfire on in-repo board homes | backlog | - | smart | S -> A -> U(code-review) |
-| [S43](s43-phase2-residue-canary-fallback.md) | Land the phase 2 residue - canary fallback, degraded close, review notes | in-review | - | smart | S -> A -> U(code-review) @ U |
+| [S43](s43-phase2-residue-canary-fallback.md) | Land the phase 2 residue - canary fallback, degraded close, review notes | done | - | smart | S -> A -> U(code-review) |
+| [S44](s44-path-constants-hierarchy.md) | Consolidate the repeated path literals into a constants hierarchy | backlog | - | smart | S -> A -> U(code-review) |
 
 ## Epics
 
-- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 0/12 done - S8 (ready), S12 (ready), S15 (in-review), S30 (in-review), S31 (in-review), S32 (backlog), S33 (backlog), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready)
+- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 3/12 done - S8 (ready), S12 (ready), S15 (done), S30 (done), S31 (done), S32 (backlog), S33 (backlog), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready)
