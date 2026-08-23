@@ -52,11 +52,13 @@ uv run --project "${BOARDKIT_HOME:-../boardkit}" boardkit review-packet \
 ```
 
 That lands in `reviews/<ID>-<name>` and leaves `reviews/<ID>` untouched, so
-the full-range packet stays the record while the fix diff sits readable
-beside it. Without the suffix the second run overwrites the packet the
-first round was graded against. `PROCESS.md` names the same flag for a card
-spanning more than one repo; one mechanism serves both, and the suffix is
-whatever tells two packets apart.
+the regenerated full-range packet stays whole while the fix diff sits
+readable beside it. Both are regenerable working material; the card and its
+log hold the durable record, per the retention contract in `PROCESS.md`.
+Without the suffix the supplementary run overwrites the packet the current
+re-review is reading. `PROCESS.md` names the same flag for a card spanning
+more than one repo; one mechanism serves both, and the suffix is whatever
+tells two packets apart.
 
 The shape this repo runs: extend the range, regenerate the primary packet,
 dispatch the re-review on it, and hand the reviewer the fix commit's own

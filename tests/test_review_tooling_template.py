@@ -78,15 +78,28 @@ def test_the_suffix_packet_is_subordinate_to_the_full_range_re_review_duty() -> 
     assert "extended range and its full-range packet are owed either way" in text
 
 
-def test_the_suffix_packet_keeps_the_primary_packet_intact() -> None:
-    """Without the flag the fix round overwrites the packet the first round
-    was graded against, so the mechanism has to survive alongside the duty."""
+def test_the_suffix_packet_keeps_the_current_re_reviews_packet_intact() -> None:
+    """The hazard is against the packet in play now: the mandatory full-range
+    regeneration has already replaced the one the previous round read, so an
+    unsuffixed supplementary run clobbers the current re-review's packet."""
     text = _section(FIX_ROUND_SECTION_RE, "Fix-round packets")
 
     assert "reviews/<ID>-<name>" in text
     assert "leaves `reviews/<ID>` untouched" in text
-    assert "overwrites the packet the first round was graded against" in text
+    assert "overwrites the packet the current re-review is reading" in text
     assert "--commit-range" in text
+
+
+def test_the_fix_round_section_honors_the_packet_retention_contract() -> None:
+    """`PROCESS.md` holds that a packet is regenerable working material and the
+    cards and logs are the durable record. A section that calls any packet the
+    record contradicts it, so pin the deference and the absence together."""
+    text = _section(FIX_ROUND_SECTION_RE, "Fix-round packets")
+
+    assert "Both are regenerable working material" in text
+    assert "the card and its log hold the durable record" in text
+    assert "retention contract in `PROCESS.md`" in text
+    assert "packet stays the record" not in text
 
 
 def test_the_verdict_is_read_from_the_reviewers_own_final_message() -> None:

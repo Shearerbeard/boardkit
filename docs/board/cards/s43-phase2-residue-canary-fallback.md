@@ -71,6 +71,26 @@ direct
 
 ## Log
 
+- 2026-08-22 Fix round 2 landed by the same Claude executor: the
+  section now says the regenerated full-range packet stays whole and
+  defers to the retention contract by name (both packets regenerable
+  working material, the card and its log the durable record), the
+  overwrite hazard is stated against the current re-review's packet,
+  and a new guard test asserts the deference positively and the
+  retracted phrasing's absence. Board owner re-ran the checks: pytest
+  424, ruff clean, vale clean, the copies' section byte-identical.
+- 2026-08-22 Gate A round 2 returned VERDICT: FAIL, in convergence:
+  the round-1 disposition verified RESOLVED (both copies lead with
+  the duty, sections byte-identical, subordination pinned), with one
+  fix-introduced regression - the reworded section calls the packet
+  "the record", contradicting the PROCESS retention contract that
+  packets are regenerable working material, and misstates which
+  packet an unsuffixed run overwrites; the replacement test pins the
+  wrong claim. Reviewer: GPT 5.6-sol via the codex CLI; round spend
+  97,285 tokens, cumulative 230,008. Unverified: full pytest (sandbox
+  limits; the focused file's 8 tests passed in-sandbox). Board owner
+  accepted; fix round 2 dispatched - the bound, so a round 3 short of
+  a clean pass requires a written ruling.
 - 2026-08-22 Commit-range extended to f769416..4a946a6 over the fix
   commit, the packet regenerated, and Gate A round 2 dispatched with
   the convergence discipline.
