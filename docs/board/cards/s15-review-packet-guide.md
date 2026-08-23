@@ -1,13 +1,13 @@
 ---
 id: S15
 title: Restore the human review guide to generated packets
-status: ready
+status: in-progress
 depends: []
 serialize-with: []
 lineage: primary
 executor: smart
-gates: "S -> A"
-user-gates: []
+gates: "S -> A -> U(code-review)"
+user-gates: [code-review]
 epic: S41
 ---
 
@@ -60,11 +60,13 @@ in nvim/LazyVim) jump straight from a log line to the diff it names.
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
 - [ ] Gate A: adversarial review, focus: does the generated guide
   mislead (supersession flag hiding a hunk that still matters, rank
   order implying reviewed-first equals safe-to-skim-later)?
+- [ ] Gate U (code-review): review packet to Mike, batched with the
+  wave-2 Phase 2 window; stop.
 
 ## Branch
 
@@ -72,6 +74,27 @@ direct
 
 ## Log
 
+- 2026-08-22 Gate S passed, run by the board owner after a two-round
+  Claude-subagent execution (initial implementation, then an amendment
+  round for the path:line anchor text and the card-body convention
+  docs): `uv run pytest -q` (400 passed, up from 383), `uv run ruff
+  check` (clean), `uv run ruff format --check` on touched Python
+  (clean), `vale` on all five touched markdown files (clean),
+  `boardkit check` (41 cards valid, views current), `boardkit render
+  --check` (current), `boardkit doctor` (20 passed, 0 errors). Board
+  owner ratified the executor's conventions: `## Design record` and
+  `## Review order` as card-body sections (no frontmatter change, no
+  CLI flag), the narrow supersession flag with its stated limit,
+  inline-code rendering for deleted-file references, and the
+  render-before-clean reorder with its regression test. Doc-sync: the
+  diff updates both PROCESS copies (retention contract, card-body
+  section note) and both card-template copies (the two optional
+  sections); README, REVIEW-TOOLING, and MODEL-CLASSES checked and
+  unaffected.
+- 2026-08-22 Board owner pulled S15 for wave-2 Phase 2 and inserted the
+  standing U(code-review) gate into the card's gates and checklist per
+  the PROCESS code-card rule. The packet presentation batches with the
+  Phase 2 user-gate window per the approved wave-2 plan.
 - 2026-08-05 Minted by the fifth feedback drain from the Epoch E1
   packet regression finding.
 - 2026-08-07 Scope extended by the sixth drain from the E1 user-gate

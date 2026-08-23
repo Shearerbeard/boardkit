@@ -27,7 +27,7 @@ Admission test: where does the diff land.
 | [S12](s12-public-repo-seam.md) | Public-repo seam for contract docs and generated views | ready | - | smart | S -> A @ S |
 | [S13](s13-board-discovery.md) | R5' .boardkit resolution with the CardStore seam | done | - | smart | S -> A -> U(code-review) |
 | [S14](s14-review-cycle-convergence.md) | Bound the adversarial review cycle with a convergence rule | done | - | smart | S -> A |
-| [S15](s15-review-packet-guide.md) | Restore the human review guide to generated packets | ready | - | smart | S -> A @ S |
+| [S15](s15-review-packet-guide.md) | Restore the human review guide to generated packets | in-progress | - | smart | S -> A -> U(code-review) @ A |
 | [S16](s16-gate-position-in-views.md) | Render each card's current gate position in the generated views | done | - | smart | S -> A -> U(code-review) |
 | [S17](s17-satellite-repo-convention.md) | Satellite-repo convention - no canonical-looking TODO beside a board | ready | - | smart | S -> A @ S |
 | [S18](s18-boards-registry.md) | R4 boards registry - the manifest is the registry | done | S13 | smart | S -> A -> U(code-review) |
@@ -57,4 +57,4 @@ Admission test: where does the diff land.
 
 ## Epics
 
-- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 0/12 done - S8 (ready), S12 (ready), S15 (ready), S30 (in-progress), S31 (ready), S32 (backlog), S33 (backlog), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready)
+- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 0/12 done - S8 (ready), S12 (ready), S15 (in-progress), S30 (in-progress), S31 (ready), S32 (backlog), S33 (backlog), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready)

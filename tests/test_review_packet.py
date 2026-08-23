@@ -1,13 +1,16 @@
 """Tests for boardkit.review_packet.
 
 Builds a real throwaway git repo per test (no git mocking): a few commits
-touching multiple files, one commit deleting a file, and one file changed
-in enough scattered places to exceed MAX_HUNKS_PER_FILE. Cards and config
-are written to tmp_path so the whole pipeline runs against real files.
+touching multiple files, one commit deleting a file, one file changed in
+enough scattered places to exceed MAX_HUNKS_PER_FILE, and two files whose
+work a later commit in the range supersedes (one rewritten, one removed
+outright). Cards and config are written to tmp_path so the whole pipeline
+runs against real files.
 """
 
 from __future__ import annotations
 
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,15 +20,22 @@ from conftest import config_text
 
 from boardkit.config import Config, load_config
 from boardkit.review_packet import (
+    MAX_FOCUS_FILES,
     MAX_HUNKS_PER_FILE,
+    FileChurn,
     ReviewPacketError,
     build_review_packet,
+    focus_prefix,
 )
 
 CARD_ID = "S2"
 # Lines in multi.txt that C1 rewrites; spaced apart so each is its own hunk
 # under `git show --unified=0`, yielding more hunks than MAX_HUNKS_PER_FILE.
 MULTI_CHANGED_LINES = (2, 6, 10, 14, 18, 22, 26)
+# churn.txt: six lines written by C1 and all six rewritten by C2, so its
+# per-commit patches move 18 lines where the range's net diff keeps 6.
+CHURN_LINES = 6
+LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 
 
 def _git(repo: Path, *args: str) -> str:
@@ -63,6 +73,7 @@ class Env:
     decoy_repo: Path
     second_repo: Path
     cards_dir: Path
+    plans_dir: Path
     output_dir: Path
     base_sha: str
     mid_sha: str
@@ -81,6 +92,13 @@ class Env:
     def write_card(self, name: str, frontmatter: str, body: str = "body\n") -> Path:
         path = self.cards_dir / name
         path.write_text(f"---\n{frontmatter}---\n\n{body}", encoding="utf-8")
+        return path
+
+    def write_record(self, text: str, name: str = "record.md") -> Path:
+        """A design record beside the cards dir, as a card links one."""
+        self.plans_dir.mkdir(exist_ok=True)
+        path = self.plans_dir / name
+        path.write_text(text, encoding="utf-8")
         return path
 
     def write_config(self, repo_rel: str = "repo") -> Config:
@@ -104,16 +122,25 @@ def env(tmp_path: Path) -> Env:
     base_sha = _commit(repo, "C0 base tree")
 
     # C1: touch several files; rewrite scattered lines of multi.txt so the
-    # commit has more than MAX_HUNKS_PER_FILE hunks in that one file.
+    # commit has more than MAX_HUNKS_PER_FILE hunks in that one file. churn
+    # and scratch are the two files C2 supersedes.
     for n in MULTI_CHANGED_LINES:
         multi_lines[n - 1] = f"CHANGED line {n}\n"
     (repo / "multi.txt").write_text("".join(multi_lines), encoding="utf-8")
     (repo / "other.txt").write_text("other rewritten\n", encoding="utf-8")
+    churn_lines = [f"draft {n}\n" for n in range(1, CHURN_LINES + 1)]
+    (repo / "churn.txt").write_text("".join(churn_lines), encoding="utf-8")
+    (repo / "scratch.txt").write_text("scratch\n", encoding="utf-8")
     mid_sha = _commit(repo, "C1 modify many files")
 
-    # C2: delete a tracked file and modify another.
+    # C2: delete a tracked file and modify another; rewrite every line C1
+    # wrote into churn.txt, and remove the file C1 added.
     (repo / "doomed.txt").unlink()
     (repo / "keep.txt").write_text("keep updated\n", encoding="utf-8")
+    (repo / "churn.txt").write_text(
+        "".join(f"final {n}\n" for n in range(1, CHURN_LINES + 1)), encoding="utf-8"
+    )
+    (repo / "scratch.txt").unlink()
     last_sha = _commit(repo, "C2 delete a file")
 
     decoy_repo = tmp_path / "decoy"
@@ -137,6 +164,7 @@ def env(tmp_path: Path) -> Env:
         decoy_repo=decoy_repo,
         second_repo=second_repo,
         cards_dir=cards_dir,
+        plans_dir=tmp_path / "plans",
         output_dir=tmp_path / "reviews",
         base_sha=base_sha,
         mid_sha=mid_sha,
@@ -155,9 +183,25 @@ def _valid_card(env: Env, commit_range: str | None = None) -> None:
 
 
 def _multi_anchor_line(review: str) -> str:
-    lines = [ln for ln in review.splitlines() if ln.startswith("- multi.txt:")]
+    lines = [ln for ln in review.splitlines() if ln.startswith("- [multi.txt:")]
     assert len(lines) == 1, f"expected one multi.txt anchor line, got {lines}"
     return lines[0]
+
+
+def _review(env: Env, dirname: str = CARD_ID) -> str:
+    return (env.output_dir / dirname / "REVIEW.md").read_text(encoding="utf-8")
+
+
+def _guide_entries(review: str) -> list[str]:
+    """The review guide's ranked list, one string per entry, in order."""
+    guide = review.split("## Review guide", 1)[1].split("\n## ", 1)[0]
+    return [ln for ln in guide.splitlines() if re.match(r"^\d+\. ", ln)]
+
+
+def _entry_for(review: str, path: str) -> str:
+    matches = [ln for ln in _guide_entries(review) if f"{path}]" in ln or f"`{path}`" in ln]
+    assert len(matches) == 1, f"expected one guide entry for {path}, got {matches}"
+    return matches[0]
 
 
 def test_happy_path_builds_full_packet(env: Env) -> None:
@@ -203,25 +247,31 @@ def test_review_md_lists_commit_subjects(env: Env) -> None:
     assert "C2 delete a file" in review
 
 
-def test_review_md_has_path_line_hunk_anchors(env: Env) -> None:
+def test_review_md_links_hunk_anchors_relative_to_the_packet(env: Env) -> None:
     config = env.write_config()
     _valid_card(env)
 
     build_review_packet(config, CARD_ID)
-    review = (env.output_dir / CARD_ID / "REVIEW.md").read_text(encoding="utf-8")
 
-    # other.txt is a single-hunk change in C1: anchor is path:new-side-line.
-    assert "- other.txt:1" in review
+    # other.txt is a single-hunk change in C1: the visible text stays the
+    # path:new-side-line token an editor jumps on, and the target is the
+    # link relative to the packet directory.
+    assert "- [other.txt:1](../../repo/other.txt)" in _review(env)
 
 
 def test_review_md_marks_deleted_file(env: Env) -> None:
+    """A file the range deletes has no working-tree target, so it renders as
+    inline code: a link there would point at nothing."""
     config = env.write_config()
     _valid_card(env)
 
     build_review_packet(config, CARD_ID)
-    review = (env.output_dir / CARD_ID / "REVIEW.md").read_text(encoding="utf-8")
+    review = _review(env)
 
-    assert "- doomed.txt (deleted)" in review
+    assert "- `doomed.txt` (deleted)" in review
+    # scratch.txt has hunks in C1 and is gone by the range end: the anchor
+    # keeps its path:line token and loses only the link.
+    assert "- `scratch.txt:1`" in review
 
 
 def test_hunk_pointers_capped_at_max(env: Env) -> None:
@@ -229,18 +279,289 @@ def test_hunk_pointers_capped_at_max(env: Env) -> None:
     _valid_card(env)
 
     build_review_packet(config, CARD_ID)
-    review = (env.output_dir / CARD_ID / "REVIEW.md").read_text(encoding="utf-8")
 
-    anchor_line = _multi_anchor_line(review)
+    anchor_line = _multi_anchor_line(_review(env))
     # The contract is five anchors: assert the literal cap, not the
     # constant, so a drive-by change to MAX_HUNKS_PER_FILE fails here.
+    # `multi.txt:` matches the link text only; the target carries no colon.
     assert MAX_HUNKS_PER_FILE == 5
     assert anchor_line.count("multi.txt:") == 5
     for line_no in MULTI_CHANGED_LINES[:5]:
-        assert f"multi.txt:{line_no}" in anchor_line
+        assert f"[multi.txt:{line_no}](../../repo/multi.txt)" in anchor_line
     for line_no in MULTI_CHANGED_LINES[5:]:
         assert f"multi.txt:{line_no}" not in anchor_line
     assert "(+2 more hunks)" in anchor_line
+
+
+def test_review_md_leads_with_the_guide_and_keeps_the_commit_listing(env: Env) -> None:
+    """The guide is an entry point over the indexed packet, not a replacement:
+    it leads, and every section the packet had is still below it."""
+    config = env.write_config()
+    _valid_card(env)
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+    headings = [ln for ln in review.splitlines() if ln.startswith("## ")]
+
+    assert headings[0] == "## Review guide"
+    assert headings == ["## Review guide", "## Commits", "## Retention"]
+    assert review.index("## Review guide") < review.index("## Commits")
+    # the commit listing itself survived the reorder
+    assert "### 1. " in review
+    assert "C1 modify many files" in review
+    assert "C2 delete a file" in review
+
+
+def test_guide_ranks_files_by_the_lines_they_change_in_the_net_diff(env: Env) -> None:
+    config = env.write_config()
+    _valid_card(env)
+
+    build_review_packet(config, CARD_ID)
+    entries = _guide_entries(_review(env))
+
+    # multi.txt changes 14 lines net, churn.txt 6, the single-line files 1-2.
+    assert entries[0].startswith("1. [multi.txt]")
+    assert entries[1].startswith("2. [churn.txt]")
+    # every file the range touches is in the guide, ranked or not
+    assert len(entries) == 6
+    # a file whose work is fully undone ranks last: nothing of it survives
+    assert entries[-1].startswith("6. `scratch.txt`")
+
+
+def test_guide_names_the_files_carrying_most_of_the_churn(env: Env) -> None:
+    """Decision 7's 80/20: the packet says where to spend the first pass."""
+    config = env.write_config()
+    _valid_card(env)
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    assert "6 files changed, 25 lines in the range's net diff." in review
+    assert (
+        "Start here - 2 files carrying 80% of it: [multi.txt](../../repo/multi.txt), "
+        "[churn.txt](../../repo/churn.txt)." in review
+    )
+
+
+def test_focus_list_is_capped_when_churn_spreads_flat() -> None:
+    """An unbounded 80% prefix over a flat range names most of its files,
+    which tells the reader to start everywhere."""
+    ranked = [FileChurn(path=f"f{n}.py", net=10, raw=10, commits=1) for n in range(20)]
+
+    focus = focus_prefix(ranked)
+
+    assert len(focus) == MAX_FOCUS_FILES
+    assert [entry.path for entry in focus] == [f"f{n}.py" for n in range(MAX_FOCUS_FILES)]
+
+
+def test_guide_flags_a_file_a_later_commit_rewrote(env: Env) -> None:
+    config = env.write_config()
+    _valid_card(env)
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    # churn.txt: C1 writes 6 lines, C2 rewrites all of them, so 18 lines move
+    # across the two patches and 6 survive.
+    churn = _entry_for(review, "churn.txt")
+    assert "6 lines net, 18 touched across 2 commits" in churn
+    assert "SUPERSEDED IN PART: 12 of the 18 touched lines do not reach the range end" in churn
+    assert "[full-range.diff](full-range.diff)" in churn
+
+    # scratch.txt: added by C1 and removed by C2, so the net diff never sees it.
+    scratch = _entry_for(review, "scratch.txt")
+    assert "SUPERSEDED: the range's net diff does not touch this file" in scratch
+
+    # and the flag's meaning is stated, including what it does not mean
+    assert "It never says the file is safe to skip" in review
+
+
+def test_guide_does_not_flag_a_file_only_one_commit_touched(env: Env) -> None:
+    """Over-flagging would tell a reader to skip hunks that still matter."""
+    config = env.write_config()
+    _valid_card(env)
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    for path in ("multi.txt", "other.txt", "keep.txt", "doomed.txt"):
+        assert "SUPERSEDED" not in _entry_for(review, path)
+
+
+def test_author_supplied_order_leads_the_guide(env: Env) -> None:
+    """Churn ranking cannot make the judgment calls, so the card's own order
+    wins where it names files, and the rest still rank by churn."""
+    config = env.write_config()
+    env.write_card(
+        "s2-example.md",
+        f"id: {CARD_ID}\ntitle: Example card\ncommit-range: {env.range}\n",
+        body="# S2\n\n## Review order\n\n- `keep.txt`, the decision this card turns on\n"
+        "- `other.txt`\n",
+    )
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+    entries = _guide_entries(review)
+
+    assert entries[0].startswith("1. [keep.txt]")
+    assert entries[1].startswith("2. [other.txt]")
+    assert entries[2].startswith("3. [multi.txt]")
+    assert "Order: author-supplied - the card's `Review order` section first" in review
+
+
+def test_review_order_naming_a_path_outside_the_range_is_rejected(env: Env) -> None:
+    config = env.write_config()
+    env.write_card(
+        "s2-example.md",
+        f"id: {CARD_ID}\ntitle: Example card\ncommit-range: {env.range}\n",
+        body="# S2\n\n## Review order\n\n- `nowhere.txt`\n",
+    )
+
+    with pytest.raises(ReviewPacketError, match="nowhere.txt, which the card's commit range"):
+        build_review_packet(config, CARD_ID)
+
+
+def test_review_order_bullet_without_a_path_is_rejected(env: Env) -> None:
+    config = env.write_config()
+    env.write_card(
+        "s2-example.md",
+        f"id: {CARD_ID}\ntitle: Example card\ncommit-range: {env.range}\n",
+        body="# S2\n\n## Review order\n\n- read the parser first\n",
+    )
+
+    with pytest.raises(ReviewPacketError, match="names no path"):
+        build_review_packet(config, CARD_ID)
+
+
+def test_a_failed_regeneration_leaves_the_previous_packet_in_place(env: Env) -> None:
+    """REVIEW.md is built from the card's own sections, so a malformed card is
+    a live failure mode; it must not empty a packet a gate is reading."""
+    config = env.write_config()
+    _valid_card(env)
+    outdir = build_review_packet(config, CARD_ID)
+    before = _review(env)
+
+    env.write_card(
+        "s2-example.md",
+        f"id: {CARD_ID}\ntitle: Example card\ncommit-range: {env.range}\n",
+        body="# S2\n\n## Review order\n\n- `nowhere.txt`\n",
+    )
+    with pytest.raises(ReviewPacketError):
+        build_review_packet(config, CARD_ID)
+
+    assert _review(env) == before
+    assert (outdir / "full-range.diff").is_file()
+    assert (outdir / f"01-{env.mid_sha[:8]}.diff").is_file()
+
+
+def test_every_file_reference_is_a_link_relative_to_the_packet_directory(env: Env) -> None:
+    """The board owner reviews in an editor that follows links: every
+    reference must resolve from the packet's own directory."""
+    config = env.write_config()
+    record = env.write_record(
+        "# Type surface\n\n## Type relationships\n\n"
+        "| Type | Wraps | Returns |\n|---|---|---|\n| `Packet` | `Commit` | `str` |\n"
+    )
+    env.write_card(
+        "s2-example.md",
+        f"id: {CARD_ID}\ntitle: Example card\ncommit-range: {env.range}\n",
+        body=f"# S2\n\n## Design record\n\n[{record.name}](../plans/{record.name})\n",
+    )
+
+    outdir = build_review_packet(config, CARD_ID)
+    targets = LINK_RE.findall(_review(env))
+
+    assert targets, "REVIEW.md renders no links at all"
+    for target in targets:
+        assert not target.startswith(("/", "http://", "https://")), f"{target} is not relative"
+        assert (outdir / target).exists(), f"{target} does not resolve from {outdir}"
+
+
+def test_design_record_is_linked_above_the_commit_listing_with_its_type_section(
+    env: Env,
+) -> None:
+    config = env.write_config()
+    record = env.write_record(
+        "# E1 type surface\n\n## Overview\n\nprose\n\n## Type relationships\n\n"
+        "| Type | Wraps | Returns |\n|---|---|---|\n"
+        "| `Packet` | `Commit` | `str` |\n\n## Fill order\n\nnot this section\n"
+    )
+    env.write_card(
+        "s2-example.md",
+        f"id: {CARD_ID}\ntitle: Example card\ncommit-range: {env.range}\n",
+        body=f"# S2\n\n## Design record\n\n[{record.name}](../plans/{record.name})\n",
+    )
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    assert "## Design record" in review
+    assert f"[{record.name}](../../plans/{record.name})" in review
+    assert review.index("## Design record") < review.index("## Commits")
+    assert review.index("## Type relationships") < review.index("## Commits")
+    assert "| `Packet` | `Commit` | `str` |" in review
+    assert "not this section" not in review
+
+
+def test_design_record_without_a_type_relationship_section_is_rejected(env: Env) -> None:
+    config = env.write_config()
+    record = env.write_record("# E1 type surface\n\n## Overview\n\nprose only\n")
+    env.write_card(
+        "s2-example.md",
+        f"id: {CARD_ID}\ntitle: Example card\ncommit-range: {env.range}\n",
+        body=f"# S2\n\n## Design record\n\n[{record.name}](../plans/{record.name})\n",
+    )
+
+    with pytest.raises(ReviewPacketError, match="no type-relationship section"):
+        build_review_packet(config, CARD_ID)
+
+
+def test_design_record_section_without_a_link_is_rejected(env: Env) -> None:
+    config = env.write_config()
+    env.write_card(
+        "s2-example.md",
+        f"id: {CARD_ID}\ntitle: Example card\ncommit-range: {env.range}\n",
+        body="# S2\n\n## Design record\n\nthe one from the design panel\n",
+    )
+
+    with pytest.raises(ReviewPacketError, match="links no record"):
+        build_review_packet(config, CARD_ID)
+
+
+def test_design_record_link_that_does_not_resolve_is_rejected(env: Env) -> None:
+    config = env.write_config()
+    env.write_card(
+        "s2-example.md",
+        f"id: {CARD_ID}\ntitle: Example card\ncommit-range: {env.range}\n",
+        body="# S2\n\n## Design record\n\n[gone.md](../plans/gone.md)\n",
+    )
+
+    with pytest.raises(ReviewPacketError, match="does not resolve to a file"):
+        build_review_packet(config, CARD_ID)
+
+
+def test_a_card_without_a_design_record_gets_no_type_sections(env: Env) -> None:
+    config = env.write_config()
+    _valid_card(env)
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    assert "## Design record" not in review
+    assert "## Type relationships" not in review
+
+
+def test_packet_states_the_retention_contract(env: Env) -> None:
+    config = env.write_config()
+    _valid_card(env)
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    assert "## Retention" in review
+    assert "regenerable working material" in review
+    assert "card and its log are the durable record" in review
+    assert "un-ignores the output" in review
 
 
 def test_rerun_keeps_reviewer_material_alongside_the_packet(env: Env) -> None:

@@ -73,6 +73,27 @@ their entries below):
 Filename rule: `<id-lowercase>-<slug>.md`, with a unique lowercase slug per
 card.
 
+Card-body sections the tooling reads, both optional and both feeding
+`boardkit review-packet`:
+
+- `## Design record`: one card-relative markdown link to this card's
+  typed-holes design record. The packet links it above the commit listing
+  and lifts the record's own type-relationship section into the packet, so
+  the link has to resolve from the cards directory (`boardkit check`
+  validates it like any other card link) and the record needs a heading
+  such as "Type relationships". A card that introduces no types carries no
+  such section.
+- `## Review order`: one bullet per repo-relative path, each path in inline
+  code, naming the order a reviewer should read the card's files in. This
+  is the author's judgment call, which churn ranking cannot make: the
+  packet's review guide leads with these files in the order given and ranks
+  whatever is left by churn. A path the card's commit range never touches
+  fails the packet rather than being skipped quietly.
+
+A card carrying neither section still generates a full packet. The guide
+then ranks every file by churn, and the packet carries no design-record
+link.
+
 Statuses and their lifecycle:
 
 - `backlog`: not yet eligible. Waiting on a dependency, or not yet
@@ -359,6 +380,14 @@ primary-repo shas that do not resolve in the second repo. When
 pulling a code card that lacks the gate, or on encountering any already-active
 (`in-progress` or `in-review`) code card without it, the board owner inserts
 the gate into the card's frontmatter and checklist and logs the insertion.
+
+A packet is regenerable working material, never the record. `boardkit init`
+gitignores the review output directory, and `boardkit review-packet`
+rebuilds a packet from the card's commit range whenever a gate needs one
+again; the cards and their logs are the durable record of what was reviewed
+and what was decided. A repo that wants its packets kept un-ignores that
+directory deliberately and owns the consequence: every diff and reviewer
+transcript the directory holds then lives in the repo's history.
 
 ## Type discipline
 

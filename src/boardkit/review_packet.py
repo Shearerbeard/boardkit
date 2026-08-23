@@ -6,9 +6,43 @@ configured review output directory (gitignored working material):
 
   NN-<shortsha>.diff   one full patch per commit, in range order
   full-range.diff      the whole card as one diff
-  REVIEW.md            commit subjects, per-file hunk pointers as
-                       file:line anchors, and ready-to-paste git
-                       commands for a terminal or editor review
+  REVIEW.md            the ranked review guide, then the design record
+                       for a card that names one, then the indexed
+                       commit listing with per-file hunk pointers
+
+REVIEW.md leads with the guide because a packet that opens on commit
+stats leaves the reader to find the 80/20 themselves. The guide ranks
+the range's files by the lines they change in its net diff, names the
+prefix that carries most of that churn, and flags the files a later
+commit in the range rewrote. It is an entry point over an indexed
+packet, not the packet's one path: the commit listing below it still
+carries every commit and every file, for a reader who works the range
+commit by commit.
+
+Two card-body conventions feed the packet, both read from the card the
+packet covers:
+
+  ## Review order    one bullet per repo-relative path in inline code.
+                     The author's judgment call about reading order,
+                     which churn ranking cannot make. Named files lead
+                     the guide, in the order given; the rest follow by
+                     churn.
+  ## Design record   a card-relative markdown link to the typed-holes
+                     design record. The packet links it above the
+                     commit listing and lifts the record's own
+                     type-relationship section into the packet.
+
+Both live in the card body rather than in frontmatter: the card already
+links its evidence and plans there, `boardkit check` already validates
+that a card-relative link resolves, and neither needs a schema change.
+
+Diff and file references render as markdown links relative to the
+packet's own directory, so an editor that follows links jumps from a
+guide or log line to the file or patch it names. A hunk anchor keeps
+its `path:line` token as the link text, because that token is what an
+editor and a terminal jump on. A file the range deletes has no
+working-tree target and renders as inline code instead of a link that
+would not resolve.
 
 The repo diffed against and the output directory come from the loaded
 Config's [review] section; there is no hardcoded default repo.
@@ -16,14 +50,18 @@ Config's [review] section; there is no hardcoded default repo.
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
+from collections.abc import Iterator
 from pathlib import Path
 from typing import NamedTuple
 
 import yaml
 
+from boardkit.board import LINK_RE
 from boardkit.config import Config
+from boardkit.contract import sections
 
 RANGE_RE = re.compile(r"^.+\.\..+$")
 HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
@@ -36,10 +74,68 @@ MAX_HUNKS_PER_FILE = 5
 GENERATED_DIFF_RE = re.compile(r"^\d{2,}-[0-9a-f]{7,40}\.diff$")
 GENERATED_NAMES = ("full-range.diff", "REVIEW.md")
 
+# The card-body sections the packet reads. Headings, not frontmatter keys:
+# see the module docstring for why.
+REVIEW_ORDER_SECTION = "Review order"
+DESIGN_RECORD_SECTION = "Design record"
+# The design record's own section the type-relationship view is lifted from.
+# The record is the source of truth for how the introduced types relate, so
+# the packet transcribes that section rather than inferring relationships
+# from the diff.
+TYPE_SECTION_RE = re.compile(r"^type[\s-]*(?:relationships?|map)\b", re.IGNORECASE)
+# Share of the range's net churn the guide's focus line aims to account for,
+# and the most files it will name reaching for it.
+FOCUS_SHARE = 0.8
+MAX_FOCUS_FILES = 5
+BULLET_RE = re.compile(r"^\s*[-*]\s+(.*)$")
+INLINE_CODE_RE = re.compile(r"`([^`]+)`")
+
 
 class Commit(NamedTuple):
     sha: str
     subject: str
+
+
+class FileChurn(NamedTuple):
+    """One file's churn across a commit range.
+
+    `raw` is the lines the per-commit patches touch, `net` the lines the
+    range's net diff keeps. When a later commit in the range rewrites what
+    an earlier one wrote, raw exceeds net and the difference is the part a
+    reader can take from the net diff instead of hunk by hunk.
+    """
+
+    path: str
+    net: int
+    raw: int
+    commits: int
+
+    @property
+    def superseded(self) -> bool:
+        """True when a later commit in the range rewrote part of this file.
+
+        Deliberately narrow: one commit cannot supersede itself, and files
+        whose commits touch disjoint lines keep raw == net and are not
+        flagged. Over-flagging would tell a reader to skip hunks that still
+        matter, which is the failure this flag exists to avoid.
+        """
+        return self.commits >= 2 and self.net < self.raw
+
+
+class Packet(NamedTuple):
+    """Everything REVIEW.md renders from, resolved once by the builder.
+
+    `card_sections` is the card body walked once into heading -> body, so
+    the two conventions the packet reads out of it share that walk.
+    """
+
+    meta: dict
+    commit_range: str
+    repo: Path
+    commits: list[Commit]
+    outdir: Path
+    cards_dir: Path
+    card_sections: dict[str, str]
 
 
 class ReviewPacketError(Exception):
@@ -67,6 +163,7 @@ def load_card(cards_dir: Path, card_id: str) -> dict:
     if not isinstance(meta, dict):
         raise ReviewPacketError(f"{matches[0].name}: frontmatter is not a mapping")
     meta["_file"] = matches[0].name
+    meta["_body"] = text[end + 5 :]
     return meta
 
 
@@ -131,36 +228,356 @@ def hunk_pointers(repo: Path, sha: str) -> dict[str, list[int]]:
     return pointers
 
 
-def render_review(meta: dict, commit_range: str, repo: Path, commits: list[Commit]) -> str:
+def _numstat_rows(output: str) -> Iterator[tuple[int, int, str]]:
+    """(added, deleted, path) per numstat row; a binary file counts as zero."""
+    for line in output.splitlines():
+        parts = line.split("\t")
+        if len(parts) != 3:
+            continue
+        added, deleted, path = parts
+        yield (0 if added == "-" else int(added), 0 if deleted == "-" else int(deleted), path)
+
+
+def file_churn(repo: Path, commit_range: str) -> list[FileChurn]:
+    """Every file the range touches, ranked for the review guide.
+
+    Ranked by the lines the range's net diff changes, because that is the
+    state under review; ties break on raw churn and then on path, so the
+    guide is deterministic. Renames are off in both passes: a rename read
+    as a delete plus an add keeps the two numbers comparable, which is
+    what the supersession flag is computed from.
+    """
+    raw: dict[str, int] = {}
+    commits: dict[str, int] = {}
+    log = git(repo, "log", "--reverse", "--numstat", "--no-renames", "--format=%H", commit_range)
+    for added, deleted, path in _numstat_rows(log):
+        raw[path] = raw.get(path, 0) + added + deleted
+        commits[path] = commits.get(path, 0) + 1
+    net: dict[str, int] = {}
+    for added, deleted, path in _numstat_rows(
+        git(repo, "diff", "--numstat", "--no-renames", commit_range)
+    ):
+        net[path] = added + deleted
+    churn = [
+        FileChurn(
+            path=path,
+            net=net.get(path, 0),
+            raw=raw.get(path, 0),
+            commits=commits.get(path, 0),
+        )
+        for path in set(raw) | set(net)
+    ]
+    return sorted(churn, key=lambda c: (-c.net, -c.raw, c.path))
+
+
+def focus_prefix(
+    ranked: list[FileChurn], share: float = FOCUS_SHARE, cap: int = MAX_FOCUS_FILES
+) -> list[FileChurn]:
+    """The ranked prefix worth the first pass.
+
+    The shortest run carrying `share` of the net churn, capped at `cap`
+    files: on a range whose churn is spread flat across fifty files, an
+    unbounded 80% prefix names most of them and points at nothing. The
+    caller reports the share the capped prefix actually covers, so the
+    line stays true when the cap bites.
+    """
+    total = sum(entry.net for entry in ranked)
+    if total == 0:
+        return []
+    prefix: list[FileChurn] = []
+    running = 0
+    for entry in ranked[:cap]:
+        prefix.append(entry)
+        running += entry.net
+        if running >= total * share:
+            break
+    return prefix
+
+
+def card_review_order(card_sections: dict[str, str], card_file: str) -> list[str]:
+    """Repo-relative paths from the card's `Review order` section, in order.
+
+    Each bullet names one path in inline code. A bullet that names none is
+    a malformed section rather than a file to skip: the packet says so
+    instead of silently dropping the author's ordering.
+    """
+    body = card_sections.get(REVIEW_ORDER_SECTION)
+    if body is None:
+        return []
+    paths: list[str] = []
+    for line in body.splitlines():
+        bullet = BULLET_RE.match(line)
+        if bullet is None:
+            continue
+        found = INLINE_CODE_RE.search(bullet.group(1))
+        if found is None:
+            raise ReviewPacketError(
+                f"{card_file}: '{REVIEW_ORDER_SECTION}' bullet "
+                f"'{bullet.group(1).strip()}' names no path. Each bullet names one "
+                "repo-relative path in inline code."
+            )
+        paths.append(found.group(1).strip())
+    return paths
+
+
+def ordered_files(
+    ranked: list[FileChurn], order: list[str], card_file: str
+) -> tuple[list[FileChurn], str]:
+    """The guide's file order, and the sentence that names where it came from."""
+    if not order:
+        return ranked, "generated, by the lines each file changes in the range's net diff"
+    by_path = {entry.path: entry for entry in ranked}
+    missing = [path for path in order if path not in by_path]
+    if missing:
+        raise ReviewPacketError(
+            f"{card_file}: '{REVIEW_ORDER_SECTION}' names {', '.join(missing)}, which "
+            "the card's commit range does not touch. Name paths as the range's diff "
+            "spells them, or drop them from the section."
+        )
+    named = set(order)
+    return (
+        [by_path[path] for path in order] + [e for e in ranked if e.path not in named],
+        f"author-supplied - the card's `{REVIEW_ORDER_SECTION}` section first, "
+        "then the rest by net churn",
+    )
+
+
+def card_design_record(
+    card_sections: dict[str, str], cards_dir: Path, card_file: str
+) -> Path | None:
+    """The typed-holes design record the card names, or None if it names none."""
+    body = card_sections.get(DESIGN_RECORD_SECTION)
+    if body is None:
+        return None
+    match = LINK_RE.search(body)
+    if match is None:
+        raise ReviewPacketError(
+            f"{card_file}: '{DESIGN_RECORD_SECTION}' section links no record. "
+            "Link the typed-holes design record there as a card-relative markdown "
+            "link, or drop the section."
+        )
+    record = (cards_dir / match.group(1)).resolve()
+    if not record.is_file():
+        raise ReviewPacketError(
+            f"{card_file}: design record '{match.group(1)}' does not resolve to a file ({record})"
+        )
+    return record
+
+
+def type_relationships(record: Path) -> tuple[str, str]:
+    """The design record's type-relationship heading and its body, verbatim.
+
+    Which types wrap, return, or consume which is a design fact the record
+    already states; the packet transcribes it rather than guessing it from
+    the diff. A record that states it nowhere fails loudly, because the
+    packet would otherwise ship a card's type surface with no view of it.
+    """
+    for heading, body in sections(record.read_text(encoding="utf-8")).items():
+        if TYPE_SECTION_RE.match(heading.strip()) and body.strip():
+            return heading.strip(), body.strip("\n")
+    raise ReviewPacketError(
+        f"{record}: no type-relationship section with a body (a heading such as "
+        "'Type relationships' or 'Type map'). The packet lifts that section for a "
+        "card that names a design record; add one to the record, or drop the card's "
+        f"'{DESIGN_RECORD_SECTION}' section."
+    )
+
+
+def rel(target: Path, outdir: Path) -> str:
+    """`target` relative to the packet directory, POSIX-style."""
+    return Path(os.path.relpath(target, outdir)).as_posix()
+
+
+def link(label: str, target: Path, outdir: Path) -> str:
+    return f"[{label}]({rel(target, outdir)})"
+
+
+def file_ref(path: str, repo: Path, outdir: Path) -> str:
+    """A changed file as a relative link, or inline code when it is gone.
+
+    Links point into the working tree, so a file the range deletes has no
+    target. Inline code says so honestly; a link there would resolve to
+    nothing.
+    """
+    target = repo / path
+    return link(path, target, outdir) if target.is_file() else f"`{path}`"
+
+
+def hunk_ref(path: str, start: int, repo: Path, outdir: Path) -> str:
+    """One hunk anchor: the `path:line` token, linked to the file it names.
+
+    The visible text stays `path:line` because that token is what the
+    board owner's editor and terminal jump on; the target is the same
+    packet-relative link every other reference uses. A file the range
+    deletes keeps the token and loses the link, as `file_ref` does.
+    """
+    anchor = f"{path}:{start}"
+    target = repo / path
+    return link(anchor, target, outdir) if target.is_file() else f"`{anchor}`"
+
+
+def _count(number: int, noun: str) -> str:
+    return f"{number} {noun}" if number == 1 else f"{number} {noun}s"
+
+
+def _guide_entry(entry: FileChurn, packet: Packet) -> str:
+    ref = file_ref(entry.path, packet.repo, packet.outdir)
+    text = (
+        f"{ref} - {_count(entry.net, 'line')} net, {entry.raw} touched across "
+        f"{_count(entry.commits, 'commit')}"
+    )
+    if not entry.superseded:
+        return text
+    if entry.net == 0:
+        return (
+            f"{text} - SUPERSEDED: the range's net diff does not touch this file. "
+            "Its hunks below are intermediate state a later commit in the range "
+            "removed."
+        )
+    full = link("full-range.diff", packet.outdir / "full-range.diff", packet.outdir)
+    return (
+        f"{text} - SUPERSEDED IN PART: {entry.raw - entry.net} of the {entry.raw} "
+        f"touched lines do not reach the range end. Read this file in {full} "
+        "rather than hunk by hunk."
+    )
+
+
+def _guide_lines(packet: Packet) -> list[str]:
+    ranked = file_churn(packet.repo, packet.commit_range)
+    card_file = packet.meta["_file"]
+    order = card_review_order(packet.card_sections, card_file)
+    files, source = ordered_files(ranked, order, card_file)
+    total = sum(entry.net for entry in ranked)
     lines = [
-        f"# Review packet: {meta['id']} {meta['title']}",
+        "## Review guide",
         "",
-        f"Card: `{meta['_file']}` | Repo: `{repo}`",
-        f"Range: `{commit_range}` ({len(commits)} commits)",
+        "Where to spend the first pass. An entry point over the indexed packet,",
+        "not the one path through it: the commit listing below carries every",
+        "commit and every file, for a reader who works the range commit by commit.",
         "",
-        "Whole card at once: `full-range.diff`, or",
-        f"`git -C {repo} diff {commit_range}`",
+        f"Order: {source}.",
         "",
     ]
-    for index, commit in enumerate(commits, start=1):
+    if total:
+        focus = focus_prefix(ranked)
+        names = ", ".join(file_ref(entry.path, packet.repo, packet.outdir) for entry in focus)
+        covered = sum(entry.net for entry in focus) / total
+        lines += [
+            f"{_count(len(ranked), 'file')} changed, {_count(total, 'line')} in the "
+            "range's net diff.",
+            f"Start here - {_count(len(focus), 'file')} carrying {covered:.0%} of it: {names}.",
+            "",
+        ]
+    else:
+        lines += [
+            f"{_count(len(ranked), 'file')} touched, none of them changed by the "
+            "range's net diff: every line this range moves is undone again before",
+            "the range ends.",
+            "",
+        ]
+    lines += [f"{index}. {_guide_entry(entry, packet)}" for index, entry in enumerate(files, 1)]
+    lines.append("")
+    if any(entry.superseded for entry in files):
+        lines += [
+            "SUPERSEDED is a mechanical flag: more than one commit in the range",
+            "touches the file, and its per-commit patches move more lines than the",
+            "net diff keeps. It says a later commit already replaced part of what",
+            "the earlier hunks show. It never says the file is safe to skip - what",
+            "survives is as reviewable as anything else in the range.",
+            "",
+        ]
+    return lines
+
+
+def _design_record_lines(packet: Packet) -> list[str]:
+    record = card_design_record(packet.card_sections, packet.cards_dir, packet.meta["_file"])
+    if record is None:
+        return []
+    heading, body = type_relationships(record)
+    return [
+        "## Design record",
+        "",
+        f"{link(record.name, record, packet.outdir)}, named by the card's "
+        f"`{DESIGN_RECORD_SECTION}` section.",
+        "",
+        "Read the record before the diff. The type view below is the record's own",
+        "account of how the types relate, not this packet's reading of the code.",
+        "",
+        "## Type relationships",
+        "",
+        f"Lifted verbatim from the design record's `{heading}` section.",
+        "",
+        body,
+        "",
+    ]
+
+
+def _commit_lines(packet: Packet) -> list[str]:
+    repo, outdir = packet.repo, packet.outdir
+    lines = [
+        "## Commits",
+        "",
+        "Every commit in the range, in range order, each with its own patch and",
+        "the new-side line of each hunk it writes.",
+        "",
+    ]
+    for index, commit in enumerate(packet.commits, start=1):
         short = commit.sha[:8]
         stat = git(repo, "show", "--shortstat", "--format=", commit.sha).strip()
+        patch = f"{index:02d}-{short}.diff"
         lines += [
-            f"## {index}. {short} {commit.subject}",
+            f"### {index}. {short} {commit.subject}",
             "",
             f"{stat}",
-            f"Patch: `{index:02d}-{short}.diff` | `git -C {repo} show {short}`",
+            f"Patch: {link(patch, outdir / patch, outdir)} | `git -C {repo} show {short}`",
             "",
         ]
         for path, starts in hunk_pointers(repo, commit.sha).items():
             if not starts:
-                lines.append(f"- {path} (deleted)")
+                lines.append(f"- `{path}` (deleted)")
                 continue
-            shown = ", ".join(f"{path}:{n}" for n in starts[:MAX_HUNKS_PER_FILE])
+            shown = ", ".join(
+                hunk_ref(path, start, repo, outdir) for start in starts[:MAX_HUNKS_PER_FILE]
+            )
             extra = len(starts) - MAX_HUNKS_PER_FILE
             suffix = f" (+{extra} more hunks)" if extra > 0 else ""
             lines.append(f"- {shown}{suffix}")
         lines.append("")
+    return lines
+
+
+def _retention_lines() -> list[str]:
+    return [
+        "## Retention",
+        "",
+        "This packet is regenerable working material. `boardkit init` gitignores",
+        "the review output directory, and `boardkit review-packet` rebuilds the",
+        "packet from the card's commit range whenever a gate needs it again. The",
+        "card and its log are the durable record of what was reviewed and what",
+        "was decided. A repo that wants packets kept un-ignores the output",
+        "directory deliberately and owns the consequence.",
+        "",
+    ]
+
+
+def render_review(packet: Packet) -> str:
+    """REVIEW.md: the guide first, then the design record, then the index."""
+    meta, repo, outdir = packet.meta, packet.repo, packet.outdir
+    card = packet.cards_dir / meta["_file"]
+    lines = [
+        f"# Review packet: {meta['id']} {meta['title']}",
+        "",
+        f"Card: {link(meta['_file'], card, outdir)} | Repo: `{repo}`",
+        f"Range: `{packet.commit_range}` ({len(packet.commits)} commits)",
+        "",
+        f"Whole card at once: {link('full-range.diff', outdir / 'full-range.diff', outdir)}, or",
+        f"`git -C {repo} diff {packet.commit_range}`",
+        "",
+        *_guide_lines(packet),
+        *_design_record_lines(packet),
+        *_commit_lines(packet),
+        *_retention_lines(),
+    ]
     return "\n".join(lines)
 
 
@@ -228,15 +645,31 @@ def build_review_packet(
     commits = commit_list(target_repo, str(commit_range))
     dirname = card_id.upper() if suffix is None else f"{card_id.upper()}-{suffix}"
     outdir = config.review.output_dir / dirname
+
+    # Render before the sweep. REVIEW.md is built from the card's own
+    # sections now, so a malformed one is a live failure mode; rendering
+    # first means a card that fails to regenerate keeps the packet a gate
+    # may already be reading. Link targets are path arithmetic, so nothing
+    # here depends on the files being written yet.
+    review = render_review(
+        Packet(
+            meta=meta,
+            commit_range=str(commit_range),
+            repo=target_repo,
+            commits=commits,
+            outdir=outdir,
+            cards_dir=config.board.cards_dir,
+            card_sections=sections(meta["_body"]),
+        )
+    )
+
     clean_generated(outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-
     for index, commit in enumerate(commits, start=1):
         patch = git(target_repo, "show", "--stat", "--patch", commit.sha)
         (outdir / f"{index:02d}-{commit.sha[:8]}.diff").write_text(patch, encoding="utf-8")
     full = git(target_repo, "diff", str(commit_range))
     (outdir / "full-range.diff").write_text(full, encoding="utf-8")
-    review = render_review(meta, str(commit_range), target_repo, commits)
     (outdir / "REVIEW.md").write_text(review, encoding="utf-8")
 
     return outdir

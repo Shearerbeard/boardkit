@@ -30,6 +30,21 @@ The artifact this card produces.
 Commands or named files with pass criteria. Every criterion verifiable
 by running something or reading a named file.
 
+## Design record
+
+Optional; delete the section when the card introduces no types. One
+card-relative markdown link to this card's typed-holes design record.
+`boardkit review-packet` links it above the packet's commit listing and
+lifts the record's own type-relationship section into the packet, so
+the record needs a heading such as "Type relationships".
+
+## Review order
+
+Optional; delete the section to let the packet rank every file itself.
+One bullet per repo-relative path, each path in inline code, in the
+order a reviewer should read them. The packet's review guide leads with
+these and ranks whatever is left by churn.
+
 ## Gate checklist
 
 - [ ] Gate S: named deterministic checks.
