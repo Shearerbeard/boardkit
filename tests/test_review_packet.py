@@ -352,7 +352,7 @@ def test_second_repo_without_the_override_cannot_resolve_the_cards_range(env: En
     config = env.write_config()
     _valid_card(env)
 
-    with pytest.raises(ReviewPacketError, match="git log"):
+    with pytest.raises(ReviewPacketError, match="does not resolve"):
         build_review_packet(config, CARD_ID, repo=env.second_repo, suffix="adapter")
 
 
@@ -360,20 +360,30 @@ def test_commit_range_override_beats_the_frontmatter_range(env: Env) -> None:
     config = env.write_config()
     _valid_card(env)
 
-    outdir = build_review_packet(
-        config, CARD_ID, commit_range=f"{env.base_sha}..{env.mid_sha}"
-    )
+    outdir = build_review_packet(config, CARD_ID, commit_range=f"{env.base_sha}..{env.mid_sha}")
     review = (outdir / "REVIEW.md").read_text(encoding="utf-8")
 
     assert "C1 modify many files" in review
     assert "C2 delete a file" not in review
 
 
+def test_revision_expression_in_commit_range_is_accepted(env: Env) -> None:
+    """A range side may be any git revision expression, not just a hex sha."""
+    config = env.write_config()
+    _valid_card(env)
+
+    outdir = build_review_packet(config, CARD_ID, commit_range=f"{env.base_sha[:8]}..HEAD")
+    review = (outdir / "REVIEW.md").read_text(encoding="utf-8")
+
+    assert "C1 modify many files" in review
+    assert "C2 delete a file" in review
+
+
 def test_malformed_commit_range_override_rejected(env: Env) -> None:
     config = env.write_config()
     _valid_card(env)
 
-    with pytest.raises(ReviewPacketError, match="not A..B hex"):
+    with pytest.raises(ReviewPacketError, match="does not resolve"):
         build_review_packet(config, CARD_ID, commit_range="zzzzzzz..yyyyyyy")
 
 
@@ -442,7 +452,7 @@ def test_malformed_commit_range_rejected(env: Env) -> None:
     config = env.write_config()
     _valid_card(env, commit_range="zzzzzzz..yyyyyyy")
 
-    with pytest.raises(ReviewPacketError, match="not A..B hex"):
+    with pytest.raises(ReviewPacketError, match="does not resolve"):
         build_review_packet(config, CARD_ID)
 
 

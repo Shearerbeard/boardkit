@@ -26,7 +26,7 @@ Admission test: where does the diff land.
 | [S11](s11-vale-tiering.md) | Tier the vale prose gate by artifact class | done | - | any | S -> A |
 | [S12](s12-public-repo-seam.md) | Public-repo seam for contract docs and generated views | ready | - | smart | S -> A @ S |
 | [S13](s13-board-discovery.md) | R5' .boardkit resolution with the CardStore seam | done | - | smart | S -> A -> U(code-review) |
-| [S14](s14-review-cycle-convergence.md) | Bound the adversarial review cycle with a convergence rule | ready | - | smart | S -> A @ S |
+| [S14](s14-review-cycle-convergence.md) | Bound the adversarial review cycle with a convergence rule | done | - | smart | S -> A |
 | [S15](s15-review-packet-guide.md) | Restore the human review guide to generated packets | ready | - | smart | S -> A @ S |
 | [S16](s16-gate-position-in-views.md) | Render each card's current gate position in the generated views | done | - | smart | S -> A -> U(code-review) |
 | [S17](s17-satellite-repo-convention.md) | Satellite-repo convention - no canonical-looking TODO beside a board | ready | - | smart | S -> A @ S |
@@ -42,7 +42,7 @@ Admission test: where does the diff land.
 | [S27](s27-architecture-flowchart.md) | Maintained architecture flowchart of the kit and its skills | backlog | - | any | S -> A |
 | [S28](s28-store-seam-wiring.md) | Wire the CLI core through the CardStore seam | backlog | - | smart | S -> A -> U(code-review) |
 | [S29](s29-shim-classification-hardening.md) | Decide how strictly doctor should classify an entry-file shim | ready | - | smart | S -> A -> U(code-review) @ S |
-| [S30](s30-small-fix-batch.md) | Wave-2 small-fix batch with the ignore and doctor truthing items | ready | - | smart | S -> A -> D -> U(code-review) @ S |
+| [S30](s30-small-fix-batch.md) | Wave-2 small-fix batch with the ignore and doctor truthing items | in-progress | - | smart | S -> A -> D -> U(code-review) @ D |
 | [S31](s31-docking-convention-spec.md) | Versioned docking-convention spec with the three consumer postures | ready | - | smart | S -> A -> D -> U(code-review) @ S |
 | [S32](s32-artifact-store-adr.md) | ArtifactStore ADR - receipts, postures, sidecar mechanics | backlog | S28 | smart | S -> A -> D -> U |
 | [S33](s33-receipts-and-sidecar.md) | Receipts and sidecar implementation per the ADR | backlog | S32 | smart | S -> A -> M -> D -> U(code-review) |
@@ -57,4 +57,4 @@ Admission test: where does the diff land.
 
 ## Epics
 
-- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 0/12 done - S8 (ready), S12 (ready), S15 (ready), S30 (ready), S31 (ready), S32 (backlog), S33 (backlog), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready)
+- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 0/12 done - S8 (ready), S12 (ready), S15 (ready), S30 (in-progress), S31 (ready), S32 (backlog), S33 (backlog), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready)

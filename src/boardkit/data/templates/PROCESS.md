@@ -264,7 +264,23 @@ checklist that repeats it at the gate is the one that fires.
   card done without this leaves the fix commit unreviewed. An external-repo
   card (`lineage: none`) carries the same duty: the fix commit extends the
   logged sha range and the card's `commit-range`, and the packet regenerates
-  over the full range with `--repo <path>` for a fresh Gate A.
+  over the full range with `--repo <path>` for a fresh Gate A. Convergence
+  rule: each re-review round verifies the prior round's dispositions with
+  evidence, re-raises findings whose fixes failed, and re-raises any
+  regression the fix introduced in the reviewed diff. It does not expand
+  scope past ground already accepted. Round bound: after two fix rounds,
+  the board owner writes a ruling that names the next action: continue,
+  card, or escalate. The ruling may not pass Gate A while unresolved
+  in-scope findings remain; failed fixes and fix-introduced regressions
+  stay in cycle or escalate, never carded as new scope. A FAIL whose
+  findings are all new scope - none re-raise a prior round's failed fix,
+  and none are regressions the fix introduced - triggers the user
+  escalation, taking the disagreement to the user with it recorded on the
+  ledger, never a silent stop or an unbounded loop. The dispatch brief for
+  a re-review round carries this discipline into the reviewer prompt. The
+  ledger records per-round finding counts, cumulative reviewer spend, and
+  per-finding disposition verification evidence as required fields, so the
+  cycle's shape is auditable from the record.
 - Gate M, manual: the agent exercises the behavior end to end and reports
   what happened.
 - Gate D, drift audit: before any user gate opens, a fresh lower-cost agent

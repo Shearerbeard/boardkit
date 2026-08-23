@@ -48,10 +48,9 @@ BOARD_ENV_VAR = "BOARDKIT_BOARD"
 
 TOP_LEVEL_SECTIONS = {"board", "review", "contract", "routes", "roles", "charter"}
 BOARD_KEYS = {"cards_dir", "id_prefix", "sentinel_ids"}
-# Optional [board] keys: lanes is the R1 vocabulary, opt-in per board;
-# base_branch declares the branch the board's host repo should sit on, for
-# the R6 doctor check (absent means the check is skipped, not passed).
-BOARD_OPTIONAL_KEYS = {"lanes", "base_branch"}
+# The board-wide in-progress cap default. PROCESS.md board mechanics sets
+# it at two; making it a config key retires the board.py hard-coded constant.
+DEFAULT_WIP = 2
 REVIEW_KEYS = {"repo", "output_dir"}
 CHARTER_KEYS = {"owns", "not", "route"}
 LANE_KEYS = {"name", "wip", "exempt"}
@@ -87,6 +86,7 @@ class BoardConfig:
     sentinel_ids: list[str]
     lanes: dict[str, LaneConfig]
     base_branch: str | None
+    wip: int = DEFAULT_WIP
 
 
 @dataclass(frozen=True)
@@ -617,9 +617,7 @@ def card_ref_findings(
                 )
                 continue
             prefix = row.effective_prefix
-            if prefix is not None and not re.fullmatch(
-                re.escape(prefix) + r"\d+", ref_id
-            ):
+            if prefix is not None and not re.fullmatch(re.escape(prefix) + r"\d+", ref_id):
                 sentinels = (
                     _board_declared_sentinels(row.resolved_root)
                     if row.resolved_root is not None
@@ -645,9 +643,7 @@ def card_ref_findings(
     return errors, warnings
 
 
-def charter_route_errors(
-    config: Config, cwd: Path, boardkit_dir: Path | None = None
-) -> list[str]:
+def charter_route_errors(config: Config, cwd: Path, boardkit_dir: Path | None = None) -> list[str]:
     """Charter route targets that do not resolve to a registry short-code.
 
     Validation needs a registry; with no manifest reachable there is
@@ -697,6 +693,9 @@ def load_config(path: Path | None) -> Config:
     base_branch = board_data.pop("base_branch", None)
     if base_branch is not None and (not isinstance(base_branch, str) or not base_branch):
         raise ValueError("[board]: base_branch must be a non-empty string")
+    wip = board_data.pop("wip", DEFAULT_WIP)
+    if not isinstance(wip, int) or isinstance(wip, bool) or wip < 0:
+        raise ValueError("[board]: wip must be a non-negative integer")
     require_keys("board", board_data, BOARD_KEYS)
     if not isinstance(board_data["cards_dir"], str) or not board_data["cards_dir"]:
         raise ValueError("[board]: cards_dir must be a non-empty string path")
@@ -721,6 +720,7 @@ def load_config(path: Path | None) -> Config:
         sentinel_ids=list(board_data["sentinel_ids"]),
         lanes=lanes,
         base_branch=base_branch,
+        wip=wip,
     )
     review = ReviewConfig(
         repo=(root / review_data["repo"]).resolve(),

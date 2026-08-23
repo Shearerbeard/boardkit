@@ -13,6 +13,8 @@ reported as an unfilled placeholder - and that is cheapest to pin here.
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -62,6 +64,7 @@ EXPECTED_CHECK_IDS = {
     "routes.pin-source",
     "board.parses",
     "board.gate-vocabulary",
+    "board.next-id-race",
     "views.current",
     "host.base-branch",
     "host.tree-state",
@@ -95,7 +98,7 @@ def _fresh_board(tmp_path: Path) -> Path:
 
 
 def _filled_board(tmp_path: Path) -> Path:
-    """A fresh board with the two fill-in duties actually done."""
+    """A fresh board with every mandatory fill-in section actually done."""
     root = _fresh_board(tmp_path)
     config = root / "boardkit.toml"
     config.write_text(
@@ -106,9 +109,17 @@ def _filled_board(tmp_path: Path) -> Path:
     )
     doc = root / REVIEW_TOOLING
     text = doc.read_text(encoding="utf-8")
+    fills = {
+        "Tools, in order of preference": "\n\n1. `test-tool`: the one tool.\n\n",
+        "Harness bindings": (
+            "\n\n| Harness | Executor | Reviewer |\n| --- | --- | --- |\n| test | test | test |\n\n"
+        ),
+        "Evidence-receipt canary": "\n\nThis repo has no evidence-dependent run types.\n\n",
+        "Wave-close cost record": "\n\nRecord cost from the harness session transcript.\n\n",
+    }
     for heading in REQUIRED_FILL_SECTIONS:
         body = sections(text)[heading]
-        text = text.replace(body, f"\n\nThis repo uses one transport for {heading}.\n\n", 1)
+        text = text.replace(body, fills[heading], 1)
     doc.write_text(text, encoding="utf-8")
     return root
 
@@ -203,6 +214,27 @@ def test_a_filled_board_reports_no_errors(tmp_path: Path) -> None:
     assert report.contract_version == CONTRACT_VERSION
 
 
+def test_next_id_race_is_warned_for_numbered_ids(tmp_path: Path) -> None:
+    report = _report(_filled_board(tmp_path))
+
+    assert "board.next-id-race" in _checks(report, Severity.WARN)
+    finding = next(f for f in report.findings if f.check == "board.next-id-race")
+    assert "S" in finding.message
+
+
+def test_next_id_race_skips_when_there_is_no_numbered_prefix(tmp_path: Path) -> None:
+    root = _filled_board(tmp_path)
+    config = root / "boardkit.toml"
+    config.write_text(
+        config.read_text(encoding="utf-8").replace('id_prefix = "S"', 'id_prefix = ""'),
+        encoding="utf-8",
+    )
+
+    report = _report(root)
+
+    assert any(s.check == "board.next-id-race" for s in report.skipped)
+
+
 def test_defined_gate_letters_pass_the_vocabulary_check(tmp_path: Path) -> None:
     report = _report(_filled_board(tmp_path))
 
@@ -282,6 +314,53 @@ def test_every_check_is_accounted_for_in_every_quadrant(tmp_path: Path) -> None:
     for report in (run_doctor(None, tmp_path), _report(_fresh_board(tmp_path))):
         reported = _checks(report) | {s.check for s in report.skipped} | set(report.passed)
         assert reported == EXPECTED_CHECK_IDS
+
+
+def test_doctor_with_config_uses_the_boards_repo_not_the_shell_cwd(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """S30: --config-bearing commands must stop resolving repo context from
+    the process cwd. Doctor's repo-root check should compare the config to
+    its own repo, not to the shell's cwd."""
+    from boardkit.cli import build_parser
+
+    board_repo = tmp_path / "board-repo"
+    board_repo.mkdir()
+    subprocess.run(["git", "init", "-q", str(board_repo)], check=True)
+    subprocess.run(
+        ["git", "-C", str(board_repo), "commit", "-q", "--allow-empty", "-m", "seed"],
+        check=True,
+        env={**dict(os.environ), "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t"},
+    )
+    root = _filled_board(board_repo)
+    config = root / "boardkit.toml"
+    current_branch = (
+        subprocess.check_output(["git", "-C", str(board_repo), "rev-parse", "--abbrev-ref", "HEAD"])
+        .decode()
+        .strip()
+    )
+    config.write_text(
+        config.read_text(encoding="utf-8").replace(
+            'base_branch = "master"', f'base_branch = "{current_branch}"'
+        ),
+        encoding="utf-8",
+    )
+
+    shell_repo = tmp_path / "shell-repo"
+    shell_repo.mkdir()
+    subprocess.run(["git", "init", "-q", str(shell_repo)], check=True)
+    subprocess.run(
+        ["git", "-C", str(shell_repo), "commit", "-q", "--allow-empty", "-m", "seed"],
+        check=True,
+        env={**dict(os.environ), "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t"},
+    )
+    monkeypatch.chdir(shell_repo)
+
+    args = build_parser().parse_args(["--config", str(config), "doctor"])
+    assert cmd_doctor(args) == 0
+    report = run_doctor(str(config), config.parent)
+
+    assert "config.repo-root" not in _checks(report, Severity.WARN)
 
 
 def test_text_output_names_the_check_and_a_remedy(tmp_path: Path) -> None:
@@ -492,11 +571,36 @@ def test_unfilled_sections_reports_a_deleted_section() -> None:
 
 def test_the_required_fill_sections_exist_in_the_shipped_template() -> None:
     """The headings are a contract with the shipped file; renaming one there
-    would silently disable both review-tooling checks."""
+    would silently disable the review-tooling checks."""
     shipped = sections((TEMPLATES_DIR / "REVIEW-TOOLING.md.template").read_text(encoding="utf-8"))
 
     for heading in REQUIRED_FILL_SECTIONS:
         assert heading in shipped
+
+
+def test_unfilled_canary_and_cost_sections_are_reported(tmp_path: Path) -> None:
+    """S30: the mandatory fill-in sections now include the canary and the
+    cost record; a board that fills only the original two still fails."""
+    root = _fresh_board(tmp_path)
+    config = root / "boardkit.toml"
+    config.write_text(
+        config.read_text(encoding="utf-8")
+        .replace('"<harness-name>"', '"test-harness"')
+        .replace('"<working-dir or repo-native>"', '"working-dir"'),
+        encoding="utf-8",
+    )
+    doc = root / REVIEW_TOOLING
+    text = doc.read_text(encoding="utf-8")
+    for heading in ("Tools, in order of preference", "Harness bindings"):
+        body = sections(text)[heading]
+        text = text.replace(body, f"\n\nFilled for {heading}.\n\n", 1)
+    doc.write_text(text, encoding="utf-8")
+
+    report = _report(root)
+
+    assert _checks(report, Severity.ERROR) == {"review-tooling.filled"}
+    assert "Evidence-receipt canary" in report.findings[0].message
+    assert "Wave-close cost record" in report.findings[0].message
 
 
 def test_sections_runs_a_body_to_the_next_heading_of_the_same_level() -> None:

@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from boardkit.board import LINEAGES, SIDE_QUEST_KEY, STATUSES, WIP_LIMIT
+from boardkit.board import LINEAGES, SIDE_QUEST_KEY, STATUSES
 from boardkit.brief import (
     DECISION_AUTHORITY_ANCHOR,
     DISPATCH_BRIEF_ANCHOR,
@@ -21,6 +21,7 @@ from boardkit.brief import (
     paragraph_at,
     section,
 )
+from boardkit.config import DEFAULT_WIP
 
 TEMPLATE = (
     Path(__file__).resolve().parents[1] / "src" / "boardkit" / "data" / "templates" / "PROCESS.md"
@@ -52,7 +53,7 @@ def test_template_states_the_enforced_wip_limit() -> None:
     found = WIP_RE.findall(_template_text())
 
     assert found, "the template no longer states the WIP limit in the bound phrasing"
-    assert set(found) == {NUMBER_WORDS[WIP_LIMIT]}
+    assert set(found) == {NUMBER_WORDS[DEFAULT_WIP]}
 
 
 def test_template_names_the_wip_exemption_key_the_validator_honors() -> None:
@@ -126,6 +127,30 @@ def test_every_gate_the_brief_can_quote_has_a_bullet() -> None:
         assert bullet.startswith("- Gate ")
     # the last bullet must stop at the Deferrals subsection, not absorb it
     assert "Deferrals" not in quoted[-1]
+
+
+def test_the_gate_a_bullet_states_the_re_review_convergence_discipline() -> None:
+    """S14: the fix-commit re-review duty gains a convergence rule, a round
+    bound with a named escalation, and ledger fields, all beside it in the
+    same Gate A bullet the dispatch brief quotes."""
+    gate_a = gate_bullets(_template_text(), ("A",))[0]
+    flat = " ".join(gate_a.split())
+
+    assert "Convergence rule:" in flat
+    assert "verifies the prior round's dispositions with evidence" in flat
+    assert "re-raises findings whose fixes failed" in flat
+    assert "regression the fix introduced" in flat
+    assert "does not expand scope past ground already accepted" in flat
+    assert "Round bound:" in flat
+    assert "after two fix rounds" in flat
+    assert "continue, card, or escalate" in flat
+    assert "may not pass Gate A while unresolved in-scope findings remain" in flat
+    assert "failed fixes and fix-introduced regressions stay in cycle" in flat
+    assert "user escalation" in flat
+    assert "never a silent stop or an unbounded loop" in flat
+    assert "per-round finding counts" in flat
+    assert "cumulative reviewer spend" in flat
+    assert "per-finding disposition verification evidence" in flat
 
 
 def test_the_model_classes_template_carries_the_gate_a_routing_rule() -> None:

@@ -6,3 +6,5 @@ dist/
 docs/board/reviews/
 .review/
 .bench-runs/
+.boardkit/local.toml
+.claude/settings.local.json

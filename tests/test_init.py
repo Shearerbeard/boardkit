@@ -93,7 +93,7 @@ def test_a_fresh_board_passes_check_and_fails_doctor(
     assert "roles.filled" in capsys.readouterr().out
 
 
-def test_init_installs_review_packet_gitignore(tmp_path: Path) -> None:
+def test_init_installs_all_four_boardkit_ignore_lines(tmp_path: Path) -> None:
     (tmp_path / ".gitignore").write_text("node_modules/\n", encoding="utf-8")
     assert cmd_init(_Args(config=str(tmp_path / CONFIG_FILENAME))) == 0
 
@@ -101,6 +101,9 @@ def test_init_installs_review_packet_gitignore(tmp_path: Path) -> None:
     lines = content.read_text(encoding="utf-8").splitlines()
     assert "node_modules/" in lines  # existing content preserved
     assert "docs/board/reviews/" in lines
+    assert ".review/" in lines
+    assert ".boardkit/local.toml" in lines
+    assert ".claude/settings.local.json" in lines
 
 
 def test_init_writes_an_opt_in_pre_commit_sample(tmp_path: Path) -> None:

@@ -362,6 +362,21 @@ These bind every review dispatch, whatever the transport.
   applied or the reason it was rejected, recorded to the card's log or its
   review directory. For a standalone prose artifact that is not a card,
   append that ledger to the artifact itself so the record travels with it.
+- **Re-review rounds converge.** A re-review round verifies the prior
+  round's dispositions with evidence, re-raises findings whose fixes
+  failed, and re-raises any regression the fix introduced in the reviewed
+  diff. It does not expand scope past ground already accepted. After two
+  fix rounds, the board owner writes a ruling that names the next action:
+  continue, card, or escalate. The ruling may not pass Gate A while
+  unresolved in-scope findings remain; failed fixes and fix-introduced
+  regressions stay in cycle or escalate, never carded as new scope. A FAIL
+  whose findings are all new scope - none re-raise a prior round's failed
+  fix, and none are regressions the fix introduced - triggers the user
+  escalation, taking the disagreement to the user with it recorded on the
+  ledger, never a silent stop or an unbounded loop. The dispatch brief for
+  a re-review round carries this discipline into the reviewer prompt, and
+  the ledger records per-round finding counts, cumulative reviewer spend,
+  and per-finding disposition verification evidence.
 - **The reviewer's model differs from every model that authored the work
   under review.** For a multi-commit range that means every commit in the
   range, and a range whose authorship cannot be established defers rather

@@ -39,7 +39,6 @@ REQUIRED = [
 DEFERRED_VIEW = "deferred.md"
 GRAPH_VIEW = "graph.md"
 GENERATED = {"INDEX.md", "board.md", GRAPH_VIEW, DEFERRED_VIEW}
-WIP_LIMIT = 2  # PROCESS.md board mechanics: at most two cards in-progress
 # Optional boolean frontmatter key. PROCESS.md board mechanics: a flow the
 # user explicitly declares a detached side quest is exempt from the WIP
 # limit, and the exemption is recorded on that flow's own cards. The
@@ -81,6 +80,12 @@ LINK_RE = re.compile(r"\[[^\]]*\]\(([^)#\s]+)(?:#[^)]*)?\)")
 # parentheses.
 GATE_TOKEN = r"[A-Z](?:\s*\([^)]*\))?"
 DEFERRED_RE = re.compile(rf"Gate\s+({GATE_TOKEN})\s+open:\s*deferred\s*\(([^)]*)\)")
+# Wave-2 decision 4: a deferral the board owner later superseded carries the
+# field-invented `superseded <date>` annotation, rewritten as
+# `Gate <X> deferred, superseded <date>: <reason>`. The parser reads the
+# annotation as an explicit terminator, so an older deferral never renders
+# as live once it is marked superseded.
+SUPERSEDED_RE = re.compile(rf"Gate\s+({GATE_TOKEN})\s+deferred,\s*superseded\s+\S+")
 CHECKBOX_RE = re.compile(rf"^\s*[-*]\s*\[([ xX])\]\s*(Gate\s+{GATE_TOKEN})")
 # A pass log line, for the phantom-deferral warning only: a deferral is
 # still cleared by the checklist tick alone, but a pass line landing after
@@ -129,9 +134,7 @@ def _raw_title_line(front: str) -> str | None:
     indentation the mapping never uses.
     """
     lines = [
-        line
-        for line in front.splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
+        line for line in front.splitlines() if line.strip() and not line.lstrip().startswith("#")
     ]
     if not lines:
         return None
@@ -220,9 +223,7 @@ def parse_card(path: Path, id_re: re.Pattern[str], errors: list[str]) -> dict | 
                     errors.append(
                         f"{path.name}: ref '{ref}' is not a qualified <code>/<id> reference"
                     )
-    if KIND_KEY in meta and (
-        not isinstance(meta[KIND_KEY], str) or meta[KIND_KEY] not in KINDS
-    ):
+    if KIND_KEY in meta and (not isinstance(meta[KIND_KEY], str) or meta[KIND_KEY] not in KINDS):
         errors.append(f"{path.name}: '{KIND_KEY}' must be one of {sorted(KINDS)}")
     raw_title = _raw_title_line(text[4:end])
     if raw_title is not None:
@@ -278,8 +279,15 @@ def check_links(card: dict, cards_dir: Path, generated: set[str], errors: list[s
             errors.append(f"{card['_file']}: broken link '{target}'")
 
 
-def check_dag(cards: dict[str, dict], errors: list[str], lanes: dict | None = None) -> None:
+def check_dag(
+    cards: dict[str, dict],
+    errors: list[str],
+    lanes: dict | None = None,
+    wip_limit: int | None = None,
+) -> None:
     lanes = lanes or {}
+    if wip_limit is None:
+        raise TypeError("wip_limit is required; pass config.board.wip")
     for card in cards.values():
         for ref_key in ("depends", "serialize-with"):
             for ref in card[ref_key]:
@@ -310,8 +318,7 @@ def check_dag(cards: dict[str, dict], errors: list[str], lanes: dict | None = No
             errors.append(f"{card['_file']}: {EPIC_KEY} references unknown card '{target_id}'")
         elif target.get(KIND_KEY) != "epic":
             errors.append(
-                f"{card['_file']}: {EPIC_KEY} target '{target_id}' is not an epic card "
-                f"(kind: epic)"
+                f"{card['_file']}: {EPIC_KEY} target '{target_id}' is not an epic card (kind: epic)"
             )
     # Finishing an epic means finishing its members (the dag closure rule):
     # an epic marked done with open members would render the initiative as
@@ -326,9 +333,9 @@ def check_dag(cards: dict[str, dict], errors: list[str], lanes: dict | None = No
         )
         if open_members:
             errors.append(
-                f"{card['_file']}: epic is done but member(s) "
-                f"{', '.join(open_members)} are not"
+                f"{card['_file']}: epic is done but member(s) {', '.join(open_members)} are not"
             )
+
     # board invariants from PROCESS.md that the views cannot show. The
     # global WIP count skips side-quest cards (user-declared) and cards in
     # an exempt lane (board-declared); a lane's own `wip` cap counts every
@@ -343,10 +350,10 @@ def check_dag(cards: dict[str, dict], errors: list[str], lanes: dict | None = No
         for c in cards.values()
         if c["status"] == "in-progress" and not c.get(SIDE_QUEST_KEY, False) and not _lane_exempt(c)
     ]
-    if len(in_progress) > WIP_LIMIT:
+    if len(in_progress) > wip_limit:
         names = ", ".join(sorted(c["id"] for c in in_progress))
         errors.append(
-            f"WIP limit exceeded: {len(in_progress)} cards in-progress ({names}), limit {WIP_LIMIT}"
+            f"WIP limit exceeded: {len(in_progress)} cards in-progress ({names}), limit {wip_limit}"
         )
     for lane in lanes.values():
         if lane.wip is None:
@@ -472,9 +479,7 @@ def remaining_gates(card: dict) -> list[str]:
         if not open_tokens:
             continue
         pool = [
-            bi
-            for bi, (bkey, _, claimed) in enumerate(boxes)
-            if bkey[:1] == letter and not claimed
+            bi for bi, (bkey, _, claimed) in enumerate(boxes) if bkey[:1] == letter and not claimed
         ]
         state = len(pool) >= len(open_tokens) and all(boxes[bi][1] for bi in pool)
         for ti in open_tokens:
@@ -530,9 +535,10 @@ def deferred_gates(cards: list[dict]) -> list[DeferredGate]:
     """Every gate a card logged as deferred and has not ticked off since.
 
     A gate with no checklist box at all counts as open: nothing has recorded
-    it passing. Repeat deferrals of the same gate with the same reason
-    collapse to one entry; a new reason is a new entry, since the log does
-    not say which came last.
+    it passing. Supersession is newest-wins (wave-2 decision 4): for the same
+    gate on the same card, only the latest deferral renders as live, and a
+    `superseded <date>` annotation terminates the deferral it marks. Log
+    entries run oldest-first, so the last write per gate is the newest event.
     """
     entries: list[DeferredGate] = []
     for card in cards:
@@ -544,22 +550,23 @@ def deferred_gates(cards: list[dict]) -> list[DeferredGate]:
             if box is not None:
                 target = ticked if box.group(1).lower() == "x" else unticked
                 target.add(gate_key(box.group(2).removeprefix("Gate")))
-        seen: set[tuple[str, str]] = set()
+        latest: dict[str, DeferredGate | None] = {}
         for entry in log_entries(body):
             for match in DEFERRED_RE.finditer(entry):
                 gate = " ".join(match.group(1).split())
                 key = gate_key(gate)
-                if key in ticked and key not in unticked:
-                    continue
                 reason = " ".join(match.group(2).split())
-                if (key, reason) in seen:
-                    continue
-                seen.add((key, reason))
-                entries.append(
-                    DeferredGate(
-                        card_id=card["id"], card_file=card["_file"], gate=gate, reason=reason
-                    )
+                latest[key] = DeferredGate(
+                    card_id=card["id"], card_file=card["_file"], gate=gate, reason=reason
                 )
+            for match in SUPERSEDED_RE.finditer(entry):
+                latest[gate_key(match.group(1))] = None
+        for key, entry in latest.items():
+            if entry is None:
+                continue
+            if key in ticked and key not in unticked:
+                continue
+            entries.append(entry)
     return entries
 
 
@@ -711,8 +718,7 @@ def render_index(cards: list[dict], config: Config) -> str:
             members = [c for c in cards if c.get(EPIC_KEY) == epic["id"]]
             done = sum(1 for m in members if m["status"] == "done")
             roster = (
-                ", ".join(f"{m['id']} ({m['status']})" for m in members)
-                or "no member cards yet"
+                ", ".join(f"{m['id']} ({m['status']})" for m in members) or "no member cards yet"
             )
             lines.append(
                 f"- [{epic['id']}]({epic['_file']}) {epic['title']} - "
@@ -888,7 +894,7 @@ def build_board(config: Config) -> BoardResult:
     if errors:
         raise BoardError(errors)
 
-    check_dag(cards, errors, config.board.lanes)
+    check_dag(cards, errors, config.board.lanes, config.board.wip)
     if errors:
         raise BoardError(errors)
 

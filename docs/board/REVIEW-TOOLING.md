@@ -52,6 +52,11 @@ Antigravity lane. Provider constraints for a given run come from the
 session-start provider question in the delegation inventory, not from
 this table.
 
+Doctor checks that every `pin_source` path exists and that its anchor
+matches a heading; it stats the file, it never executes the route's
+`preflight` commands. Preflight commands are printed for the caller to
+run, per the rule that a diagnostic must not be a code-execution surface.
+
 ## Tools, in order of preference
 
 1. `opencode run -m` with the plain provider/model path read from the pin
@@ -170,18 +175,10 @@ under-permissioned reviewer defers per `PROCESS.md`.
 
 ## Evidence-receipt canary
 
-Fill this in when this repo has runs whose value depends on captured
-evidence: traces, metrics, transcripts, recordings, anything the analysis
-reads back after the run. Before any expensive run of that kind, a named
-canary command must prove end-to-end receipt in the launch shell: the
-evidence lands, readable, at the place the analysis will later read it from.
-Endpoint reachability is not receipt. A collector that accepts a connection
-can still drop every span it is handed. Where the canary cannot run, the
-card records an explicit user waiver before the run starts, naming what
-evidence the run is risking.
-
-One row per run type. Leave the rows commented out if this repo has no such
-runs; delete the section only once that is durably true.
+This repo has no evidence-dependent run types today (no traced sessions,
+benchmark sweeps, or recordings that the analysis reads back). The rows
+below stay commented out; un-comment and fill one only when a run type is
+added whose value depends on captured evidence.
 
 | Run type | Canary command | Receipt proven at |
 | --- | --- | --- |
@@ -196,9 +193,27 @@ budget cap). Leave this section out if the generic guidance is enough.
 
 ## Wave-close cost record
 
-A delegated wave's closing handoff records per-session cost, duration, and
-token totals per the wave-close cost duty in `MODEL-CLASSES.md`. Put the
-harness-specific recovery recipe (the query or command that pulls those
-numbers out of this repo's session store) here. Unlike budget etiquette
-above, this section is not optional: without the recipe the duty cannot be
-carried out.
+At wave close the board owner records, for the orchestrator session and each
+delegated session:
+
+- model string (the provider/model path used for the session),
+- session id or transcript path,
+- duration,
+- input, output, and total token counts,
+- cost in USD if reported by the harness.
+
+Recovery recipe by harness:
+
+- **opencode (board owner and Gate A code-review fallback):** copy the
+  figures from the session's close summary in the opencode transcript.
+  There is no stable CLI export yet; if an export becomes available, prefer
+  it and validate the totals against the live transcript before committing
+  the record.
+- **codex (code-review fallback and Gate F frontier review):** copy the
+  figures from the codex session log printed at the end of `codex exec`.
+- **agy (prose review):** copy the figures from the agy job summary shown
+  by the agy MCP tools; the job id is the session id.
+
+Record the aggregate and per-model figures in the wave-close retro. If
+per-session recovery fails mid-close, record what is recoverable and log
+the failure as process feedback rather than dropping the record.

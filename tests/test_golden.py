@@ -30,8 +30,9 @@ GOLDEN_CARDS_DIR = Path(__file__).parent / "golden" / "aura-cards"
 
 
 class _Args:
-    def __init__(self, config: str) -> None:
+    def __init__(self, config: str, check: bool = False) -> None:
         self.config = config
+        self.check = check
 
 
 def test_render_matches_committed_golden_views(golden_board: Path) -> None:
@@ -88,3 +89,16 @@ def test_render_writes_generated_views(golden_board: Path) -> None:
     assert exit_code == 0
     assert index_path.read_text(encoding="utf-8") == original_index
     assert board_path.read_text(encoding="utf-8") == original_board
+
+
+def test_render_check_detects_drift_without_writing(golden_board: Path) -> None:
+    config = load_config(golden_board)
+    index_path = config.board.cards_dir / "INDEX.md"
+    drifted = index_path.read_text(encoding="utf-8") + "\nperturbed\n"
+    index_path.write_text(drifted, encoding="utf-8")
+    args = _Args(config=str(golden_board), check=True)
+
+    exit_code = cmd_render(args)
+
+    assert exit_code == 1
+    assert index_path.read_text(encoding="utf-8") == drifted

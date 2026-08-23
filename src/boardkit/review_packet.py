@@ -25,7 +25,7 @@ import yaml
 
 from boardkit.config import Config
 
-RANGE_RE = re.compile(r"^[0-9a-f]{7,40}\.\.[0-9a-f]{7,40}$")
+RANGE_RE = re.compile(r"^.+\.\..+$")
 HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 SUFFIX_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 MAX_HUNKS_PER_FILE = 5
@@ -70,11 +70,26 @@ def load_card(cards_dir: Path, card_id: str) -> dict:
     return meta
 
 
+def validate_commit_range(repo: Path, commit_range: str) -> None:
+    """A range must be A..B and both sides must resolve to commits."""
+    if not RANGE_RE.match(commit_range):
+        raise ReviewPacketError(f"'{commit_range}' is not a commit range (expected A..B)")
+    left, _, right = commit_range.partition("..")
+    for side in (left, right):
+        if not side:
+            raise ReviewPacketError(f"'{commit_range}' is not a commit range (expected A..B)")
+        try:
+            git(repo, "rev-parse", "--verify", f"{side}^{{commit}}")
+        except ReviewPacketError as exc:
+            raise ReviewPacketError(
+                f"commit range '{commit_range}' does not resolve: {exc}"
+            ) from exc
+
+
 def commit_list(repo: Path, commit_range: str) -> list[Commit]:
     lines = git(repo, "log", "--reverse", "--format=%H%x09%s", commit_range).splitlines()
     commits = [
-        Commit(sha=sha, subject=subject)
-        for sha, subject in (line.split("\t", 1) for line in lines)
+        Commit(sha=sha, subject=subject) for sha, subject in (line.split("\t", 1) for line in lines)
     ]
     if not commits:
         raise ReviewPacketError(f"range {commit_range} contains no commits in {repo}")
@@ -189,8 +204,7 @@ def build_review_packet(
     target_repo = repo if repo is not None else config.review.repo
     if suffix is not None and not SUFFIX_RE.match(suffix):
         raise ReviewPacketError(
-            f"--suffix '{suffix}' is not a lowercase slug "
-            "(a-z, 0-9, single dashes between them)"
+            f"--suffix '{suffix}' is not a lowercase slug (a-z, 0-9, single dashes between them)"
         )
 
     meta = load_card(config.board.cards_dir, card_id)
@@ -201,19 +215,15 @@ def build_review_packet(
         )
     if commit_range is None:
         commit_range = meta.get("commit-range")
-        source = f"{meta['_file']}: commit-range"
-    else:
-        source = "--commit-range"
     if not commit_range:
         raise ReviewPacketError(
             f"{meta['_file']}: no 'commit-range' frontmatter. Find the range "
             f"with: git log --oneline --grep '^Card: {card_id.upper()}$' "
             "<primary-branch>, record it on the card, and re-run."
         )
-    if not RANGE_RE.match(str(commit_range)):
-        raise ReviewPacketError(f"{source} '{commit_range}' is not A..B hex shas")
     if not target_repo.is_dir():
         raise ReviewPacketError(f"repo {target_repo} does not exist; pass --repo")
+    validate_commit_range(target_repo, str(commit_range))
 
     commits = commit_list(target_repo, str(commit_range))
     dirname = card_id.upper() if suffix is None else f"{card_id.upper()}-{suffix}"

@@ -12,6 +12,7 @@ spend a card's worth of work; a wording drift is a behavior change.
 
 from __future__ import annotations
 
+import re
 import shutil
 from pathlib import Path
 
@@ -22,6 +23,7 @@ from boardkit.brief import (
     DECISION_AUTHORITY_ANCHOR,
     DISPATCH_BRIEF_ANCHOR,
     GATE_A_ROUTING_ANCHOR,
+    RE_REVIEW_CONVERGENCE_ANCHOR,
     BriefError,
     build_brief,
     gate_tokens,
@@ -150,6 +152,26 @@ def test_both_process_clauses_are_quoted(tmp_path: Path) -> None:
 
     assert DISPATCH_BRIEF_ANCHOR in text
     assert DECISION_AUTHORITY_ANCHOR in text
+
+
+def test_the_re_review_dispatch_brief_carries_the_convergence_instruction(
+    tmp_path: Path,
+) -> None:
+    """S14: the convergence discipline lives in the Gate A bullet the brief
+    quotes, so a re-review round's reviewer prompt carries it. The anchor
+    pins the clause; if the template drops it, this fails instead of shipping
+    a brief whose reviewer can loop without bound."""
+    text = _brief(tmp_path)
+    # The brief quotes clauses with a "> " prefix per line, so a phrase that
+    # wraps across lines reads "> " between its words. Strip the prefix, then
+    # collapse whitespace, so the anchor and phrases match regardless of wrap.
+    flat = " ".join(re.sub(r"^> ?", "", line).strip() for line in text.splitlines() if line.strip())
+
+    assert RE_REVIEW_CONVERGENCE_ANCHOR in flat
+    assert "re-raises findings whose fixes failed" in flat
+    assert "regression the fix introduced" in flat
+    assert "may not pass Gate A while unresolved in-scope findings remain" in flat
+    assert "never a silent stop or an unbounded loop" in flat
 
 
 def test_the_provenance_footer_says_to_regenerate(tmp_path: Path) -> None:

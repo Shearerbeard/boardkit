@@ -1,7 +1,7 @@
 ---
 id: S14
 title: Bound the adversarial review cycle with a convergence rule
-status: ready
+status: done
 depends: []
 serialize-with: []
 lineage: primary
@@ -50,9 +50,9 @@ so the cycle's shape is auditable from the record.
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
-- [ ] Gate A: adversarial review, focus: can the convergence rule be
+- [x] Gate A: adversarial review, focus: can the convergence rule be
   gamed to close a cycle early (dispositions marked verified without
   evidence, real regressions dismissed as "new scope")?
 
@@ -62,6 +62,37 @@ direct
 
 ## Log
 
+- 2026-08-22 Session close canary evidence filed at
+  [2026-08-22-s30-s14-session-close.md](../evidence/2026-08-22-s30-s14-session-close.md);
+  the canary passed 4/4.
+- 2026-08-22 S14 done. Acceptance verified by the board owner: tests pin
+  the dispatch-brief convergence clause and the template Gate A bullet;
+  the live and template PROCESS copies are byte-identical for the new rule;
+  the ledger fields require per-round counts, cumulative spend, and
+  per-finding disposition verification evidence; Gate S and Gate A both
+  passed.
+- 2026-08-22 Gate A passed via Codex fallback for prose/process review
+  after Antigravity was skipped for lack of fresh spend approval. Round 1
+  failed with three BLOCKING findings: fix-induced regressions could be
+  mislabeled new scope, dispositions could be marked verified without
+  evidence, and the two-round ruling could pass Gate A while unresolved
+  in-scope work remained. The board owner fixed all three in both PROCESS
+  copies, the delegating-work skill, and the brief/template tests. Focused
+  re-review returned VERDICT: PASS, with pytest and ruff unverified in the
+  reviewer sandbox; the board owner supplied `uv run pytest -q` (383
+  passed) and `uv run ruff check` (clean).
+- 2026-08-22 Gate S passed for S14 after board-owner correction to match
+  wave-2 decision 6's two-fix-round bound: `uv run pytest -q` (383
+  passed), `uv run ruff check` (clean), targeted `uv run ruff format
+  --check` on touched Python files (clean), and `vale docs/board/PROCESS.md
+  src/boardkit/data/templates/PROCESS.md
+  plugins/board/skills/delegating-work/SKILL.md
+  docs/board/cards/s14-review-cycle-convergence.md` (clean). Board
+  validation also remained current with `boardkit check` and `boardkit
+  render --check`.
+- 2026-08-22 Board owner pulled S14 for wave-2 Phase 2 process
+  scaffolding after the user approved batching S30 with Phase 2 for the
+  next code-review gate.
 - 2026-08-05 Minted by the fifth feedback drain from the Epoch
   five-round review-cycle finding.
 - 2026-08-16 Second worked example, on this board's own R-wave:

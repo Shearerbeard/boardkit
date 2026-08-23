@@ -543,6 +543,70 @@ def test_colon_pass_with_no_space_is_a_verdict(
     assert "WARN" in capsys.readouterr().out
 
 
+def test_superseded_marker_terminates_an_older_deferral(board: Path) -> None:
+    """Wave-2 decision 4: the field-invented `superseded <date>` annotation
+    clears the deferral it marks, so the R-wave's annotated deferral lines
+    parse as resolved without hand-editing."""
+    cards_dir = board.parent / "cards"
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        checklist="- [ ] Gate A: fresh-agent review.",
+        log=(
+            "- 2026-07-27 Gate A open: deferred (reviewer unvetted).\n"
+            "- 2026-07-28 Gate A deferred, superseded 2026-07-28: reviewer found."
+        ),
+    )
+
+    result = build_board(load_config(board))
+
+    assert deferred_gates(result.cards) == []
+    assert DEFERRED_VIEW not in result.views
+
+
+def test_newest_deferral_wins_for_the_same_gate(board: Path) -> None:
+    """Wave-2 decision 4: for the same gate on the same card, only the
+    latest deferral renders as live; older rows become history."""
+    cards_dir = board.parent / "cards"
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        checklist="- [ ] Gate A: fresh-agent review.",
+        log=(
+            "- 2026-07-26 Gate A open: deferred (first reviewer stalled).\n"
+            "- 2026-07-27 Gate A open: deferred (second reviewer unvetted)."
+        ),
+    )
+
+    entries = deferred_gates(build_board(load_config(board)).cards)
+
+    assert len(entries) == 1
+    assert entries[0].reason == "second reviewer unvetted"
+
+
+def test_superseded_marker_is_gate_specific(board: Path) -> None:
+    """A superseded annotation for Gate A must not clear a deferral on Gate U."""
+    cards_dir = board.parent / "cards"
+    _write_card(
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        checklist="- [ ] Gate U (launch): stop.",
+        log=(
+            "- 2026-07-27 Gate A open: deferred (reviewer unvetted).\n"
+            "- 2026-07-28 Gate A deferred, superseded 2026-07-28: reviewer found.\n"
+            "- 2026-07-28 Gate U (launch) open: deferred (waiting for user)."
+        ),
+    )
+
+    entries = deferred_gates(build_board(load_config(board)).cards)
+
+    assert len(entries) == 1
+    assert entries[0].gate == "U (launch)"
+
+
 def test_dash_and_question_terminated_verdicts_are_phantoms(
     board: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

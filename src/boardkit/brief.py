@@ -45,6 +45,10 @@ MODEL_CLASSES_DOC = CONTRACT_DOC_DESTS["MODEL-CLASSES.md"]
 DISPATCH_BRIEF_ANCHOR = "A dispatch brief for a subagent contains"
 DECISION_AUTHORITY_ANCHOR = "Decision authority stays with the board owner"
 GATE_A_ROUTING_ANCHOR = "Gate A routing follows what the artifact is judged on"
+# The opening of the Gate A convergence clause. It rides the Gate A bullet the
+# brief quotes, so a re-review round's reviewer prompt carries the discipline;
+# a test pins it so the brief cannot lose it without failing.
+RE_REVIEW_CONVERGENCE_ANCHOR = "Convergence rule:"
 
 GATES_SECTION = "Gates"
 INVARIANTS_SECTION = "Invariants"

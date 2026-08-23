@@ -23,8 +23,6 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> M -> U @ S. Executor: any.
 - [ ] **S12** [Public-repo seam for contract docs and generated views](s12-public-repo-seam.md)
 	Depends: none. Gates: S -> A @ S. Executor: smart.
-- [ ] **S14** [Bound the adversarial review cycle with a convergence rule](s14-review-cycle-convergence.md)
-	Depends: none. Gates: S -> A @ S. Executor: smart.
 - [ ] **S15** [Restore the human review guide to generated packets](s15-review-packet-guide.md)
 	Depends: none. Gates: S -> A @ S. Executor: smart.
 - [ ] **S17** [Satellite-repo convention - no canonical-looking TODO beside a board](s17-satellite-repo-convention.md)
@@ -33,8 +31,6 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> U(code-review) @ S. Executor: smart.
 - [ ] **S29** [Decide how strictly doctor should classify an entry-file shim](s29-shim-classification-hardening.md)
 	Depends: none. Gates: S -> A -> U(code-review) @ S. Executor: smart.
-- [ ] **S30** [Wave-2 small-fix batch with the ignore and doctor truthing items](s30-small-fix-batch.md)
-	Depends: none. Gates: S -> A -> D -> U(code-review) @ S. Executor: smart.
 - [ ] **S31** [Versioned docking-convention spec with the three consumer postures](s31-docking-convention-spec.md)
 	Depends: none. Gates: S -> A -> D -> U(code-review) @ S. Executor: smart.
 - [ ] **S38** [Pick the board's visual home](s38-visual-surface-decision.md)
@@ -45,6 +41,8 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A @ S. Executor: any.
 
 ## In Progress
+- [ ] **S30** [Wave-2 small-fix batch with the ignore and doctor truthing items](s30-small-fix-batch.md)
+	Depends: none. Gates: S -> A -> D -> U(code-review) @ D. Executor: smart.
 
 ## In Review
 
@@ -79,6 +77,8 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A. Executor: any.
 - [ ] **S13** [R5' .boardkit resolution with the CardStore seam](s13-board-discovery.md)
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
+- [ ] **S14** [Bound the adversarial review cycle with a convergence rule](s14-review-cycle-convergence.md)
+	Depends: none. Gates: S -> A. Executor: smart.
 - [ ] **S16** [Render each card's current gate position in the generated views](s16-gate-position-in-views.md)
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 - [ ] **S18** [R4 boards registry - the manifest is the registry](s18-boards-registry.md)

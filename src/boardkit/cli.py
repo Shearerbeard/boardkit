@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -120,6 +122,97 @@ def _fail(errors: list[str]) -> int:
     return 1
 
 
+def _git_lines(repo: Path, *args: str) -> list[str]:
+    """Run git in `repo` and return non-empty stdout lines."""
+    result = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True)
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip() or f"git exited {result.returncode}"
+        raise RuntimeError(detail)
+    return [line for line in result.stdout.splitlines() if line]
+
+
+def trailer_range_warnings(repo: Path, cards: list[dict]) -> list[str]:
+    """Warn when Card: trailer commits fall outside a card's recorded range."""
+    if not repo.is_dir():
+        return []
+    warnings: list[str] = []
+    for card in cards:
+        commit_range = card.get("commit-range")
+        if not commit_range:
+            continue
+        try:
+            trailer_shas = set(
+                _git_lines(
+                    repo,
+                    "log",
+                    "--all",
+                    "--format=%H",
+                    "--extended-regexp",
+                    f"--grep=^Card: {re.escape(card['id'])}$",
+                )
+            )
+        except RuntimeError as exc:
+            warnings.append(f"{card['_file']}: could not check Card: trailer commits: {exc}")
+            continue
+        if not trailer_shas:
+            continue
+        try:
+            range_shas = set(_git_lines(repo, "log", "--format=%H", str(commit_range)))
+        except RuntimeError as exc:
+            warnings.append(
+                f"{card['_file']}: could not check commit-range '{commit_range}' "
+                f"against Card: trailers: {exc}"
+            )
+            continue
+        outside = sorted(trailer_shas - range_shas)
+        if outside:
+            warnings.append(
+                f"{card['_file']}: Card: trailer commits {', '.join(outside)} "
+                f"fall outside commit-range '{commit_range}' "
+                "(rebase hazard or excluded-first-commit trap)"
+            )
+    return warnings
+
+
+def src_path_warnings(repo: Path, cards: list[dict]) -> list[str]:
+    """Warn when a recorded commit-range touches src/ paths on a card without U(code-review)."""
+    if not repo.is_dir():
+        return []
+    warnings: list[str] = []
+    for card in cards:
+        commit_range = card.get("commit-range")
+        if not commit_range:
+            continue
+        try:
+            paths = _git_lines(repo, "diff", "--name-only", str(commit_range))
+        except RuntimeError as exc:
+            warnings.append(
+                f"{card['_file']}: could not check commit-range '{commit_range}' "
+                f"for src/ paths: {exc}"
+            )
+            continue
+        if any(p.startswith("src/") for p in paths) and "U(code-review)" not in str(
+            card.get("gates", "")
+        ):
+            warnings.append(
+                f"{card['_file']}: commit-range touches src/ paths but gates "
+                f"lack U(code-review): {card.get('gates')}"
+            )
+    return warnings
+
+
+def entity_name_collision_warnings(cards: list[dict]) -> list[str]:
+    """Warn when two or more cards share the same title."""
+    by_title: dict[str, list[str]] = {}
+    for card in cards:
+        by_title.setdefault(card["title"], []).append(card["_file"])
+    return [
+        f"entity-name collision: title '{title}' used by {', '.join(sorted(files))}"
+        for title, files in sorted(by_title.items())
+        if len(files) > 1
+    ]
+
+
 def _resolve_board_context(args: argparse.Namespace) -> tuple[Config, Path | None]:
     """The board this invocation targets, plus the registry that chose it.
 
@@ -171,6 +264,12 @@ def cmd_check(args: argparse.Namespace) -> int:
         print(f"WARN {warning}")
     for warning in phantom_deferrals(result.cards):
         print(f"WARN {warning}")
+    for warning in trailer_range_warnings(config.review.repo, result.cards):
+        print(f"WARN {warning}")
+    for warning in src_path_warnings(config.review.repo, result.cards):
+        print(f"WARN {warning}")
+    for warning in entity_name_collision_warnings(result.cards):
+        print(f"WARN {warning}")
     print(f"OK: {len(result.cards)} cards valid, views current")
     return 0
 
@@ -181,6 +280,13 @@ def cmd_render(args: argparse.Namespace) -> int:
         result = build_board(config)
     except BoardError as exc:
         return _fail(exc.errors)
+
+    if getattr(args, "check", False):
+        errors = view_drift(config, result.views)
+        if errors:
+            return _fail(errors)
+        print(f"OK: {len(result.cards)} cards valid, views current")
+        return 0
 
     for name, content in result.views.items():
         (config.board.cards_dir / name).write_text(content, encoding="utf-8")
@@ -213,9 +319,7 @@ def cmd_dag(args: argparse.Namespace) -> int:
     cards = {card["id"]: card for card in result.cards}
     try:
         output = (
-            render_dag_mermaid(cards, args.to)
-            if args.render
-            else render_dag_text(cards, args.to)
+            render_dag_mermaid(cards, args.to) if args.render else render_dag_text(cards, args.to)
         )
     except DagError as exc:
         return _fail([str(exc)])
@@ -303,14 +407,22 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     # manifest still refuses loudly (ValueError reaches main's handler).
     config_arg = args.config
     resolution_source = None if config_arg is None else "--config"
+    cwd = Path.cwd()
     if config_arg is None:
         try:
             resolution = resolve_board(Path.cwd(), board=args.board)
             config_arg = str(resolution.config_path)
             resolution_source = resolution.source
+            cwd = resolution.config_path.parent
         except FileNotFoundError:
             config_arg = None
-    report = run_doctor(config_arg, Path.cwd(), resolution_source=resolution_source)
+    else:
+        # --config names the board directly; repo-root and worktree checks
+        # should run against the board's own directory, not the shell cwd.
+        config_path = Path(config_arg).resolve()
+        if config_path.is_file():
+            cwd = config_path.parent
+    report = run_doctor(config_arg, cwd, resolution_source=resolution_source)
     print(render_json(report) if args.json else render_text(report), end="")
     return 1 if report.errors else 0
 
@@ -393,15 +505,24 @@ def cmd_init(args: argparse.Namespace) -> int:
 
     config = load_config(config_path)
 
-    # review packets are local working material; install the gitignore contract
+    # Local-only working material and machine overlays should never be
+    # committed. Scaffold all four ignore lines so a fresh repo starts clean.
     gitignore = root / ".gitignore"
-    ignore_line = config.review.output_dir.relative_to(root).as_posix() + "/"
+    ignore_lines = [
+        config.review.output_dir.relative_to(root).as_posix() + "/",
+        ".review/",
+        ".boardkit/local.toml",
+        ".claude/settings.local.json",
+    ]
     existing_ignore = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
-    if ignore_line not in existing_ignore.splitlines():
+    existing_lines = existing_ignore.splitlines()
+    missing = [line for line in ignore_lines if line not in existing_lines]
+    if missing:
         with gitignore.open("a", encoding="utf-8") as f:
             if existing_ignore and not existing_ignore.endswith("\n"):
                 f.write("\n")
-            f.write(f"{ignore_line}\n")
+            for line in missing:
+                f.write(f"{line}\n")
 
     result = build_board(config)
     for name, content in result.views.items():
@@ -448,6 +569,11 @@ def build_parser() -> argparse.ArgumentParser:
         "render", help="validate the board and write its generated views"
     )
     render.set_defaults(handler=cmd_render)
+    render.add_argument(
+        "--check",
+        action="store_true",
+        help="validate generated views are current without writing them",
+    )
 
     dag = subparsers.add_parser(
         "dag", help="goal-directed graph queries: closure, frontier, waves, gates on edges"

@@ -17,7 +17,7 @@ flowchart TD
     S8["S8 Board-root portability and checko…"]:::ready
     S12["S12 Public-repo seam for contract doc…"]:::ready
     S15["S15 Restore the human review guide to…"]:::ready
-    S30["S30 Wave-2 small-fix batch with the i…"]:::ready
+    S30["S30 Wave-2 small-fix batch with the i…"]:::inprogress
     S31["S31 Versioned docking-convention spec…"]:::ready
     S32["S32 ArtifactStore ADR - receipts, pos…"]:::backlog
     S33["S33 Receipts and sidecar implementati…"]:::backlog
@@ -38,7 +38,7 @@ flowchart TD
   S10["S10 Prose-reviewer bench over snapsho…"]:::ready
   S11["S11 Tier the vale prose gate by artif…"]:::done
   S13["S13 R5' .boardkit resolution with the…"]:::done
-  S14["S14 Bound the adversarial review cycl…"]:::ready
+  S14["S14 Bound the adversarial review cycl…"]:::done
   S16["S16 Render each card's current gate p…"]:::done
   S17["S17 Satellite-repo convention - no ca…"]:::ready
   S18["S18 R4 boards registry - the manifest…"]:::done

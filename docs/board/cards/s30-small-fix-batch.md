@@ -1,7 +1,7 @@
 ---
 id: S30
 title: Wave-2 small-fix batch with the ignore and doctor truthing items
-status: ready
+status: in-progress
 depends: []
 serialize-with: []
 lineage: primary
@@ -56,10 +56,10 @@ none of them design-bearing:
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `boardkit check`, `boardkit render --check`,
   `boardkit doctor`; `vale` on touched markdown.
-- [ ] Gate A: opencode-lane review of the diff, fresh context, packet
+- [x] Gate A: opencode-lane review of the diff, fresh context, packet
   staged per the working-dir contract.
 - [ ] Gate D: drift audit of the living documents before the user gate.
 - [ ] Gate U (code-review): batched packet to Mike; stop.
@@ -70,5 +70,31 @@ direct
 
 ## Log
 
+- 2026-08-22 Session close canary evidence filed at
+  [2026-08-22-s30-s14-session-close.md](../evidence/2026-08-22-s30-s14-session-close.md);
+  S30 remains in-progress at Gate D for the planned batched user gate.
+- 2026-08-22 Gate A passed after three GLM-family reviewer rounds over
+  the S30 diff. Round 1 returned PASS with five MINOR findings: dead
+  optional-key constant, missing `[board] wip` override/validation tests,
+  missing `cmd_check --config` cwd-regression coverage, unescaped `Card:`
+  trailer grep, and silent git warning-probe failures. All five were
+  fixed. Round 2 returned PASS with one MINOR finding, a duplicated
+  `commit.gpgsign` test-helper line; it was removed. The focused final
+  re-review verified the removal and returned VERDICT: PASS with zero
+  findings. Reviewer unverified checks: git-diff reconstruction, pytest,
+  boardkit commands, and Vale were unavailable in its sandbox, so the
+  board owner supplied the passing Gate S outputs.
+- 2026-08-22 First executor dispatch returned empty, so the board owner
+  treated it as a failed delegation, audited the S30-scoped dirty diff,
+  and completed the remaining Gate S repair directly. Gate S passed:
+  `uv run pytest -q` (375 passed), `uv run ruff check` (clean), targeted
+  `uv run ruff format --check` on touched Python files (clean),
+  `boardkit render --check` (views current), `boardkit check` (valid;
+  expected S30 range warnings over historical R-wave cards), `boardkit
+  doctor` (20 passed, warnings only for the new next-id-race note and
+  dirty tree), and `vale docs/board/REVIEW-TOOLING.md
+  docs/board/cards/s30-small-fix-batch.md` (clean).
+- 2026-08-22 Board owner pulled S30 for wave-2 Phase 1 execution after
+  the user approved the batched user-gate plan.
 - 2026-08-22 Minted at the wave-2 Gate U (Phase 0) per the plan's
   card map; Mike approved the plan and its dispositions that day.

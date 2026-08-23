@@ -58,9 +58,16 @@ ENTRY_SHIM_DESTS = dict(ENTRY_SHIMS)
 REVIEW_TOOLING_TEMPLATE = "REVIEW-TOOLING.md.template"
 AGENTS_TEMPLATE = "AGENTS.md.template"
 
-# The two sections of REVIEW-TOOLING.md a consumer must write themselves.
-# Everything else in that file ships usable; these ship as prompts.
-REQUIRED_FILL_SECTIONS = ("Tools, in order of preference", "Harness bindings")
+# The sections of REVIEW-TOOLING.md a consumer must write themselves.
+# Everything else in that file ships usable; these ship as prompts. The
+# canary and cost-record sections are mandatory even when their rows are
+# commented out; budget etiquette is explicitly optional.
+REQUIRED_FILL_SECTIONS = (
+    "Tools, in order of preference",
+    "Harness bindings",
+    "Evidence-receipt canary",
+    "Wave-close cost record",
+)
 
 BOARD_SKILLS = ("board-hygiene", "delegating-work")
 SKILL_METADATA_KEY = "boardkit-contract"
@@ -98,6 +105,7 @@ ALL_CHECKS = (
     "routes.pin-source",
     "board.parses",
     "board.gate-vocabulary",
+    "board.next-id-race",
     "views.current",
     "host.base-branch",
     "host.tree-state",
@@ -616,6 +624,19 @@ def _check_gate_vocabulary(checks: _Checks, config: Config, cards: list[dict]) -
     checks.ok("board.gate-vocabulary")
 
 
+def _check_next_id_race(checks: _Checks, config: Config) -> None:
+    """Numbered ids have a minting race; name it so sessions verify the live registry."""
+    if not config.board.id_prefix:
+        checks.skip("board.next-id-race", "board has no numbered id prefix")
+        return
+    checks.warn(
+        "board.next-id-race",
+        f"numbered card ids under prefix '{config.board.id_prefix}' have a next-id race: "
+        "verify the live registry before minting a new card",
+        "check the registry's highest id and any in-flight cards before assigning a new id",
+    )
+
+
 def _check_board(checks: _Checks, config: Config) -> None:
     try:
         result = build_board(config)
@@ -626,11 +647,13 @@ def _check_board(checks: _Checks, config: Config) -> None:
             "fix the cards named above, then run `boardkit check`",
         )
         checks.skip("board.gate-vocabulary", "the board does not parse; see board.parses")
+        checks.skip("board.next-id-race", "the board does not parse; see board.parses")
         checks.skip("views.current", "the board does not parse; see board.parses")
         return
     checks.ok("board.parses")
 
     _check_gate_vocabulary(checks, config, result.cards)
+    _check_next_id_race(checks, config)
 
     drift = view_drift(config, result.views)
     if drift:
@@ -786,9 +809,7 @@ def _check_entry_parity(checks: _Checks, root: Path) -> None:
         root = Path(toplevel.strip())
     shim_names = ("CLAUDE.md", "GEMINI.md")
     agents = read_text_or_none(root / "AGENTS.md")
-    shims = {
-        name: read_text_or_none(root / name) for name in shim_names if (root / name).is_file()
-    }
+    shims = {name: read_text_or_none(root / name) for name in shim_names if (root / name).is_file()}
     if agents is None and not shims:
         checks.warn(
             "entry.parity",

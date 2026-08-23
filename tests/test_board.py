@@ -76,9 +76,7 @@ def test_regex_metacharacters_in_id_scheme_are_literal(tmp_path: Path) -> None:
 
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
-    (tmp_path / "boardkit.toml").write_text(
-        config_text(id_prefix="S."), encoding="utf-8"
-    )
+    (tmp_path / "boardkit.toml").write_text(config_text(id_prefix="S."), encoding="utf-8")
     config = load_config(tmp_path / "boardkit.toml")
 
     # "S." must match only a literal "S." prefix, never "SX" via the dot wildcard
@@ -93,15 +91,43 @@ def test_wip_limit_enforced(tmp_path: Path) -> None:
     cards_dir.mkdir()
     (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     for n in (1, 2, 3):
-        _write_card(
-            cards_dir, f"s{n}-c{n}.md", id=f"S{n}", title=f"C{n}", status="in-progress"
-        )
+        _write_card(cards_dir, f"s{n}-c{n}.md", id=f"S{n}", title=f"C{n}", status="in-progress")
 
     config = load_config(tmp_path / "boardkit.toml")
     with pytest.raises(BoardError) as excinfo:
         build_board(config)
 
     assert any("WIP limit exceeded" in e for e in excinfo.value.errors)
+
+
+def test_board_wip_config_overrides_default(tmp_path: Path) -> None:
+    cards_dir = tmp_path / "cards"
+    cards_dir.mkdir()
+    (tmp_path / "boardkit.toml").write_text(
+        config_text().replace(
+            'sentinel_ids = ["MILESTONE"]', 'sentinel_ids = ["MILESTONE"]\nwip = 3'
+        ),
+        encoding="utf-8",
+    )
+    for n in (1, 2, 3):
+        _write_card(cards_dir, f"s{n}-c{n}.md", id=f"S{n}", title=f"C{n}", status="in-progress")
+
+    result = build_board(load_config(tmp_path / "boardkit.toml"))
+
+    assert len(result.cards) == 3
+
+
+@pytest.mark.parametrize("value", ["-1", "true"])
+def test_board_wip_config_rejects_invalid_values(tmp_path: Path, value: str) -> None:
+    (tmp_path / "boardkit.toml").write_text(
+        config_text().replace(
+            'sentinel_ids = ["MILESTONE"]', f'sentinel_ids = ["MILESTONE"]\nwip = {value}'
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="wip must be a non-negative integer"):
+        load_config(tmp_path / "boardkit.toml")
 
 
 def test_side_quest_card_does_not_count_toward_wip(tmp_path: Path) -> None:
@@ -111,9 +137,7 @@ def test_side_quest_card_does_not_count_toward_wip(tmp_path: Path) -> None:
     cards_dir.mkdir()
     (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     for n in (1, 2):
-        _write_card(
-            cards_dir, f"s{n}-c{n}.md", id=f"S{n}", title=f"C{n}", status="in-progress"
-        )
+        _write_card(cards_dir, f"s{n}-c{n}.md", id=f"S{n}", title=f"C{n}", status="in-progress")
     _write_card(
         cards_dir,
         "s3-c3.md",
@@ -137,9 +161,7 @@ def test_side_quest_cards_still_count_once_they_exceed_the_limit_themselves(
     cards_dir.mkdir()
     (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     for n in (1, 2, 3):
-        _write_card(
-            cards_dir, f"s{n}-c{n}.md", id=f"S{n}", title=f"C{n}", status="in-progress"
-        )
+        _write_card(cards_dir, f"s{n}-c{n}.md", id=f"S{n}", title=f"C{n}", status="in-progress")
     _write_card(
         cards_dir,
         "s4-c4.md",
@@ -183,12 +205,21 @@ def test_side_quest_card_still_obeys_the_serialize_mutex(tmp_path: Path) -> None
     cards_dir.mkdir()
     (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     _write_card(
-        cards_dir, "s1-a.md", id="S1", title="A", status="in-progress",
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        title="A",
+        status="in-progress",
         serialize_with="[S2]",
     )
     _write_card(
-        cards_dir, "s2-b.md", id="S2", title="B", status="in-progress",
-        serialize_with="[S1]", extra="side-quest: true\n",
+        cards_dir,
+        "s2-b.md",
+        id="S2",
+        title="B",
+        status="in-progress",
+        serialize_with="[S1]",
+        extra="side-quest: true\n",
     )
 
     with pytest.raises(BoardError) as excinfo:
@@ -202,11 +233,19 @@ def test_serialized_cards_may_not_both_be_in_progress(tmp_path: Path) -> None:
     cards_dir.mkdir()
     (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     _write_card(
-        cards_dir, "s1-a.md", id="S1", title="A", status="in-progress",
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        title="A",
+        status="in-progress",
         serialize_with="[S2]",
     )
     _write_card(
-        cards_dir, "s2-b.md", id="S2", title="B", status="in-progress",
+        cards_dir,
+        "s2-b.md",
+        id="S2",
+        title="B",
+        status="in-progress",
         serialize_with="[S1]",
     )
 
@@ -223,7 +262,11 @@ def test_in_review_lineage_card_requires_commit_range(tmp_path: Path) -> None:
     cards_dir.mkdir()
     (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     _write_card(
-        cards_dir, "s1-a.md", id="S1", title="A", status="in-review",
+        cards_dir,
+        "s1-a.md",
+        id="S1",
+        title="A",
+        status="in-review",
         lineage="accepted-head",
     )
 
@@ -248,18 +291,14 @@ def test_unquoted_hash_title_refuses_instead_of_truncating(tmp_path: Path) -> No
     with pytest.raises(BoardError, match="quote the whole title"):
         build_board(load_config(tmp_path / "boardkit.toml"))
 
-    quoted = card.replace(
-        "title: Record the #398 follow-up", 'title: "Record the #398 follow-up"'
-    )
+    quoted = card.replace("title: Record the #398 follow-up", 'title: "Record the #398 follow-up"')
     (cards / "s1-a.md").write_text(quoted, encoding="utf-8")
     result = build_board(load_config(tmp_path / "boardkit.toml"))
     assert "Record the #398 follow-up" in result.views["INDEX.md"]
 
     # YAML tolerates a space before the colon; the guard must too, or the
     # spelling slips past it and truncates anyway.
-    spaced = card.replace(
-        "title: Record the #398 follow-up", "title : Record the #398 follow-up"
-    )
+    spaced = card.replace("title: Record the #398 follow-up", "title : Record the #398 follow-up")
     (cards / "s1-a.md").write_text(spaced, encoding="utf-8")
     with pytest.raises(BoardError, match="quote the whole title"):
         build_board(load_config(tmp_path / "boardkit.toml"))
@@ -369,10 +408,7 @@ def test_qualified_gate_occurrences_track_independently(tmp_path: Path) -> None:
     (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     cards = tmp_path / "cards"
     cards.mkdir()
-    checklist = (
-        "- [x] Gate U (mockup): shown.\n- [x] Gate S: checks.\n"
-        "- [ ] Gate U (launch): stop."
-    )
+    checklist = "- [x] Gate U (mockup): shown.\n- [x] Gate S: checks.\n- [ ] Gate U (launch): stop."
     card = (
         "---\nid: S1\ntitle: Card S1\nstatus: in-review\n"
         "depends: []\nserialize-with: []\nlineage: none\nexecutor: any\n"
