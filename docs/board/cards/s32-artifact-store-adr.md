@@ -2,7 +2,7 @@
 id: S32
 title: ArtifactStore ADR - receipts, postures, sidecar mechanics
 status: in-review
-commit-range: "3435716..bb671ca"
+commit-range: "3435716..650b844"
 depends: [S28]
 serialize-with: []
 lineage: primary
@@ -54,6 +54,27 @@ direct
 
 ## Log
 
+- 2026-08-23 Commit-range extended to 3435716..650b844 over the
+  second fix commit, the packet regenerated, and Gate A round 3
+  dispatched. Two fix rounds are spent: a round 3 short of a clean
+  pass requires a written board-owner ruling before the cycle
+  continues.
+- 2026-08-23 Fix round 2 landed by the same Claude executor as
+  650b844, all three residuals resolved: the ruling receipt is one
+  coherent story (reviewer_models plural with the single-entry case
+  explained, the one-row digest table shown, a per-kind digest rule
+  in the schema, and published defined as three states where
+  never-archived means no published key exists); the dir: locator
+  carries a manifest-root prefix in the position the commit sha holds
+  under git:, under the stated rule that the path addresses and the
+  anchor verifies; and OQ4 prices its literal branch with an
+  encodable fourth check kind, defined but not adopted, so both
+  branches of the either-or are implementable as written. Board owner
+  re-ran the checks: pytest 430, ruff clean, boardkit check green,
+  vale clean at 985 lines. Executor note carried to the round 3
+  brief: both residual classes were cross-section contradictions, so
+  the re-review targets schema-versus-example and stated-rule-versus-
+  dependent-section consistency.
 - 2026-08-23 Gate A round 2 returned VERDICT: FAIL, in convergence:
   seven of ten round-1 dispositions verified RESOLVED with file:line
   evidence (stamp, manifest, vetter wording, author_models, suffix,
