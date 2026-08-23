@@ -36,9 +36,14 @@ distinguishable from a tool that silently returned nothing.
 
 ## Fix-round packets
 
-A Gate A fix round is reviewed on the fix diff rather than on the card's
-full diff a second time, so it needs a packet of its own. `--suffix` gives
-it one:
+The fix-commit re-review duty in `PROCESS.md` governs every fix round. The
+card's `commit-range` extends over the fix commit, the primary packet
+regenerates over the full range, and the fresh Gate A review reads that
+packet. Nothing in this section changes that. A packet built on the fix
+diff alone is never the packet a gate is graded on.
+
+`--suffix` supplements the duty, and only where a reviewer reads the round
+better with the fix commits isolated:
 
 ```sh
 export BOARDKIT_HOME=/path/to/boardkit
@@ -46,17 +51,19 @@ uv run --project "${BOARDKIT_HOME:-../boardkit}" boardkit review-packet \
   <ID> --suffix <name> --commit-range <a>..<b>
 ```
 
-The packet lands in `reviews/<ID>-<name>` and the primary packet at
-`reviews/<ID>` stays as it was. Without the suffix the fix round overwrites
-the packet the first round was graded against, and the record of what the
-reviewer actually read is gone. `PROCESS.md` names the same flag for a card
-spanning more than one repo; the flag is one mechanism serving both, and
-the suffix is whatever tells the two packets apart.
+That lands in `reviews/<ID>-<name>` and leaves `reviews/<ID>` untouched, so
+the full-range packet stays the record while the fix diff sits readable
+beside it. Without the suffix the second run overwrites the packet the
+first round was graded against. `PROCESS.md` names the same flag for a card
+spanning more than one repo; one mechanism serves both, and the suffix is
+whatever tells two packets apart.
 
-The fix round's `--commit-range` is its own. A card's `commit-range`
-frontmatter holds the reviewed range, and fix commits separated by foreign
-commits are not expressible as `A..B` at all, so the fix round gets a range
-and a directory of its own rather than an extended range.
+The shape this repo runs: extend the range, regenerate the primary packet,
+dispatch the re-review on it, and hand the reviewer the fix commit's own
+numbered diff alongside. Generate the supplementary packet where a range
+cannot isolate the fix commits by itself, since fix commits separated by
+foreign commits are not expressible as `A..B`. The extended range and its
+full-range packet are owed either way.
 
 ## Harness bindings
 

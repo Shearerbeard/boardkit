@@ -63,15 +63,29 @@ def test_session_close_accounts_for_delegated_worktrees() -> None:
     assert "Session close accounts for every worktree" in text
 
 
-def test_a_fix_round_gets_its_own_packet_directory() -> None:
-    """A second `review-packet` run without `--suffix` overwrites the packet
-    the first round was graded against, so the template has to name the flag
-    and say what it protects."""
+def test_the_suffix_packet_is_subordinate_to_the_full_range_re_review_duty() -> None:
+    """The hazard this section has to avoid teaching: a fix round reviewed on
+    a suffixed packet alone, leaving the fix commits outside the card's
+    durable reviewed range. The section names the PROCESS duty it defers to
+    and says the supplement never replaces the full-range packet."""
     text = _section(FIX_ROUND_SECTION_RE, "Fix-round packets")
 
-    assert "--suffix" in text
+    assert "fix-commit re-review duty in `PROCESS.md` governs every fix round" in text
+    assert "`commit-range` extends over the fix commit" in text
+    assert "primary packet regenerates over the full range" in text
+    assert "packet built on the fix diff alone is never the packet a gate is graded on" in text
+    assert "`--suffix` supplements the duty" in text
+    assert "extended range and its full-range packet are owed either way" in text
+
+
+def test_the_suffix_packet_keeps_the_primary_packet_intact() -> None:
+    """Without the flag the fix round overwrites the packet the first round
+    was graded against, so the mechanism has to survive alongside the duty."""
+    text = _section(FIX_ROUND_SECTION_RE, "Fix-round packets")
+
     assert "reviews/<ID>-<name>" in text
-    assert "overwrites" in text
+    assert "leaves `reviews/<ID>` untouched" in text
+    assert "overwrites the packet the first round was graded against" in text
     assert "--commit-range" in text
 
 

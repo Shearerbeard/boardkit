@@ -71,6 +71,27 @@ direct
 
 ## Log
 
+- 2026-08-22 Fix round landed by the same Claude executor: the
+  fix-round packet section in both REVIEW-TOOLING copies now leads
+  with the PROCESS fix-commit re-review duty (range extended, primary
+  packet regenerated over the full range) and frames the --suffix
+  packet as strictly supplementary, never the packet a gate is graded
+  on, closing with this session's own worked shape. The pinned test
+  now asserts the subordination rather than the objected-to wording.
+  Board owner re-ran the checks: pytest 423, ruff clean, vale clean,
+  the two copies' section byte-identical.
+- 2026-08-22 Gate A round 1 returned VERDICT: FAIL with one BLOCKING
+  finding: the new fix-round packet section in REVIEW-TOOLING (live
+  and template) reads as an alternative to the PROCESS fix-commit
+  re-review duty rather than a supplement to it, so following it
+  literally could leave fix commits outside the durable reviewed
+  range. Everything else verified: canary fallback resolution,
+  degraded-close wording across all three homes, byte-identical
+  PROCESS copies, brief extraction, scaffold parsing. Reviewer: GPT
+  5.6-sol via the codex CLI; round spend 132,723 tokens. Unverified:
+  full pytest (sandbox temp denial; 24 affected non-temporary tests
+  passed in-sandbox); the board owner's run stands (422 passed). Board
+  owner accepted the finding; fix round dispatched.
 - 2026-08-22 Entered in-review: commit-range f769416..1d72d44 recorded
   and the review packet generated. Gate A dispatch to the codex lane
   follows; the packet presentation batches with the Phase 2 window.
