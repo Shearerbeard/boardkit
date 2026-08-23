@@ -45,7 +45,7 @@ per-harness machine-local pointer pattern is weighed here beside S12.
   `boardkit doctor`, `vale` on the ADR prose.
 - [x] Gate A: adversarial prose review per the roster, ledger appended
   to the ADR.
-- [ ] Gate D: drift audit before the user gate.
+- [x] Gate D: drift audit before the user gate.
 - [ ] Gate U: Mike approves the ADR; S33 does not start without it.
 
 ## Branch
@@ -54,6 +54,14 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate D passed: a fresh small-class Claude auditor with
+  no implementation context checked the ADR against PROCESS,
+  DOCKING, REVIEW-TOOLING, MODEL-CLASSES, and the plan's decision 2,
+  and spot-checked five premise-table rows against their code
+  anchors: DRIFT AUDIT: CLEAN, zero findings. Evidence:
+  [2026-08-23-s32-gate-d.md](../evidence/2026-08-23-s32-gate-d.md).
+  The card now waits at its user gate with the two flagged
+  amendments and four open questions.
 - 2026-08-23 Gate A closed under the bound ruling's exit condition.
   Round 4 verified the check-schema fix RESOLVED and the other two
   ruled fixes NOT RESOLVED, each with one remaining cross-section

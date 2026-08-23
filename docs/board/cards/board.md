@@ -38,7 +38,7 @@ kanban-plugin: board
 
 ## In Review
 - [ ] **S32** [ArtifactStore ADR - receipts, postures, sidecar mechanics](s32-artifact-store-adr.md)
-	Depends: S28. Gates: S -> A -> D -> U @ D. Executor: smart.
+	Depends: S28. Gates: S -> A -> D -> U @ U. Executor: smart.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)
