@@ -133,10 +133,13 @@ def test_parity_agents_with_no_shims_warns(tmp_path: Path) -> None:
     _check_entry_parity(checks, tmp_path)
     assert "no shim points at it" in _findings(checks)["entry.parity"]
     # A repo with no shims is being told to write one, so this branch owes
-    # the convention and its home as much as the divergence branch does.
+    # the text itself, not only a pointer at where the text is stated: an
+    # AGENTS.md that predates the convention has no section to point at.
     remedy = next(f for f in checks.findings if f.check == "entry.parity").remedy
     assert "Entry files and their shims" in remedy
     assert "`boardkit init` scaffolds" in remedy
+    for name in SHIM_TEMPLATES:
+        assert f'{name} reads "{SHIM.strip()}"' in remedy
 
 
 def test_parity_shimlike_opening_with_own_rules_warns(tmp_path: Path) -> None:
@@ -177,8 +180,9 @@ def test_parity_short_divergent_shim_warns(tmp_path: Path) -> None:
 
 def test_parity_drops_only_a_title_that_is_the_files_own_name(tmp_path: Path) -> None:
     """The convention says the optional title is the file's own name, so the
-    check drops exactly that and nothing else. A title naming another file
-    is content, and content beyond the pointer text flags."""
+    check drops exactly that and nothing else. Gate A round 1 finding 2: the
+    dropped form is a real heading at column 0, so an indented title, a
+    missing space, and a seven-hash run are all content."""
     (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
     (tmp_path / "GEMINI.md").write_text(SHIM, encoding="utf-8")
     (tmp_path / "CLAUDE.md").write_text(f"# CLAUDE.md\n\n{SHIM}", encoding="utf-8")
@@ -186,11 +190,45 @@ def test_parity_drops_only_a_title_that_is_the_files_own_name(tmp_path: Path) ->
     _check_entry_parity(checks, tmp_path)
     assert "entry.parity" in checks.passed
 
-    (tmp_path / "CLAUDE.md").write_text(f"# AGENTS.md\n\n{SHIM}", encoding="utf-8")
-    checks = _Checks()
-    _check_entry_parity(checks, tmp_path)
-    assert "CLAUDE.md" in _findings(checks)["entry.parity"]
-    assert "follow different rules" in _findings(checks)["entry.parity"]
+    for title in (
+        "# AGENTS.md",  # a title naming another file is not this file's title
+        "    # CLAUDE.md",  # indented: an indented code block, not a heading
+        "#CLAUDE.md",  # no space: not a heading
+        "####### CLAUDE.md",  # seven hashes: past the six markdown allows
+    ):
+        (tmp_path / "CLAUDE.md").write_text(f"{title}\n\n{SHIM}", encoding="utf-8")
+        checks = _Checks()
+        _check_entry_parity(checks, tmp_path)
+        assert "CLAUDE.md" in _findings(checks)["entry.parity"], title
+        assert "follow different rules" in _findings(checks)["entry.parity"], title
+
+
+def test_parity_drops_only_comments_standing_on_their_own_lines(tmp_path: Path) -> None:
+    """Gate A round 1 finding 1: the normalizer does not parse markdown, so
+    every comment tolerance is somewhere a directive could hide. Only a
+    well-formed comment opening a line and closing one drops out; anything
+    looser is content and warns, including an unterminated `<!--` that a
+    run-to-end-of-file rule would have let erase the whole file."""
+    (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
+    (tmp_path / "GEMINI.md").write_text(SHIM, encoding="utf-8")
+    for body in (
+        # The reviewer's evasion: an indented code block whose `<!--` opens
+        # a span that a run-to-EOF rule erases, directive and all.
+        f"# CLAUDE.md\n\n{SHIM}\n    <!-- fenced\n    Always use tabs.\n",
+        # An unterminated comment is content, not a licence to drop the rest.
+        f"# CLAUDE.md\n\n{SHIM}\n<!-- Always use tabs.\n",
+        # A comment that closes mid-line leaves prose beside it.
+        "# CLAUDE.md\n\n<!-- stamp --> Always use tabs.\n",
+        # An indented open is not a comment block, so the directive stands.
+        f"# CLAUDE.md\n\n  <!-- stamp -->\n{SHIM}Always use tabs.\n",
+        # Two comments where the first closes mid-line: a lazy span would
+        # jump to the second close and swallow the directive between them.
+        f"# CLAUDE.md\n\n<!-- a --> Always use tabs.\n<!-- b -->\n{SHIM}",
+    ):
+        (tmp_path / "CLAUDE.md").write_text(body, encoding="utf-8")
+        checks = _Checks()
+        _check_entry_parity(checks, tmp_path)
+        assert "follow different rules" in _findings(checks)["entry.parity"], body
 
 
 def test_parity_warns_on_a_faithful_rewording(tmp_path: Path) -> None:

@@ -25,6 +25,7 @@ import os
 import re
 import subprocess
 import tomllib
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from fnmatch import fnmatch
@@ -92,14 +93,24 @@ INSTALL_ROOT = DATA_DIR.parent.parent.parent
 
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*$", re.MULTILINE)
 HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
-# An unterminated comment runs to the end of the file.
-UNCLOSED_COMMENT_RE = re.compile(r"<!--.*\Z", re.DOTALL)
 FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 
+# A well-formed HTML comment standing on lines of its own: `<!--` opens a
+# line at column 0 and the FIRST `-->` ends one. Only these drop out of a
+# shim, because anything looser lets a stripper erase real content - an
+# indented `<!--` inside a code block, or a close that lands mid-line with
+# the next comment's close further down, would both swallow prose between
+# the markers. A comment that opens mid-line, sits indented, or never
+# closes is therefore content, and content beyond the pointer text warns.
+COMMENT_BLOCK_RE = re.compile(r"^<!--(?:(?!-->).)*-->[ \t]*$", re.DOTALL | re.MULTILINE)
+
 # Where a consumer reads the shim convention. Every `entry.parity` remedy
-# ends here, so a repo that wants its own wording knows what doctor
-# compares against before it decides to carry the warning.
-CONVENTION_HOME = "the convention is stated in AGENTS.md under 'Entry files and their shims'"
+# ends here, and it names the kit's own copy: `boardkit init` leaves an
+# existing entry file untouched, so a consumer's live AGENTS.md may predate
+# the section while the shipped template always carries it.
+CONVENTION_HOME = (
+    "the convention is stated under 'Entry files and their shims' in the AGENTS.md the kit ships"
+)
 
 # Every check doctor knows how to run, in report order. Any id not recorded
 # by the end of a run is reported as skipped, so no check can go silent.
@@ -772,18 +783,19 @@ def _shim_body(name: str, text: str) -> str:
     """An entry file reduced to the content the shim convention compares.
 
     Both reductions are part of the stated convention rather than silent
-    guesses. Comment spans drop out - spans, not lines, because a stamp may
-    open and close mid-line and the prose on either side of it is ordinary
-    content. A title drops out only when it is the file's own name and only
-    on the first line, exactly as the convention states it: a directive
-    wearing heading syntax cannot pass as boilerplate, and neither can a
-    title naming some other file.
-    What is left is whitespace-normalized, so re-wrapping the pointer is
-    not a divergence.
+    guesses, and both are narrow on purpose: this function does not parse
+    markdown, so every tolerance it grants is a place a directive could
+    hide. Comment blocks drop out only when they stand on lines of their
+    own (`COMMENT_BLOCK_RE`). A title drops out only when it is a real
+    heading at column 0 whose text is exactly this file's own name, and
+    only as the first line, so neither a directive wearing heading syntax
+    nor a title naming another file passes as boilerplate.
+
+    Everything else is content. What survives is whitespace-normalized, so
+    re-wrapping the pointer is not a divergence.
     """
-    stripped = UNCLOSED_COMMENT_RE.sub(" ", HTML_COMMENT_RE.sub(" ", text))
-    lines = [line for line in (raw.strip() for raw in stripped.splitlines()) if line]
-    if lines and lines[0].startswith("#") and lines[0].lstrip("#").strip() == name:
+    lines = [line for line in COMMENT_BLOCK_RE.sub(" ", text).splitlines() if line.strip()]
+    if lines and re.fullmatch(rf"#{{1,6}} +{re.escape(name)}[ \t]*", lines[0]):
         lines = lines[1:]
     return _normalize(" ".join(lines))
 
@@ -813,8 +825,23 @@ def _is_shim(name: str, text: str) -> bool:
     check is a warning, so a reworded shim costs a one-line edit or a
     carried warning, while a missed divergence costs two harnesses
     silently following different rules.
+
+    The residual risk is a directive hidden inside a comment block. This
+    check cannot see it; a harness reading the raw file can. That is
+    stated with the convention rather than only here, because it is the
+    consumer's risk to carry, not the maintainer's to know.
     """
     return _shim_body(name, text) == CANONICAL_SHIM_BODIES[name]
+
+
+def _expected_texts(names: Iterable[str]) -> str:
+    """What each named entry file must read, quoted for a remedy line.
+
+    Printed rather than pointed at: `boardkit init` leaves an existing entry
+    file untouched, so the AGENTS.md a consumer already has may not carry the
+    convention's section, and a remedy that only pointed there could dangle.
+    """
+    return "; ".join(f'{name} reads "{CANONICAL_SHIM_BODIES[name]}"' for name in names)
 
 
 def _check_entry_parity(checks: _Checks, root: Path) -> None:
@@ -851,8 +878,8 @@ def _check_entry_parity(checks: _Checks, root: Path) -> None:
             "entry.parity",
             "AGENTS.md exists but no shim points at it, so any harness that reads "
             "only its own entry file runs blind here",
-            f"add the shim files the kit ships ({', '.join(shim_names)}), each carrying "
-            f"the pointer text `boardkit init` scaffolds; {CONVENTION_HOME}",
+            "add the shim files the kit ships, each carrying the pointer text "
+            f"`boardkit init` scaffolds ({_expected_texts(shim_names)}); {CONVENTION_HOME}",
         )
         return
     unreadable = sorted(name for name, text in shims.items() if text is None)
@@ -868,15 +895,14 @@ def _check_entry_parity(checks: _Checks, root: Path) -> None:
             "two harnesses may follow different rules in the same checkout"
         )
     if problems:
-        expected = "; ".join(f'{name} reads "{CANONICAL_SHIM_BODIES[name]}"' for name in divergent)
+        expected = _expected_texts(divergent or shim_names)
         checks.warn(
             "entry.parity",
             "; ".join(problems),
-            "restore the pointer text `boardkit init` scaffolds"
-            + (f" ({expected})" if expected else "")
-            + "; doctor compares that text exactly, dropping only comment spans, a "
-            "leading title that is the file's own name, and whitespace differences, "
-            f"and {CONVENTION_HOME}",
+            f"restore the pointer text `boardkit init` scaffolds ({expected}); doctor "
+            "compares that text exactly, dropping only comment blocks that stand on "
+            "lines of their own, a leading title that is the file's own name, and "
+            f"whitespace differences, and {CONVENTION_HOME}",
         )
         return
     checks.ok("entry.parity")

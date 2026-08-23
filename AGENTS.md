@@ -74,14 +74,22 @@ Read `AGENTS.md` first; it is the stable agent handoff for this repo.
 ```
 
 A title that is only the file's own name (`# CLAUDE.md`) may stand above
-it. HTML comments may sit anywhere around it, and the contract stamp is
-one. Nothing else belongs in the file: put a rule in a shim and two
-harnesses read different instructions out of the same checkout.
+it. Well-formed HTML comments may sit around it on lines of their own,
+opening at the start of a line and closing at the end of one; the contract
+stamp is such a comment. Nothing else belongs in the file: put a rule in a
+shim and two harnesses read different instructions out of the same
+checkout.
 
 `boardkit doctor` compares each shim against that text exactly, dropping
-only comment spans, that title, and whitespace differences. Reword a shim
-and the `entry.parity` check warns, even when the rewording says the same
-thing: doctor cannot tell a faithful rewrite from a second instruction set,
-so it stops guessing and names anything that is not the stated text. The
-finding is a warning, never an error, so a repo that wants its own wording
-keeps it and carries the warning.
+only those comment blocks, that title, and whitespace differences. A
+comment that opens mid-line or sits indented is content. So is one that
+never closes: an unterminated `<!--` warns rather than swallowing the rest
+of the file. Reword a shim and the `entry.parity` check warns as well, even
+when the rewording says the same thing. Doctor cannot tell a faithful
+rewrite from a second instruction set, so it flags whatever is not the
+stated text rather than guessing. The finding is a warning, never an error,
+so a repo that wants its own wording keeps it and carries the warning.
+
+One gap the check cannot close: text inside a well-formed comment is
+invisible to it, while a harness reading the raw file still sees that text.
+A directive hidden in a comment goes unwarned.

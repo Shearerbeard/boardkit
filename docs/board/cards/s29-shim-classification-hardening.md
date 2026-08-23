@@ -71,6 +71,26 @@ direct
 
 ## Log
 
+- 2026-08-22 Gate A round 1 returned VERDICT: FAIL with one BLOCKING
+  and two MINOR findings, all in the reviewed diff: the comment
+  regexes ignore markdown structure, so an indented code block holding
+  an unclosed comment marker erases a directive and passes the exact
+  check; the dropped title accepts non-heading forms (indented, no
+  space, seven hashes) the stated convention excludes; and the remedy
+  points at a section an existing v2 consumer's AGENTS.md may lack,
+  since init preserves existing entry files, while the no-shims branch
+  never prints the canonical text. Reviewer verified all four recorded
+  evasions warn and the shipped templates and this repo's shims pass.
+  Author of the diff: Claude (claude-opus executor under a
+  claude-fable-5 board owner). Reviewer: GPT 5.6-sol via the codex
+  CLI; round spend 100,766 tokens. Reviewer unverified: pytest, ruff,
+  boardkit check (sandbox limits); the board owner's Gate S runs stand
+  for them. Board owner accepted all three and ruled the disposition
+  for the blocker: shrink the normalizer rather than out-parse
+  markdown - an unclosed comment is content and warns, and only a
+  well-formed comment on lines of its own drops, so both false
+  directions are warnings. Fix round dispatched to the authoring
+  executor.
 - 2026-08-22 Entered in-review: commit-range 486d790..97a4459 recorded
   and the review packet generated. Gate A dispatch to the codex lane
   follows; the packet presentation batches with the Phase 2 window.
