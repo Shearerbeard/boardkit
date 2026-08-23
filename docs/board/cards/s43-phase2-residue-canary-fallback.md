@@ -8,7 +8,7 @@ lineage: primary
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
-commit-range: "f769416..1d72d44"
+commit-range: "f769416..4a946a6"
 ---
 
 # S43: Land the phase 2 residue - canary fallback, degraded close, review notes
@@ -71,6 +71,9 @@ direct
 
 ## Log
 
+- 2026-08-22 Commit-range extended to f769416..4a946a6 over the fix
+  commit, the packet regenerated, and Gate A round 2 dispatched with
+  the convergence discipline.
 - 2026-08-22 Fix round landed by the same Claude executor: the
   fix-round packet section in both REVIEW-TOOLING copies now leads
   with the PROCESS fix-commit re-review duty (range extended, primary
