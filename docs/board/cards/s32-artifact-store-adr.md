@@ -2,7 +2,7 @@
 id: S32
 title: ArtifactStore ADR - receipts, postures, sidecar mechanics
 status: in-review
-commit-range: "3435716..ce38986"
+commit-range: "3435716..bb671ca"
 depends: [S28]
 serialize-with: []
 lineage: primary
@@ -54,6 +54,32 @@ direct
 
 ## Log
 
+- 2026-08-23 Commit-range extended to 3435716..bb671ca over the fix
+  commit and the packet regenerated over the full range; Gate A
+  round 2 dispatched with the convergence discipline. The fix round
+  survived a session-limit interruption mid-edit: the executor's
+  saved progress resumed cleanly after the reset, with the
+  interruption and resume both on this ledger.
+- 2026-08-23 Fix round landed by the same Claude executor as bb671ca,
+  all ten dispositions implemented: stamp corrected to the sha
+  actually verified with all 30 anchors re-checked there (one
+  re-anchored); the manifest restated as transcription checking with
+  tamper-evidence assigned to git history; the vetter path reworded
+  to assertion; a ruling kind whose worked R-wave receipt encodes ten
+  cards and five rounds; author_models as a list with set-membership
+  checking; the suffix in filename grammar and schema with packets as
+  a list; a new lifecycle section (hash, write, log in one commit,
+  publish outside it, the published flip as the one permitted
+  mutation); the [stores.<name>] overlay schema stated against the
+  strict parser; dir: backend semantics with the weaker guarantee in
+  the posture table and failure rows; and OQ4 reframed as an explicit
+  flagged departure from decision 2's literal per-gate wording. Board
+  owner re-ran the checks: pytest 430, ruff clean, boardkit check
+  green, vale clean. Correction, executor-caught: the Gate S entry
+  below says nothing tracked in-repo names docs/adr/ - too broad, as
+  this card's own log names it; the true gap is that no living
+  contract document (AGENTS.md, PROCESS.md, README.md) states the ADR
+  home, and the ADR's premise row now says exactly that.
 - 2026-08-23 Gate A round 1 returned VERDICT: FAIL with ten BLOCKING
   findings, all accepted by the board owner: the verification stamp
   names 23dea92 while the anchors match the working HEAD (the
