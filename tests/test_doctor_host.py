@@ -9,10 +9,11 @@ commits), so the fixtures reproduce those shapes rather than mocking git.
 import subprocess
 from pathlib import Path
 
+import pytest
 from conftest import config_text
 
 from boardkit.config import load_config
-from boardkit.contract import TEMPLATES_DIR
+from boardkit.contract import TEMPLATES_DIR, read_text_or_none
 from boardkit.doctor import SHIM_TEMPLATES, _check_entry_parity, _check_host, _Checks
 
 IDENTITY = ["-c", "user.email=t@t", "-c", "user.name=t"]
@@ -185,10 +186,19 @@ def test_parity_drops_only_a_title_that_is_the_files_own_name(tmp_path: Path) ->
     missing space, and a seven-hash run are all content."""
     (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
     (tmp_path / "GEMINI.md").write_text(SHIM, encoding="utf-8")
-    (tmp_path / "CLAUDE.md").write_text(f"# CLAUDE.md\n\n{SHIM}", encoding="utf-8")
-    checks = _Checks()
-    _check_entry_parity(checks, tmp_path)
-    assert "entry.parity" in checks.passed
+    # Gate A round 2 residual 1: the title is matched against the first
+    # line that survives comment-block and blank-line removal, not the raw
+    # first line. These forms pass, and pass deliberately - the tolerance
+    # admits only blanks and comment blocks, never content.
+    for body in (
+        f"# CLAUDE.md\n\n{SHIM}",
+        f"\n# CLAUDE.md\n{SHIM}",
+        f"<!-- stamp -->\n# CLAUDE.md\n{SHIM}",
+    ):
+        (tmp_path / "CLAUDE.md").write_text(body, encoding="utf-8")
+        checks = _Checks()
+        _check_entry_parity(checks, tmp_path)
+        assert "entry.parity" in checks.passed, body
 
     for title in (
         "# AGENTS.md",  # a title naming another file is not this file's title
@@ -229,6 +239,31 @@ def test_parity_drops_only_comments_standing_on_their_own_lines(tmp_path: Path) 
         checks = _Checks()
         _check_entry_parity(checks, tmp_path)
         assert "follow different rules" in _findings(checks)["entry.parity"], body
+
+
+def test_parity_remedy_names_every_problem_shim(tmp_path: Path) -> None:
+    """Gate A round 2 residual 2: an unreadable shim has to be rewritten
+    too, and its text is the one thing its reader cannot go and look at, so
+    the remedy owes it even when a divergent sibling already supplies one."""
+    (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
+    (tmp_path / "GEMINI.md").write_text("Always use tabs.\n", encoding="utf-8")
+    claude = tmp_path / "CLAUDE.md"
+    claude.write_text(SHIM, encoding="utf-8")
+    claude.chmod(0o000)
+    if read_text_or_none(claude) is not None:
+        pytest.skip("this user reads a 0o000 file (root), so the unreadable branch is unreachable")
+    try:
+        checks = _Checks()
+        _check_entry_parity(checks, tmp_path)
+    finally:
+        claude.chmod(0o644)
+
+    message = _findings(checks)["entry.parity"]
+    assert "CLAUDE.md unreadable" in message
+    assert "GEMINI.md" in message
+    remedy = next(f for f in checks.findings if f.check == "entry.parity").remedy
+    for name in SHIM_TEMPLATES:
+        assert f'{name} reads "{SHIM.strip()}"' in remedy, name
 
 
 def test_parity_warns_on_a_faithful_rewording(tmp_path: Path) -> None:

@@ -71,6 +71,33 @@ direct
 
 ## Log
 
+- 2026-08-22 Fix round 2 landed by the same Claude executor: the
+  `_shim_body` docstring now states the actual title rule (first line
+  surviving comment-block and blank-line removal) with the two
+  reviewer forms pinned as passing tests, per the board owner's ruling
+  that the code was right and the claim overstated; and the remedy
+  prints canonical text for the union of unreadable and divergent
+  shims, with the reviewer's mixed case pinned and the test proven
+  non-vacuous by reverting the fix in a scratch copy. The AGENTS.md
+  pair was verified claim-free and left untouched. Board owner re-ran
+  the checks: `uv run pytest -q` (417 passed), `uv run ruff check`
+  (clean), format clean, this repo's doctor passing entry.parity.
+- 2026-08-22 Gate A round 2 returned VERDICT: FAIL, in convergence:
+  the BLOCKING comment-stripping fix verified RESOLVED under
+  adversarial probes (unterminated, indented, nested, adjacent, CRLF,
+  mid-line-close all rejected); two MINOR residuals re-raised, no new
+  scope. The residuals: the title rule's raw-first-line claim
+  overstates the code, which accepts a title after comment blocks and
+  blank lines (the consumer-facing convention matches the code, so the
+  board owner ruled this resolves by correcting the claim, since the
+  tolerance admits no content); and the mixed unreadable-plus-divergent
+  remedy omits the unreadable shim's canonical text, reproduced by the
+  reviewer. Reviewer: GPT 5.6-sol via the codex CLI; round spend
+  105,820 tokens, cumulative 206,586. Reviewer unverified: full pytest
+  (sandbox temp denial); ruff, vale, boardkit check, and the live
+  entry.parity probe all passed in-sandbox. Fix round 2 dispatched;
+  the round bound's ruling requirement applies if round 3 is not a
+  clean pass.
 - 2026-08-22 Fix round landed as 406309d after the board owner re-ran
   the checks over the combined Phase 2 tree (pytest 416, ruff and
   format clean, vale clean, this repo's doctor passing entry.parity).

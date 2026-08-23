@@ -787,9 +787,18 @@ def _shim_body(name: str, text: str) -> str:
     markdown, so every tolerance it grants is a place a directive could
     hide. Comment blocks drop out only when they stand on lines of their
     own (`COMMENT_BLOCK_RE`). A title drops out only when it is a real
-    heading at column 0 whose text is exactly this file's own name, and
-    only as the first line, so neither a directive wearing heading syntax
-    nor a title naming another file passes as boilerplate.
+    heading at column 0 whose text is exactly this file's own name, so
+    neither a directive wearing heading syntax nor a title naming another
+    file passes as boilerplate.
+
+    The title is matched against the first line that survives comment-block
+    and blank-line removal, not against the raw first line of the file. A
+    stamp or a blank line above the title is therefore fine, which is what
+    the stated convention describes ("a title may stand above it; comments
+    may sit around it on lines of their own"). That position tolerance
+    admits no content of its own: anything that is neither the exact title
+    nor a comment block is still in the list, so it stays in the body and
+    fails the match.
 
     Everything else is content. What survives is whitespace-normalized, so
     re-wrapping the pointer is not a divergence.
@@ -895,7 +904,10 @@ def _check_entry_parity(checks: _Checks, root: Path) -> None:
             "two harnesses may follow different rules in the same checkout"
         )
     if problems:
-        expected = _expected_texts(divergent or shim_names)
+        # Every shim the finding names, not only the divergent ones: an
+        # unreadable shim has to be rewritten too, and its text is exactly
+        # what the reader cannot go and look at.
+        expected = _expected_texts(sorted({*unreadable, *divergent}))
         checks.warn(
             "entry.parity",
             "; ".join(problems),
