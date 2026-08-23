@@ -227,11 +227,13 @@ into.
 This board sets `sidecar`, per decision 2.
 
 `sidecar` splits by backend, and the split matters to a reader choosing one.
-A `git:` sidecar pins the published bytes with a commit sha the receipt
-names, so the locator resolves to one immutable snapshot. A `dir:` sidecar
-has no such anchor: the locator names a path, and whether that path still
-holds the reviewed bytes is answered only by recomputing the digests.
-Section 5 gives both backends their semantics.
+Both locators carry a path that addresses and an anchor that identifies, but
+the anchors differ in kind. A `git:` sidecar anchors on a commit sha, which
+pins the bytes independently of any digest the receipt carries. A `dir:`
+sidecar anchors on a prefix of the receipt's own manifest root, which
+identifies the publication and detects a change without pinning anything, so
+a mismatch never says which side moved. Section 5 gives both backends their
+semantics.
 
 The table above is the posture table `DOCKING.md` set the precedent for, and
 it carries the same property: the CLI reads the posture, and no resolution
@@ -267,12 +269,15 @@ packets in the `packets` list below. `REVIEW-TOOLING.md` fixes which is
 which: "A packet built on the fix diff alone is never the packet a gate is
 graded on." A receipt concludes one verdict and may name several packets.
 
-**Three kinds, because three things close a gate.** `review` carries a
-reviewer's verdict and requires `reviewer_model`. `ruling` carries a board
-owner's written termination of a cycle, covers a list of cards, and has no
-single reviewer. `decision` carries a user gate, names the decider, and has
-no `reviewer_model` at all. Splitting them means no kind has a required
-field it cannot fill, which is what a single shape forced.
+**Three kinds, because three things close a gate.** `review` carries one
+reviewer's verdict on one round and requires `reviewer_model`. `ruling`
+carries a board owner's written termination of a cycle, covers a list of
+cards and a list of rounds, and takes `reviewer_models` as a list, since a
+cycle can change transports between rounds. `decision` carries a user gate,
+names the decider, and has no reviewer field at all. Splitting them means no
+kind has a required field it cannot fill, which is what a single shape
+forced. A fourth kind is defined but not adopted; open question 4 owns it,
+because it exists only under that question's literal branch.
 
 YAML frontmatter for the fields a checker reads, then prose for the reader.
 A `review` receipt:
@@ -302,24 +307,31 @@ packets:                     # one entry per packet behind this one verdict
 ---
 ```
 
-`ruling` replaces `card` with `cards` and `round` with a rounds summary,
-because a ruling is exactly the artifact that spans both, and its verdict is
-`RULING`. `decision` replaces `reviewer_model` with `decider`, names the
-gate it closes, and takes verdict `ACCEPTED` or `REJECTED`. The full verdict
-vocabulary across the three kinds is `PASS`, `FAIL`, `DEFERRED`, `RULING`,
-`ACCEPTED`, `REJECTED`, and each kind admits only its own subset, so an
-absent or out-of-kind verdict is a validation error rather than a reading
-the reader has to interpret. Section 8 shows the R-wave ruling written out
-in full against this schema.
+`ruling` replaces `card` with `cards`, `round` with a rounds summary, and
+`reviewer_model` with `reviewer_models`, because a ruling is exactly the
+artifact that spans all three; its verdict is `RULING`. `decision` replaces
+`reviewer_model` with `decider`, names the gate it closes, and takes verdict
+`ACCEPTED` or `REJECTED`. The full verdict vocabulary across the adopted
+kinds is `PASS`, `FAIL`, `DEFERRED`, `RULING`, `ACCEPTED`, `REJECTED`, and
+each kind admits only its own subset, so an absent or out-of-kind verdict is
+a validation error rather than a reading the reader has to interpret.
+Section 8 shows the R-wave ruling written out in full against this schema.
 
-Then three body sections: `## Packet digests`, a table of one row per
-published file (full SHA-256, then the packet-relative POSIX path, grouped
-by packet name when there is more than one); `## Findings`, the numbered
-ledger with each finding's disposition, being the fix applied or the reason
-it was rejected; and `## Checks the reviewer did not run`, holding the
-UNVERIFIED class `PROCESS.md:274-279` defines, so a sandbox limitation is
-never silently read as a passing check. This review is the worked example:
-its round-1 reviewer could not run the `uv`-backed checks at all.
+Then three body sections. `## Digests` is a table of one row per attested
+file: full SHA-256, then the path. What it attests to follows the kind, and
+the rule is one line long. A `review` attests its packet files, pathed
+relative to the packet and grouped by packet name when there is more than
+one. A `ruling` attests the tracked document its `ruling` key names, pathed
+relative to the repo root. A `decision` attests the receipts it decides
+over. No adopted kind has an empty table, because a receipt that attests to
+nothing has no reason to exist; open question 4's unadopted fourth kind
+would be the first exception, counted there as part of its cost.
+`## Findings` is the numbered ledger with each
+finding's disposition, being the fix applied or the reason it was rejected.
+`## Checks the reviewer did not run` holds the UNVERIFIED class
+`PROCESS.md:274-279` defines, so a sandbox limitation is never silently read
+as a passing check. This review is the worked example: its round-1 reviewer
+could not run the `uv`-backed checks at all.
 
 **`author_models` is a list, and the invariant reads it as one.** A
 `commit_range` can span commits several models wrote, and `PROCESS.md:266-268`
@@ -340,10 +352,25 @@ findings is written `verdict: PASS` with `findings: 0`, which is the same
 rule's "Zero findings is recorded as an explicit PASS, distinguishable from
 a tool that silently returned nothing."
 
-**`published` is a first-class field, not an inference.** Driver 2 needs a
-reader to tell an attested packet from a fetchable one without reasoning
-about posture, and the R-wave backfill below is the first record whose
-accuracy depends on `published: false` existing.
+**`published` is a key of a `packets` entry, and its absence means
+something.** Driver 2 needs a reader to tell an attested packet from a
+fetchable one without reasoning about posture, and there are three states,
+not two:
+
+- **A packet exists and is fetchable.** One entry, `published: true`, with a
+  locator.
+- **A packet exists and has not been pushed.** One entry, `published:
+  false`, no locator. Section 4's lifecycle produces this, and `boardkit
+  doctor` warns while it lasts.
+- **No packet was ever archived.** `packets: []`. There is no `published`
+  field anywhere in such a receipt, because the key belongs to an entry and
+  there are no entries. The R-wave ruling in section 8 is this state.
+
+Collapsing the second and third would be the overclaim driver 2 forbids in
+the direction that matters least, and the underclaim that matters most: a
+board owner who has a packet in hand and one who never kept one are not in
+the same position, and a reader deciding whether to ask for the bytes needs
+to know which.
 
 **Digests are full 64-character SHA-256.** `contract_digest`
 (`contract.py:372-389`) truncates to 12 hex characters, which suits its job:
@@ -451,23 +478,40 @@ alone would move under the reader.
 needs semantics rather than an implied port of the git ones, and its
 guarantee is weaker in a way worth stating plainly.
 
-- **Locator.** `dir:<store-name>#<board>/<ID>/<gate>-r<N>[-<suffix>]`, with
-  no `@` component, because a directory has no commit to name.
-- **What replaces the commit sha.** The manifest root already in the
-  receipt. A directory publication is content-addressed by that value and
-  by nothing else, so a `dir:` locator resolves to a path and the reader's
-  only assurance that the path still holds the reviewed bytes is
-  recomputing the per-file digests. Under git the sha pins the bytes before
-  a digest is computed; under `dir:` nothing does.
+The rule for both backends is the same sentence read twice: **the path
+addresses, the anchor verifies.** Under `git:` the anchor is a commit sha,
+and it pins the bytes before anyone hashes anything. Under `dir:` the anchor
+is the receipt's own manifest root, which pins nothing and only detects.
+
+- **Locator.**
+  `dir:<store-name>@<root-prefix>#<board>/<ID>/<gate>-r<N>[-<suffix>]`. The
+  `@` component is the first 12 hex characters of the manifest root, which
+  is the same position the commit sha occupies under `git:`, so one locator
+  grammar serves both backends.
+- **What the two components do.** The path after `#` resolves to the
+  directory: it addresses. The `@` prefix identifies which publication the
+  locator means, so a reader can tell at a glance whether the directory in
+  front of them is the one the receipt meant. Neither proves anything on its
+  own. Verification is the full 64-character root in the receipt's
+  `manifest` field, recomputed from the fetched files. The prefix is an
+  identifier and the root is the check, and they are deliberately not the
+  same value in the same place.
+- **What a reader actually does.** Fetch by path, verify by root. If the
+  root recomputes to the receipt's value, the directory holds the reviewed
+  bytes. If it does not, the reader knows the two disagree and knows nothing
+  about which one moved, since a directory keeps no history to consult.
+  Under `git:` that question has an answer; under `dir:` it does not, and
+  that is the whole of the weaker guarantee.
 - **Collision.** A publish whose target directory exists refuses and says
   so. The store is append-only (plan, Rollback), so an existing directory
-  means either a republish of the same round, which needs no write, or a
-  ref collision, which is a defect. Overwriting would silently invalidate
-  every receipt already naming that path.
+  means either a republish of the same round, whose root prefix matches and
+  which needs no write, or a real collision, which is a defect.
+  Overwriting would silently invalidate every receipt already naming that
+  path.
 - **Fetch.** Copy the directory back out to a caller-named destination.
-  There is no revision to check out and no history to consult, so a fetch
-  that returns nothing is indistinguishable from a packet that was never
-  published; the receipt's `published` field is what tells them apart.
+  There is no revision to check out, so a fetch that finds nothing is
+  indistinguishable from a packet that was never archived; the receipt's
+  `packets` list is what tells those apart, per section 3.
 
 That asymmetry is stated in the posture and failure tables too, so a reader
 choosing a backend sees it without reading this section.
@@ -529,7 +573,7 @@ Each row is a failure the design expects, with what the reader sees.
 | Receipt committed, publish never ran | The reconciliation check below finds a receipt whose `published: true` names a locator nothing can fetch, or a `published: false` that has sat unpublished across sessions. `boardkit doctor` warns. |
 | A packet carries a secret | The sidecar is private, and the receipt exposes file names and digests only. A digest still confirms a guess about a small file's exact content. Named as a residual, not mitigated. |
 | Two boards share one sidecar | Short-code namespacing prevents collision. A board whose short-code changes orphans its earlier packets, which the locator makes visible. |
-| A `dir:` sidecar's published bytes change underneath a receipt | Nothing detects it at fetch time, because the locator names a path rather than a snapshot. Recomputing the digests is the only check, and it reports a mismatch without saying which side moved. This is the weaker guarantee open question 3 trades away. |
+| A `dir:` sidecar's published bytes change underneath a receipt | Recomputing the manifest root is the only check there is, and a mismatch cannot say which side moved, since a directory keeps no history to consult. This is the weaker guarantee open question 3 trades away. |
 | A publish targets a `dir:` path that already exists | Refused, since the store is append-only. Overwriting would invalidate every receipt already naming that path. |
 | Packet regenerated on another machine | The bytes differ, so the digests do not match. This is not a bug and not a validation path. See the premise check below: `REVIEW.md` embeds an absolute machine path by construction. |
 
@@ -600,7 +644,7 @@ verdict: RULING
 dated: 2026-08-16
 route: codex-reviewer
 author_models: [<the model that authored the wave>]
-reviewer_model: <the model that ran every round>
+reviewer_models: [<the model that returned every round's verdict>]
 rounds:                      # one entry per round the cycle ran
   - round: 1
     object: "the ten card diffs, one packet each"
@@ -628,17 +672,37 @@ packets: []                  # never archived; nothing to point at
 ---
 ```
 
-Three things the shape has to carry, and does. `cards` is a list because the
+with the body's digest table carrying exactly one row, the tracked evidence
+file `ruling` names:
+
+| SHA-256 | Path |
+| --- | --- |
+| `<64 hex>` | `docs/board/evidence/2026-08-16-gate-a-review-cycle.md` |
+
+Four things the shape has to carry, and does. `cards` is a list because the
 cycle was batched across ten. `rounds` is a list of summaries rather than a
 single count, because the interesting fact about this cycle is its shape:
-each round narrower than the last. And `packets: []` with an empty digest
-table is the honest encoding of material that stayed on one machine, which
-is why `published` had to be a real field rather than an inference.
+each round narrower than the last. `reviewer_models` is a list because a
+cycle can change transports between rounds; this one did not, and the list
+has one entry.
+
+And `packets: []` is the encoding of material that stayed on one machine.
+Read it with the rule from section 3: `published` is a key of a `packets`
+entry, so a receipt with no entries carries no `published` field at all.
+That is a different state from a packet that exists and has not been pushed,
+which appears as one entry with `published: false`. The R-wave is the first
+state, not the second, and the two must not read alike.
+
+The digest table is not empty, and it is not a packet digest either. It
+attests the one file this receipt points at, which is the tracked ruling
+document. Section 3 states the general rule: the table covers whatever the
+receipt attests to, being the packet files for a `review` and the `ruling`
+document for a `ruling`.
 
 `MIXED` appears only inside a ruling's `rounds` list, never as a receipt's
 own verdict. Round 2 above returned one PASS and five FAILs across six
 cards, and flattening that to either value would misreport it. A
-receipt-level verdict stays one of the four in the vocabulary, because a
+receipt-level verdict stays one of the values in the vocabulary, because a
 receipt concludes one thing.
 
 `gate_ticked: false` is specific to a ruling, and it comes straight from
@@ -647,9 +711,8 @@ cards.**" A ruling that ends a cycle without a pass is exactly the case a
 reader would otherwise misread, since every other receipt in the directory
 records a gate that closed.
 
-Its digest table has one row, the tracked evidence file the ruling lives in.
-That digest is redundant with git's own object hash for a tracked file, and
-it is kept anyway, so that every receipt has the same shape and can be
+That one digest is redundant with git's own object hash for a tracked file,
+and it is kept anyway, so that every receipt has the same shape and can be
 checked by a reader with a hash tool and no git.
 
 This makes the backfill the format's first proof that driver 2 works: the
@@ -820,15 +883,48 @@ both by listing Gate U under a rule that required a `reviewer_model` Gate U
 does not have. That contradiction is what produced the three kinds in
 section 3: `review` for a reviewer's verdict, `ruling` for a board owner
 ending a cycle, `decision` for a user gate with a decider and no reviewer.
-With the kinds split, "which gates" stops being a question about the schema
-and becomes a question about scope alone.
+With the kinds split, "which gates" stops being a question the schema
+answers by accident and becomes a question of scope with a stated price on
+each branch.
 
-Gates D and M sit closest to the line. Both produce a written judgment a
-vetter might reach for, and both fit `decision` without a format change, so
-including them later costs a value in an existing field. If Mike prefers
-decision 2's literal reading, the cost is bounded in the same way: every
-gate gets a `decision` receipt, Gate S receipts carry command output instead
-of a findings ledger, and nothing in sections 1 through 5 changes.
+**The literal branch has a price, and it is a fourth kind.** Gates S, D, and
+M do not fit any adopted kind. `review` requires a `reviewer_model` they
+have no candidate for; `decision` requires a `decider`, and nobody decides a
+Gate S, the commands do. Saying they "fit `decision`" was this ADR's second
+attempt at the same mistake the kinds split was meant to end, and it is
+withdrawn here. Taking decision 2 literally means adding:
+
+```yaml
+---
+receipt: v1
+kind: check                  # the fourth kind, adopted only under OQ4's literal branch
+card: S32
+gate: S                      # S | D | M
+verdict: PASS                # PASS | FAIL | DEFERRED
+dated: 2026-08-23
+ran_by: <the model or session that ran the gate>
+packets: []
+---
+```
+
+with a `## Checks` body section holding the commands and their output for a
+Gate S, or the drift findings for a Gate D, in place of `## Findings`. Note
+what the kind costs beyond its own fields. `ran_by` is a new role name that
+is neither author nor reviewer nor decider. `## Checks` is a fourth body
+section. And the `## Digests` rule in section 3 gains its first exception
+rather than a fourth row: a Gate S receipt's evidence is command output that
+sits inline in the receipt, so there is no file to point at, and `check`
+becomes the one kind whose digest table may be empty. That exception is the
+sharpest part of the price, because "no kind has an empty table" is what
+gives the table its force for the other three. All of it is stated here so
+the branch is encodable as written rather than left to S33 as an exercise.
+
+So the either-or is: **the recommended narrowing, as a departure from
+decision 2 flagged for approval here**, or **literal per-gate, at the price
+of the `check` kind above**. Both are implementable as written; neither
+leaves S33 inventing a representation. Gates D and M are the closest call in
+either direction, since both produce a written judgment a vetter might reach
+for, and under the narrowing they are the first candidates to add later.
 
 ## Premises checked against the code
 
