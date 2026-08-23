@@ -67,3 +67,30 @@ discriminator (real tokens billed, versus the hang's zero), and the
 pre-vet section gains the ladder with the caveat that a passing smoke
 does not clear a lane for long runs. Proposes; the maintainer
 disposes.
+
+## 2026-08-22 serialize-with-misses-in-review-fix-rounds
+
+```yaml
+date: 2026-08-22
+harness: claude-code
+agent: claude-fable-5
+workstreams: [boardkit]
+repo: boardkit (its own board, wave-2 Phase 2)
+source: docs/board/cards/s29-shim-classification-hardening.md log, S29 executor report 2026-08-22
+```
+
+Two live collisions from one session. S29 (shim convention) and S31
+(docking spec) both edit the AGENTS.md doc pair; neither card declared
+`serialize-with`, and the board owner dispatched S31's executor while
+S29's Gate A fix round was still writing the tree. The letter of the
+WIP rule held - S29 was `in-review` when S31 went `in-progress` - but a
+fix round is live authoring the serialize-with rule does not cover, so
+two executors interleaved on shared files: one executor's vale gate
+failed on the other's uncommitted sentence, and the byte-identical
+doc-pair sync (a whole-file copy) was one timing window away from
+silently reverting the other card's edit. Two candidate fixes, either
+sufficient: the serialize-with rule extends to any card with a live fix
+round, not just `in-progress` status; or entry-file doc pairs get a
+kit-side sync check so a pair edit collision surfaces as a
+deterministic failure instead of a silent revert. Proposes; the
+maintainer disposes.
