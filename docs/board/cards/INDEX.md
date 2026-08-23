@@ -43,7 +43,7 @@ Admission test: where does the diff land.
 | [S28](s28-store-seam-wiring.md) | Wire the CLI core through the CardStore seam | backlog | - | smart | S -> A -> U(code-review) |
 | [S29](s29-shim-classification-hardening.md) | Decide how strictly doctor should classify an entry-file shim | in-review | - | smart | S -> A -> U(code-review) @ A |
 | [S30](s30-small-fix-batch.md) | Wave-2 small-fix batch with the ignore and doctor truthing items | in-progress | - | smart | S -> A -> D -> U(code-review) @ D |
-| [S31](s31-docking-convention-spec.md) | Versioned docking-convention spec with the three consumer postures | in-progress | - | smart | S -> A -> D -> U(code-review) @ A |
+| [S31](s31-docking-convention-spec.md) | Versioned docking-convention spec with the three consumer postures | in-review | - | smart | S -> A -> D -> U(code-review) @ A |
 | [S32](s32-artifact-store-adr.md) | ArtifactStore ADR - receipts, postures, sidecar mechanics | backlog | S28 | smart | S -> A -> D -> U |
 | [S33](s33-receipts-and-sidecar.md) | Receipts and sidecar implementation per the ADR | backlog | S32 | smart | S -> A -> M -> D -> U(code-review) |
 | [S34](s34-wave-gate-design.md) | Decide whether the wave-level Gate F packet is worth generating | backlog | S32 | smart | S -> A -> D -> U |
@@ -58,4 +58,4 @@ Admission test: where does the diff land.
 
 ## Epics
 
-- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 0/12 done - S8 (ready), S12 (ready), S15 (in-review), S30 (in-progress), S31 (in-progress), S32 (backlog), S33 (backlog), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready)
+- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 0/12 done - S8 (ready), S12 (ready), S15 (in-review), S30 (in-progress), S31 (in-review), S32 (backlog), S33 (backlog), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready)

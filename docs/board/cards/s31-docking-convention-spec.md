@@ -1,13 +1,14 @@
 ---
 id: S31
 title: Versioned docking-convention spec with the three consumer postures
-status: in-progress
+status: in-review
 depends: []
 serialize-with: []
 lineage: primary
 executor: smart
 gates: "S -> A -> D -> U(code-review)"
 user-gates: [code-review]
+commit-range: "406309d..1ee9c7f"
 epic: S41
 ---
 
@@ -57,6 +58,11 @@ direct
 
 ## Log
 
+- 2026-08-22 Entered in-review: commit-range 406309d..1ee9c7f recorded
+  (the split with S29's concurrent doc-pair edits kept each card's
+  commit to its own sections) and the review packet generated. Gate A
+  dispatch to the codex lane follows; Gate D and the packet
+  presentation batch with the Phase 2 window.
 - 2026-08-22 Gate S passed, run by the board owner over the combined
   Phase 2 tree: `uv run pytest -q` (416 passed), `uv run ruff check`
   (clean), `vale` on all six touched markdown files (clean),

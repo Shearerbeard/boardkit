@@ -8,7 +8,7 @@ lineage: primary
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
-commit-range: "486d790..97a4459"
+commit-range: "486d790..406309d"
 ---
 
 # S29: Decide how strictly doctor should classify an entry-file shim
@@ -71,6 +71,15 @@ direct
 
 ## Log
 
+- 2026-08-22 Fix round landed as 406309d after the board owner re-ran
+  the checks over the combined Phase 2 tree (pytest 416, ruff and
+  format clean, vale clean, this repo's doctor passing entry.parity).
+  Commit-range extended to 486d790..406309d, the packet regenerated,
+  and Gate A round 2 dispatched with the convergence discipline. The
+  concurrent-edit collision with S31 on the AGENTS.md doc pair was
+  split at commit time (each card's commit carries only its own
+  sections) and filed in FEEDBACK.md as
+  serialize-with-misses-in-review-fix-rounds.
 - 2026-08-22 Gate A round 1 returned VERDICT: FAIL with one BLOCKING
   and two MINOR findings, all in the reviewed diff: the comment
   regexes ignore markdown structure, so an indented code block holding
