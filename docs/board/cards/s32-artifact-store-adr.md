@@ -43,7 +43,7 @@ per-harness machine-local pointer pattern is weighed here beside S12.
 - [x] Gate S: `adr-review` structure checks, then `uv run pytest -q`,
   `uv run ruff check`, `boardkit check`, `boardkit render --check`,
   `boardkit doctor`, `vale` on the ADR prose.
-- [ ] Gate A: adversarial prose review per the roster, ledger appended
+- [x] Gate A: adversarial prose review per the roster, ledger appended
   to the ADR.
 - [ ] Gate D: drift audit before the user gate.
 - [ ] Gate U: Mike approves the ADR; S33 does not start without it.
@@ -54,6 +54,28 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate A closed under the bound ruling's exit condition.
+  Round 4 verified the check-schema fix RESOLVED and the other two
+  ruled fixes NOT RESOLVED, each with one remaining cross-section
+  contradiction: the lifecycle paragraph requires a ruling receipt at
+  the event it records while §8 requires the R-wave receipt as a
+  future backfill, with no backfill exception stated; and the failure
+  table still refuses every existing dir: target while the edited
+  collision rule permits an equal-root idempotent republish. VERDICT:
+  FAIL; per the ruling, the cycle ends here and the two survivors
+  present at Gate U as flagged amendments under the ADR's proposed
+  status, each with board-owner-proposed one-sentence amendment text.
+  Cycle shape: round 1 FAIL (10 BLOCKING), round 2 FAIL in
+  convergence (7 resolved, 3 residuals), round 3 FAIL (3 not
+  resolved, bound spent, written ruling filed), round 4 under the
+  ruling (1 resolved, 2 survivors). Author of the reviewed range:
+  Claude (claude-opus executor under a claude-fable-5 board owner).
+  Reviewer all rounds: GPT 5.6-sol via the codex CLI, read-only
+  sandbox. Reviewer spend: 132,320 + 132,178 + 127,759 + 104,087 =
+  496,344 tokens. Unverified in round 4: pytest (sandbox temp
+  denial); the board owner's run stands (430 passed). Review record:
+  prompts and outputs for all four rounds in the packet directory.
+  Gate D follows, then the user gate.
 - 2026-08-23 Commit-range extended to 3435716..038ad96 over the ruled
   fix commit, the packet regenerated, and Gate A round 4 dispatched -
   the cycle's final review under the ruling's exit condition. The fix
