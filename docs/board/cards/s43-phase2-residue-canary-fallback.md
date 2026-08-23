@@ -1,13 +1,14 @@
 ---
 id: S43
 title: Land the phase 2 residue - canary fallback, degraded close, review notes
-status: in-progress
+status: in-review
 depends: []
 serialize-with: []
 lineage: primary
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
+commit-range: "f769416..1d72d44"
 ---
 
 # S43: Land the phase 2 residue - canary fallback, degraded close, review notes
@@ -70,6 +71,9 @@ direct
 
 ## Log
 
+- 2026-08-22 Entered in-review: commit-range f769416..1d72d44 recorded
+  and the review packet generated. Gate A dispatch to the codex lane
+  follows; the packet presentation batches with the Phase 2 window.
 - 2026-08-22 Gate S passed, run by the board owner after a two-round
   Claude-subagent execution (implementation, then an amendment adding
   the two review practices to the shipped REVIEW-TOOLING template -
