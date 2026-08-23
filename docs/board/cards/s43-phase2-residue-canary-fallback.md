@@ -56,7 +56,7 @@ decisions:
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `boardkit check`, `boardkit render --check`,
   `boardkit doctor`; `vale` on touched markdown.
 - [ ] Gate A: adversarial review of the diff against the plan's
@@ -70,6 +70,25 @@ direct
 
 ## Log
 
+- 2026-08-22 Gate S passed, run by the board owner after a two-round
+  Claude-subagent execution (implementation, then an amendment adding
+  the two review practices to the shipped REVIEW-TOOLING template -
+  a board-owner scope extension logged here): `uv run pytest -q` (422
+  passed, up from 417), ruff and format clean, vale clean on all five
+  touched markdown files, the PROCESS pair byte-identical, `boardkit
+  resolve-route canary` resolving codex-reviewer as fallback, check,
+  render --check, and doctor green. Board owner rulings: the scaffold
+  ships the fallback shape as a second placeholder route with a
+  documented single-transport deletion escape, since a generic
+  scaffold cannot name a real transport and parse_contract rejects
+  undeclared routes - the scaffolded-not-lying consequence (a fresh
+  init needs two transports or one deletion before doctor is clean)
+  is accepted and surfaces in doctor's own message. The parallel-fill
+  note rides the DISPATCH_BRIEF_ANCHOR paragraph so briefs quote it
+  without a new required anchor for consumers, verified in a
+  generated brief. Discovered, not fixed: the --suffix CLI help and
+  two PROCESS passages still describe only the multi-repo use of the
+  flag; queued for the next drain.
 - 2026-08-22 Minted and pulled by the board owner on finding Phase 2's
   done-when unmet: the plan's decision-5 and documentation items were
   phase deliverables attached to no card, discovered while preparing

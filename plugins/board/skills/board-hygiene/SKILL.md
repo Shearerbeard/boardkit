@@ -251,6 +251,16 @@ closing handoff. A canary that ran and left no key, no answers, and no
 grade has not run for audit purposes, because the next session cannot tell
 it from a skipped one.
 
+**Degraded close, for an outage only.** When every route the board's
+`canary` role declares is unreachable, the session may close degraded rather
+than block. Compute the key with `boardkit canary-key` anyway and file it in
+the close evidence. Log the canary as a deferred gate whose reason carries
+the outage evidence: each route tried, and how it failed. The next session
+start owes the canary and runs it before pulling new work. A degraded close
+is an exception with a record, never a silent skip. Only an unreachable route
+grounds one; a canary that ran and missed is graded by the two miss classes
+above.
+
 ## Dispatching from this checklist
 
 Several steps here need a dispatch. The canary is one. A deferred gate that

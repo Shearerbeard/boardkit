@@ -217,7 +217,10 @@ required reference material (not summaries of it), the scope rule ("only
 modify what the card names; if the task needs anything else, stop and
 report instead"), and the expected report format: what changed as
 file:line, acceptance-check output verbatim, open questions, and anything
-discovered but not fixed.
+discovered but not fixed. Where two executors fill work in parallel against
+the same crate or the same shared files, the brief also names that shared
+surface, and the executor reports a collision with the other's uncommitted
+work rather than resolving it.
 
 A brief names the role it dispatches and the pin source where that role's
 live model pins are read. It never names a model id. Models resolve from
@@ -529,6 +532,16 @@ slightly stronger cheap model orients correctly, means the board is fine;
 swap the canary model and clear it rather than blocking. Re-run once to rule
 out nondeterminism. The hard stop is on board ambiguity, never on the
 frailty of one cheap model.
+
+Degraded close, for an outage only. When every route the `canary` role
+declares is unreachable, the session may close degraded rather than block.
+Compute the key with `boardkit canary-key` anyway and file it in the close
+evidence. Log the canary as a deferred gate whose reason carries the outage
+evidence: each route tried, and how it failed. The next session start owes
+the canary and runs it before pulling new work. A degraded close is an
+exception with a record, never a silent skip. Only an unreachable route
+grounds one; a canary that ran and missed is graded by the two miss classes
+above.
 
 ## Process feedback
 

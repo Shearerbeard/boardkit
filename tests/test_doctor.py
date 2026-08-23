@@ -619,7 +619,8 @@ def test_unfilled_routes_names_the_placeholder_tokens(tmp_path: Path) -> None:
     contract = load_config(tmp_path / "boardkit.toml").contract
 
     assert unfilled_routes(contract) == {
-        "primary": ["<harness-name>", "<working-dir or repo-native>"]
+        "primary": ["<harness-name>", "<working-dir or repo-native>"],
+        "fallback": ["<harness-name>", "<working-dir or repo-native>"],
     }
 
 
@@ -637,9 +638,11 @@ def test_missing_pin_sources_resolves_paths_and_anchors(tmp_path: Path) -> None:
     (tmp_path / "boardkit.toml").write_text(config_text(), encoding="utf-8")
     contract = load_config(tmp_path / "boardkit.toml").contract
 
+    # every route on the test board shares one pin source, so a missing doc is
+    # reported once per route rather than once per document
     assert [reason for _name, reason in missing_pin_sources(contract, tmp_path)] == [
         "pin_source path `docs/board/REVIEW-TOOLING.md` does not exist"
-    ]
+    ] * len(contract.routes)
 
     doc = tmp_path / "docs" / "board" / "REVIEW-TOOLING.md"
     doc.parent.mkdir(parents=True)

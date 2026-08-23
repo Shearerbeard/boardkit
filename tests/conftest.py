@@ -8,7 +8,9 @@ GOLDEN_CARDS_DIR = GOLDEN_DIR / "aura-cards"
 
 # The delegation contract every test board declares. Filled in with real
 # values (no angle-bracket placeholders) so boards under test load the way a
-# migrated repo's does, not the way a freshly scaffolded one does.
+# migrated repo's does, not the way a freshly scaffolded one does. Two routes,
+# because `roles.canary` carries a fallback: the scaffold ships that shape and
+# tests/test_schema_copies.py binds this block to it.
 CONTRACT_BLOCK = """\
 [contract]
 version = 2
@@ -19,6 +21,13 @@ skill = ""
 pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"
 preflight = []
 staging = "working-dir"
+
+[routes.fallback]
+adapter = "fallback-harness"
+skill = ""
+pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"
+preflight = []
+staging = "repo-native"
 
 [roles.executor]
 routes = ["primary"]
@@ -36,7 +45,7 @@ routes = ["primary"]
 routes = ["primary"]
 
 [roles.canary]
-routes = ["primary"]
+routes = ["primary", "fallback"]
 """
 
 CONFIG_TEMPLATE = (

@@ -94,6 +94,18 @@ preflight = []
 # repo-native paths; staged copies outside a git repo stall silently).
 staging = "<working-dir or repo-native>"
 
+# A second transport, ideally on a different provider from `primary`. The
+# canary below is a hard stop at session close, so it routes here when its
+# first route is unreachable and one outage would otherwise block the close.
+# A repo with a single transport deletes this table and the second entry in
+# [roles.canary].
+[routes.fallback]
+adapter = "<harness-name>"
+skill = ""
+pin_source = "docs/board/REVIEW-TOOLING.md#harness-bindings"
+preflight = []
+staging = "<working-dir or repo-native>"
+
 # One [roles.<name>] table per required role. `routes` is the ordered
 # fallback list; every name must be declared above.
 [roles.executor]
@@ -112,7 +124,7 @@ routes = ["primary"]
 routes = ["primary"]
 
 [roles.canary]
-routes = ["primary"]
+routes = ["primary", "fallback"]
 """
 
 

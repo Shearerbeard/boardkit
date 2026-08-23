@@ -36,6 +36,9 @@ LINEAGE_BULLET_RE = re.compile(r"^- `lineage`:(.*?)(?=^- `)", re.DOTALL | re.MUL
 BACKTICKED_RE = re.compile(r"`([a-z-]+)`")
 ROLES_SECTION_RE = re.compile(r"^## Roles\n(.*?)^## ", re.DOTALL | re.MULTILINE)
 SESSION_CLOSE_SECTION_RE = re.compile(r"^## Session close\n(.*?)^#{2,3} ", re.DOTALL | re.MULTILINE)
+CANARY_SECTION_RE = re.compile(
+    r"^### Orientation canary.*?\n(.*?)^#{1,3} ", re.DOTALL | re.MULTILINE
+)
 
 
 def _template_text() -> str:
@@ -151,6 +154,33 @@ def test_the_gate_a_bullet_states_the_re_review_convergence_discipline() -> None
     assert "per-round finding counts" in flat
     assert "cumulative reviewer spend" in flat
     assert "per-finding disposition verification evidence" in flat
+
+
+def test_the_dispatch_brief_clause_carries_the_parallel_fill_note() -> None:
+    """Two executors filling against one crate collided over uncommitted work
+    (2026-08-16). The note rides the clause the brief already quotes, so every
+    generated brief carries it; without the pin the clause can lose it
+    silently."""
+    clause = " ".join(paragraph_at(_template_text(), DISPATCH_BRIEF_ANCHOR, TEMPLATE).split())
+
+    assert "fill work in parallel" in clause
+    assert "the brief also names that shared surface" in clause
+    assert "reports a collision with the other's uncommitted work" in clause
+    assert "rather than resolving it" in clause
+
+
+def test_the_canary_section_defines_the_degraded_close() -> None:
+    """S43 / decision 5: an outage that takes out every canary route must have
+    a written way through, or a blocked session improvises a silent skip."""
+    canary = _section(CANARY_SECTION_RE, "Orientation canary")
+
+    assert "Degraded close, for an outage only." in canary
+    assert "every route the `canary` role declares is unreachable" in canary
+    assert "`boardkit canary-key`" in canary
+    assert "file it in the close evidence" in canary
+    assert "deferred gate whose reason carries the outage evidence" in canary
+    assert "next session start owes the canary and runs it before pulling new work" in canary
+    assert "exception with a record, never a silent skip" in canary
 
 
 def test_the_model_classes_template_carries_the_gate_a_routing_rule() -> None:

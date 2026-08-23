@@ -174,6 +174,19 @@ def test_the_re_review_dispatch_brief_carries_the_convergence_instruction(
     assert "never a silent stop or an unbounded loop" in flat
 
 
+def test_the_brief_carries_the_parallel_fill_interference_note(tmp_path: Path) -> None:
+    """Two executors filling in parallel against one crate collided over each
+    other's uncommitted work (2026-08-16). The note rides the dispatch-brief
+    clause, so every brief carries it; this fails if the clause loses it."""
+    text = _brief(tmp_path)
+    flat = " ".join(re.sub(r"^> ?", "", line).strip() for line in text.splitlines() if line.strip())
+
+    assert "fill work in parallel" in flat
+    assert "the same crate or the same shared files" in flat
+    assert "the brief also names that shared surface" in flat
+    assert "reports a collision with the other's uncommitted work rather than resolving it" in flat
+
+
 def test_the_provenance_footer_says_to_regenerate(tmp_path: Path) -> None:
     text = _brief(tmp_path)
 

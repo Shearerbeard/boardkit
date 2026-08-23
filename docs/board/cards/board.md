@@ -38,7 +38,7 @@ kanban-plugin: board
 - [ ] **S30** [Wave-2 small-fix batch with the ignore and doctor truthing items](s30-small-fix-batch.md)
 	Depends: none. Gates: S -> A -> D -> U(code-review) @ U. Executor: smart.
 - [ ] **S43** [Land the phase 2 residue - canary fallback, degraded close, review notes](s43-phase2-residue-canary-fallback.md)
-	Depends: none. Gates: S -> A -> U(code-review) @ S. Executor: smart.
+	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: smart.
 
 ## In Review
 - [ ] **S15** [Restore the human review guide to generated packets](s15-review-packet-guide.md)

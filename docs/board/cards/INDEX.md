@@ -55,7 +55,7 @@ Admission test: where does the diff land.
 | [S40](s40-readme-developer-path.md) | README developer path, canary brief template, plan navigation | ready | - | any | S -> A @ S |
 | [S41](s41-co-worker-consumption.md) | Co-worker consumption readiness | backlog | - | smart | S -> U |
 | [S42](s42-doctor-docked-board-misfires.md) | Fix doctor host checks that misfire on in-repo board homes | backlog | - | smart | S -> A -> U(code-review) |
-| [S43](s43-phase2-residue-canary-fallback.md) | Land the phase 2 residue - canary fallback, degraded close, review notes | in-progress | - | smart | S -> A -> U(code-review) @ S |
+| [S43](s43-phase2-residue-canary-fallback.md) | Land the phase 2 residue - canary fallback, degraded close, review notes | in-progress | - | smart | S -> A -> U(code-review) @ A |
 
 ## Epics
 

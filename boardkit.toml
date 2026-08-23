@@ -81,5 +81,8 @@ routes = ["codex-reviewer", "opencode-reviewer"]
 [roles.drift-audit]
 routes = ["claude-session"]
 
+# The canary is a hard stop at session close, so this role carries the one
+# cross-provider escape on the board: an opencode outage must not strand a
+# session that is otherwise ready to close.
 [roles.canary]
-routes = ["opencode-reviewer"]
+routes = ["opencode-reviewer", "codex-reviewer"]

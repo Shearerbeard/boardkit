@@ -34,6 +34,30 @@ finding was rejected. An empty or verdict-less return is a failed review,
 never a clean pass. Zero findings is recorded as an explicit PASS,
 distinguishable from a tool that silently returned nothing.
 
+## Fix-round packets
+
+A Gate A fix round is reviewed on the fix diff rather than on the card's
+full diff a second time, so it needs a packet of its own. `--suffix` gives
+it one:
+
+```sh
+export BOARDKIT_HOME=/path/to/boardkit
+uv run --project "${BOARDKIT_HOME:-../boardkit}" boardkit review-packet \
+  <ID> --suffix <name> --commit-range <a>..<b>
+```
+
+The packet lands in `reviews/<ID>-<name>` and the primary packet at
+`reviews/<ID>` stays as it was. Without the suffix the fix round overwrites
+the packet the first round was graded against, and the record of what the
+reviewer actually read is gone. `PROCESS.md` names the same flag for a card
+spanning more than one repo; the flag is one mechanism serving both, and
+the suffix is whatever tells the two packets apart.
+
+The fix round's `--commit-range` is its own. A card's `commit-range`
+frontmatter holds the reviewed range, and fix commits separated by foreign
+commits are not expressible as `A..B` at all, so the fix round gets a range
+and a directory of its own rather than an extended range.
+
 ## Harness bindings
 
 One row per board-owner harness. Fill this in for your repo; the two
@@ -141,6 +165,15 @@ cases: 17 and 10 minutes of silence at ~0.1s CPU). On that signature,
 kill it, retry once at most, then switch transports or defer - the
 bounded retry-then-switch above, triggered by the harness's own check
 rather than by waiting out the full deadline.
+
+Read the verdict from the reviewer's own final message, the tail of its
+transcript or output. Never from the wrapper's exit code, and never from an
+intermediate tool line. The wrapper's exit says whether the delegation
+completed, which is a different question from what the reviewer concluded;
+a zero exit has shipped a truncated run more than once. An intermediate
+line can carry a finding the reviewer went on to withdraw. An output whose
+tail states no explicit verdict is a failed review, on the same footing as
+an empty return.
 
 ## Reviewer pre-vet
 
