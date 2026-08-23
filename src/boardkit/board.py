@@ -1,11 +1,15 @@
 """Card registry validation and generated-view rendering.
 
 Ported from terminalbench-aura's scripts/cards_index.py. Validates card
-frontmatter (schema, unique ids, dependency DAG acyclicity) and body
-links (relative markdown links must resolve), then renders INDEX.md,
-the Obsidian-kanban board.md, and the Mermaid graph.md. The card id
-scheme (prefix + sentinels) and cards directory come from the loaded
-Config rather than being hardcoded.
+frontmatter (schema, dependency DAG acyclicity), then renders INDEX.md,
+the Obsidian-kanban board.md, and the Mermaid graph.md.
+
+This is the CLI core, and it reads a board only through the CardStore
+seam in `store.py` (S28). The things that depend on how a board is laid
+out - finding the cards, id uniqueness, resolving body links - belong to
+the driver; the card id scheme arrives as the `BoardMeta` the driver
+serves. Lanes, the WIP cap and the charter stay kit-side and come from
+the loaded Config.
 
 Deviation from the source script: an empty cards directory is valid
 here (a freshly `boardkit init`-ed board has zero cards); the source
@@ -16,11 +20,17 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 import yaml
 
 from boardkit.config import Config
+
+if TYPE_CHECKING:
+    # The seam module imports this one, so the core takes its seam types
+    # for typing only. `build_board` imports the driver factory lazily,
+    # inside the one branch that needs it.
+    from boardkit.store import BoardMeta, CardStore
 
 STATUSES = ["ready", "in-progress", "in-review", "backlog", "done"]
 EXECUTORS = {"smart", "any"}
@@ -159,19 +169,16 @@ class BoardResult(NamedTuple):
     views: dict[str, str]
 
 
-def card_file_pattern(config: Config) -> re.Pattern[str]:
+def card_file_pattern(meta: BoardMeta) -> re.Pattern[str]:
     ids = "|".join(
-        [re.escape(config.board.id_prefix.lower()) + r"\d+"]
-        + [re.escape(s.lower()) for s in config.board.sentinel_ids]
+        [re.escape(meta.id_prefix.lower()) + r"\d+"]
+        + [re.escape(s.lower()) for s in meta.sentinel_ids]
     )
     return re.compile(rf"^({ids})-[a-z0-9-]+\.md$")
 
 
-def card_id_pattern(config: Config) -> re.Pattern[str]:
-    ids = "|".join(
-        [re.escape(config.board.id_prefix) + r"\d+"]
-        + [re.escape(s) for s in config.board.sentinel_ids]
-    )
+def card_id_pattern(meta: BoardMeta) -> re.Pattern[str]:
+    ids = "|".join([re.escape(meta.id_prefix) + r"\d+"] + [re.escape(s) for s in meta.sentinel_ids])
     return re.compile(rf"^({ids})$")
 
 
@@ -253,30 +260,6 @@ def parse_card(path: Path, id_re: re.Pattern[str], errors: list[str]) -> dict | 
     meta["_file"] = path.name
     meta["_body"] = text[end + 5 :]
     return meta
-
-
-def check_links(card: dict, cards_dir: Path, generated: set[str], errors: list[str]) -> None:
-    """Every relative link in the card body must resolve.
-
-    `generated` is the set of this run's own outputs, which always exist
-    after it. It is not the whole GENERATED set: `deferred.md` is written
-    only while some gate is open-deferred, so on a board with none, a link
-    to it is as broken as a link to a deleted card.
-    """
-    for match in LINK_RE.finditer(card["_body"]):
-        target = match.group(1)
-        if target.startswith(("http://", "https://", "mailto:")):
-            continue
-        if target in generated:
-            continue
-        if target in GENERATED:
-            # A generated name outside this run's outputs is stale: a copy
-            # left on disk does not legitimize the link, because render
-            # deletes it on the next pass.
-            errors.append(f"{card['_file']}: broken link '{target}' (stale generated view)")
-            continue
-        if not (cards_dir / target).resolve().exists():
-            errors.append(f"{card['_file']}: broken link '{target}'")
 
 
 def check_dag(
@@ -637,11 +620,11 @@ def render_deferred(entries: list[DeferredGate]) -> str:
     return "\n".join(lines)
 
 
-def sort_key(card: dict, config: Config) -> tuple[int, int]:
+def sort_key(card: dict, meta: BoardMeta) -> tuple[int, int]:
     cid = card["id"]
-    if cid in config.board.sentinel_ids:
-        return (1, config.board.sentinel_ids.index(cid))
-    return (0, int(cid[len(config.board.id_prefix) :]))
+    if cid in meta.sentinel_ids:
+        return (1, meta.sentinel_ids.index(cid))
+    return (0, int(cid[len(meta.id_prefix) :]))
 
 
 # S16: statuses whose view rows carry the card's current gate position.
@@ -853,31 +836,31 @@ def view_drift(config: Config, views: dict[str, str]) -> list[str]:
     return errors
 
 
-def build_board(config: Config) -> BoardResult:
-    """Validate every card in config.board.cards_dir and render its views.
+def build_board(config: Config, store: CardStore | None = None) -> BoardResult:
+    """Validate every card the store holds and render its views.
+
+    `store` is the seam (RULE-3). Everything that depends on how a board
+    is laid out reaches this function through it: the traversal, the card
+    id scheme, and link resolution. What stays here is what stays
+    kit-side permanently - lanes, the WIP cap, the dependency DAG, and
+    the view renders - so a second driver plugs in without this module
+    learning that it exists.
+
+    A caller that resolved a board constructs the store at resolution
+    time and passes it. The default builds driver #1 for the callers that
+    only ever hold a config, and is the one line here that names a
+    driver; it is imported lazily because the seam module imports this
+    one.
 
     Raises BoardError carrying every error found, if any.
     """
-    errors: list[str] = []
-    cards: dict[str, dict] = {}
-    parsed: list[dict] = []
-    file_re = card_file_pattern(config)
-    id_re = card_id_pattern(config)
-    cards_dir = config.board.cards_dir
+    if store is None:
+        from boardkit.store import open_store
 
-    for path in sorted(cards_dir.glob("*.md")):
-        if path.name in GENERATED or path.name.startswith("_"):
-            continue
-        if not file_re.match(path.name):
-            errors.append(f"{path.name}: filename violates <id>-<slug>.md naming rule")
-            continue
-        card = parse_card(path, id_re, errors)
-        if card is None:
-            continue
-        if card["id"] in cards:
-            errors.append(f"{path.name}: duplicate id {card['id']}")
-        cards[card["id"]] = card
-        parsed.append(card)
+        store = open_store(config)
+
+    errors: list[str] = []
+    parsed = store.load_cards(errors)
 
     # The deferred view exists only while something is deferred: a board with
     # no open deferrals renders the two views it always did, and boards
@@ -886,7 +869,7 @@ def build_board(config: Config) -> BoardResult:
     deferred = deferred_gates(parsed)
     generated = GENERATED if deferred else GENERATED - {DEFERRED_VIEW}
     for card in parsed:
-        check_links(card, cards_dir, generated, errors)
+        store.check_links(card, generated, errors)
         lane = card.get(LANE_KEY)
         if lane is not None and isinstance(lane, str) and lane not in config.board.lanes:
             declared = ", ".join(sorted(config.board.lanes)) or "none declared"
@@ -894,11 +877,15 @@ def build_board(config: Config) -> BoardResult:
     if errors:
         raise BoardError(errors)
 
+    # A duplicate id is already a store error, so the collision is reported
+    # before this collapse can hide it.
+    cards = {card["id"]: card for card in parsed}
     check_dag(cards, errors, config.board.lanes, config.board.wip)
     if errors:
         raise BoardError(errors)
 
-    ordered = sorted(cards.values(), key=lambda c: sort_key(c, config))
+    meta = store.board_meta()
+    ordered = sorted(cards.values(), key=lambda c: sort_key(c, meta))
     views = {
         "INDEX.md": render_index(ordered, config),
         "board.md": render_board(ordered, config),

@@ -73,17 +73,18 @@ def test_dependency_cycle_detected(tmp_path: Path) -> None:
 
 def test_regex_metacharacters_in_id_scheme_are_literal(tmp_path: Path) -> None:
     from boardkit.board import card_file_pattern, card_id_pattern
+    from boardkit.store import BoardMeta
 
     cards_dir = tmp_path / "cards"
     cards_dir.mkdir()
     (tmp_path / "boardkit.toml").write_text(config_text(id_prefix="S."), encoding="utf-8")
-    config = load_config(tmp_path / "boardkit.toml")
+    meta = BoardMeta.from_config(load_config(tmp_path / "boardkit.toml"))
 
     # "S." must match only a literal "S." prefix, never "SX" via the dot wildcard
-    assert not card_id_pattern(config).match("SX1")
-    assert card_id_pattern(config).match("S.1")
-    assert not card_file_pattern(config).match("sx1-thing.md")
-    assert card_file_pattern(config).match("s.1-thing.md")
+    assert not card_id_pattern(meta).match("SX1")
+    assert card_id_pattern(meta).match("S.1")
+    assert not card_file_pattern(meta).match("sx1-thing.md")
+    assert card_file_pattern(meta).match("s.1-thing.md")
 
 
 def test_wip_limit_enforced(tmp_path: Path) -> None:

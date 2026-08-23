@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 from boardkit import __version__
 from boardkit.board import (
@@ -50,6 +51,7 @@ from boardkit.contract import (
 from boardkit.dag import DagError, render_dag_mermaid, render_dag_text
 from boardkit.doctor import render_json, render_text, run_doctor
 from boardkit.review_packet import ReviewPacketError, build_review_packet
+from boardkit.store import CardStore, open_store
 
 TEMPLATE_SOURCE = DATA_DIR / "_template.md"
 
@@ -225,36 +227,52 @@ def entity_name_collision_warnings(cards: list[dict]) -> list[str]:
     ]
 
 
-def _resolve_board_context(args: argparse.Namespace) -> tuple[Config, Path | None]:
-    """The board this invocation targets, plus the registry that chose it.
+class BoardContext(NamedTuple):
+    """One invocation's board: its config, its store, and the registry that chose it.
+
+    `store` is constructed here rather than by each command, so
+    resolution is the one moment a driver is picked and every command
+    downstream reads the board through the seam.
+
+    `registry_dir` is the `.boardkit/` whose manifest resolved the board.
+    Validation needs it rather than a fresh search: an `external` board's
+    manifest sits in the consuming repo, so searching from the board root
+    finds nothing and searching from the process cwd finds whatever
+    happens to sit above the shell. `--config` carries no such
+    provenance, so it falls back to a search from the board root.
+    """
+
+    config: Config
+    store: CardStore
+    registry_dir: Path | None
+
+
+def _resolve_board_context(args: argparse.Namespace) -> BoardContext:
+    """The board this invocation targets.
 
     `--config` names a boardkit.toml directly and wins outright; otherwise
     the R5' resolution order runs: `--board`, then BOARDKIT_BOARD, then the
     `.boardkit/` walk-up with its git common-dir fallback, then the legacy
     walk-up.
-
-    The second element is the `.boardkit/` whose manifest resolved the
-    board. Validation needs it rather than a fresh search: an `external`
-    board's manifest sits in the consuming repo, so searching from the
-    board root finds nothing and searching from the process cwd finds
-    whatever happens to sit above the shell. `--config` carries no such
-    provenance, so it falls back to a search from the board root.
     """
     if args.config is not None:
         config = load_config(Path(args.config).resolve())
-        return config, find_boardkit(config.root) or git_common_boardkit(config.root)
-    resolution = resolve_board(Path.cwd(), board=args.board)
-    return load_config(resolution.config_path), resolution.boardkit_dir
+        registry_dir = find_boardkit(config.root) or git_common_boardkit(config.root)
+    else:
+        resolution = resolve_board(Path.cwd(), board=args.board)
+        config = load_config(resolution.config_path)
+        registry_dir = resolution.boardkit_dir
+    return BoardContext(config, open_store(config), registry_dir)
 
 
 def _resolve_config(args: argparse.Namespace) -> Config:
-    return _resolve_board_context(args)[0]
+    return _resolve_board_context(args).config
 
 
 def cmd_check(args: argparse.Namespace) -> int:
-    config, registry_dir = _resolve_board_context(args)
+    config, store, registry_dir = _resolve_board_context(args)
     try:
-        result = build_board(config)
+        result = build_board(config, store)
     except BoardError as exc:
         return _fail(exc.errors)
 
@@ -287,9 +305,9 @@ def cmd_check(args: argparse.Namespace) -> int:
 
 
 def cmd_render(args: argparse.Namespace) -> int:
-    config = _resolve_config(args)
+    config, store, _ = _resolve_board_context(args)
     try:
-        result = build_board(config)
+        result = build_board(config, store)
     except BoardError as exc:
         return _fail(exc.errors)
 
@@ -311,9 +329,9 @@ def cmd_render(args: argparse.Namespace) -> int:
 
 
 def cmd_canary_key(args: argparse.Namespace) -> int:
-    config = _resolve_config(args)
+    config, store, _ = _resolve_board_context(args)
     try:
-        result = build_board(config)
+        result = build_board(config, store)
     except BoardError as exc:
         return _fail(exc.errors)
 
@@ -323,9 +341,9 @@ def cmd_canary_key(args: argparse.Namespace) -> int:
 
 
 def cmd_dag(args: argparse.Namespace) -> int:
-    config = _resolve_config(args)
+    config, store, _ = _resolve_board_context(args)
     try:
-        result = build_board(config)
+        result = build_board(config, store)
     except BoardError as exc:
         return _fail(exc.errors)
     cards = {card["id"]: card for card in result.cards}
@@ -536,7 +554,7 @@ def cmd_init(args: argparse.Namespace) -> int:
             for line in missing:
                 f.write(f"{line}\n")
 
-    result = build_board(config)
+    result = build_board(config, open_store(config))
     for name, content in result.views.items():
         (config.board.cards_dir / name).write_text(content, encoding="utf-8")
 
