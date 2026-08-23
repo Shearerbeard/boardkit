@@ -68,11 +68,10 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import NamedTuple
 
-import yaml
-
 from boardkit.board import LINK_RE
 from boardkit.config import Config
 from boardkit.contract import sections
+from boardkit.store import CardStore, open_store
 
 RANGE_RE = re.compile(r"^.+\.\..+$")
 HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
@@ -196,22 +195,36 @@ def git(repo: Path, *args: str) -> str:
     return result.stdout
 
 
-def load_card(cards_dir: Path, card_id: str) -> dict:
-    matches = sorted(cards_dir.glob(f"{card_id.lower()}-*.md"))
+def resolve_card(store: CardStore, card_id: str) -> dict:
+    """The card this packet covers, read through the CardStore seam.
+
+    Card identity is the `id` frontmatter, never the filename (RULE-3),
+    so this asks the store for the board's cards and matches on the
+    declared id. A file named `s2-thing.md` that declares `S3` is card
+    S3, and a request for S2 finds nothing - which is the whole point of
+    reading the board through the seam rather than globbing `<id>-*.md`.
+    The match is case-insensitive because the CLI has always taken `s28`
+    for `S28`.
+
+    Schema errors from the load are deliberately not fatal. A packet
+    exists to get a card reviewed, and a card whose frontmatter is still
+    being filled in is exactly one a reviewer needs to see; holding the
+    board to the schema is `boardkit check`'s job, not this path's. Only
+    a card the store could not read at all is absent from the list, and
+    a duplicate id leaves both records in it, which is what makes the
+    ambiguity below reachable.
+    """
+    errors: list[str] = []
+    cards = store.load_cards(errors)
+    matches = [card for card in cards if str(card.get("id", "")).upper() == card_id.upper()]
     if not matches:
-        raise ReviewPacketError(f"no card file matching '{card_id.lower()}-*.md' in {cards_dir}")
+        known = ", ".join(sorted(str(card["id"]) for card in cards)) or "none"
+        raise ReviewPacketError(f"no card with id '{card_id}'; this board declares: {known}")
     if len(matches) > 1:
-        raise ReviewPacketError(f"ambiguous card id {card_id}: {[m.name for m in matches]}")
-    text = matches[0].read_text(encoding="utf-8")
-    end = text.find("\n---\n", 4)
-    if not text.startswith("---\n") or end < 0:
-        raise ReviewPacketError(f"{matches[0].name}: missing or unterminated frontmatter")
-    meta = yaml.safe_load(text[4:end])
-    if not isinstance(meta, dict):
-        raise ReviewPacketError(f"{matches[0].name}: frontmatter is not a mapping")
-    meta["_file"] = matches[0].name
-    meta["_body"] = text[end + 5 :]
-    return meta
+        raise ReviewPacketError(
+            f"ambiguous card id {card_id}: {sorted(str(m['_file']) for m in matches)}"
+        )
+    return matches[0]
 
 
 def validate_commit_range(repo: Path, commit_range: str) -> None:
@@ -769,8 +782,13 @@ def build_review_packet(
     repo: Path | None = None,
     suffix: str | None = None,
     commit_range: str | None = None,
+    store: CardStore | None = None,
 ) -> Path:
     """Build the review packet for `card_id`; returns the output directory.
+
+    `store` is the seam the card is read through; the CLI passes the one
+    it resolved the board with, and the default builds driver #1 for
+    callers that only hold a config.
 
     `repo` overrides config.review.repo. `suffix` names the repo this
     packet covers, for a card whose work spans more than one repo: the
@@ -789,12 +807,7 @@ def build_review_packet(
             f"--suffix '{suffix}' is not a lowercase slug (a-z, 0-9, single dashes between them)"
         )
 
-    meta = load_card(config.board.cards_dir, card_id)
-    if str(meta.get("id", "")).upper() != card_id.upper():
-        raise ReviewPacketError(
-            f"{meta['_file']}: frontmatter id '{meta.get('id')}' does not "
-            f"match requested '{card_id}'"
-        )
+    meta = resolve_card(store if store is not None else open_store(config), card_id)
     if commit_range is None:
         commit_range = meta.get("commit-range")
     if not commit_range:

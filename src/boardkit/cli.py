@@ -483,7 +483,7 @@ def cmd_dispatch_brief(args: argparse.Namespace) -> int:
 
 
 def cmd_review_packet(args: argparse.Namespace) -> int:
-    config = _resolve_config(args)
+    config, store, _ = _resolve_board_context(args)
     repo = Path(args.repo).resolve() if args.repo is not None else None
     try:
         outdir = build_review_packet(
@@ -492,6 +492,7 @@ def cmd_review_packet(args: argparse.Namespace) -> int:
             repo=repo,
             suffix=args.suffix,
             commit_range=args.commit_range,
+            store=store,
         )
     except ReviewPacketError as exc:
         return _fail([str(exc)])

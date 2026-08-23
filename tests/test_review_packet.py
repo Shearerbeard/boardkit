@@ -994,15 +994,25 @@ def test_malformed_commit_range_rejected(env: Env) -> None:
         build_review_packet(config, CARD_ID)
 
 
-def test_frontmatter_id_mismatch_rejected(env: Env) -> None:
+def test_the_declared_id_decides_the_card_not_the_filename(env: Env) -> None:
+    """A file named `s2-*.md` that declares S3 is card S3, and only S3.
+
+    The lookup goes through the CardStore seam, where identity is the
+    `id` frontmatter and the filename carries no weight, so requesting
+    S2 finds nothing on this board rather than matching the filename and
+    then rejecting the mismatch.
+    """
     config = env.write_config()
     env.write_card(
         "s2-example.md",
         f"id: S3\ntitle: Wrong id\ncommit-range: {env.range}\n",
     )
 
-    with pytest.raises(ReviewPacketError, match="does not.*match requested"):
+    with pytest.raises(ReviewPacketError, match="no card with id 'S2'"):
         build_review_packet(config, CARD_ID)
+
+    # The same file answers to the id it actually declares.
+    assert build_review_packet(config, "S3") == env.output_dir / "S3"
 
 
 def test_ambiguous_card_glob_rejected(env: Env) -> None:
@@ -1014,11 +1024,52 @@ def test_ambiguous_card_glob_rejected(env: Env) -> None:
         build_review_packet(config, CARD_ID)
 
 
+def test_the_packet_reads_its_card_through_the_store(env: Env) -> None:
+    """The seam is the only way in: the card served here is on no disk.
+
+    The cards directory holds a real card with a different title, so a
+    packet carrying the store's title proves the lookup goes through the
+    seam instead of globbing the cards directory.
+    """
+    config = env.write_config()
+    _valid_card(env)  # s2-example.md on disk, titled "Example card"
+
+    class _StoreOnlyCard:
+        """A store whose card was never written to a file.
+
+        `load_cards` is the packet's one call into the seam; anything
+        else the packet starts reaching for fails loudly here.
+        """
+
+        def __init__(self) -> None:
+            self.load_calls = 0
+
+        def load_cards(self, errors: list[str]) -> list[dict]:
+            self.load_calls += 1
+            return [
+                {
+                    "id": CARD_ID,
+                    "title": "Served through the seam",
+                    "commit-range": env.range,
+                    "_file": "s2-example.md",
+                    "_body": "body\n",
+                }
+            ]
+
+    store = _StoreOnlyCard()
+    outdir = build_review_packet(config, CARD_ID, store=store)
+
+    assert store.load_calls == 1
+    review = (outdir / "REVIEW.md").read_text(encoding="utf-8")
+    assert "Served through the seam" in review
+    assert "Example card" not in review
+
+
 def test_no_card_match_rejected(env: Env) -> None:
     config = env.write_config()
     _valid_card(env)
 
-    with pytest.raises(ReviewPacketError, match="no card file matching"):
+    with pytest.raises(ReviewPacketError, match="no card with id 'S99'"):
         build_review_packet(config, "S99")
 
 
