@@ -2,7 +2,7 @@
 id: S15
 title: Restore the human review guide to generated packets
 status: in-review
-commit-range: "23dea92..d01c3a1"
+commit-range: "23dea92..2b29e0e"
 depends: []
 serialize-with: []
 lineage: primary
@@ -75,6 +75,11 @@ direct
 
 ## Log
 
+- 2026-08-22 Commit-range extended to 23dea92..2b29e0e over the second
+  fix commit, the packet regenerated over the full range, and Gate A
+  round 3 dispatched. Two fix rounds are now spent: if round 3 is not
+  a clean PASS, the round bound requires a written board-owner ruling
+  before the cycle continues.
 - 2026-08-22 Fix round 2 landed by the same Claude executor: the
   binary flag now derives from the net pass alone (a transient binary
   reads as undone work, a binary-to-text file keeps its real net
