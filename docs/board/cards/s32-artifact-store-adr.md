@@ -54,6 +54,27 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate A round 3 returned VERDICT: FAIL with all three
+  round-2 dispositions verified NOT RESOLVED, each with a narrower
+  cross-section contradiction: the §4 lifecycle mandates per-round
+  packet hashing and a published flip that the ruling receipt's shape
+  cannot satisfy; the dir: prefix is the change-detecting anchor in
+  §2 but only an identifier in §5, and the collision rule compares
+  the collidable prefix; and the priced check kind omits round and
+  author_models, which the filename grammar and driver 9 require.
+  Reviewer: GPT 5.6-sol via the codex CLI; round spend 127,759
+  tokens, cumulative 392,257. In-sandbox boardkit check, render
+  --check, doctor, vale, and the range diff all passed. The
+  convergence bound is spent, so the mandatory written ruling is
+  filed:
+  [2026-08-23-s32-gate-a-ruling.md](../evidence/2026-08-23-s32-gate-a-ruling.md).
+  Ruling: continue, once, under constraint - the fix shape is
+  specified in the ruling (lifecycle scoped by kind, one meaning for
+  the prefix with full-root collision comparison, the two missing
+  fields added), edits restricted to the three sites with
+  delete-over-add preference, and anything short of a clean round 4
+  ends the cycle with the survivors presented at Gate U as flagged
+  amendments under the ADR's proposed status.
 - 2026-08-23 Commit-range extended to 3435716..650b844 over the
   second fix commit, the packet regenerated, and Gate A round 3
   dispatched. Two fix rounds are spent: a round 3 short of a clean
