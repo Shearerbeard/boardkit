@@ -8,7 +8,7 @@ lineage: primary
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
-commit-range: "f769416..4a946a6"
+commit-range: "f769416..6bd4d25"
 ---
 
 # S43: Land the phase 2 residue - canary fallback, degraded close, review notes
@@ -71,6 +71,10 @@ direct
 
 ## Log
 
+- 2026-08-22 Commit-range extended to f769416..6bd4d25 over the second
+  fix commit, the packet regenerated, and Gate A round 3 dispatched.
+  Two fix rounds are spent: a round 3 short of a clean pass requires a
+  written board-owner ruling before the cycle continues.
 - 2026-08-22 Fix round 2 landed by the same Claude executor: the
   section now says the regenerated full-range packet stays whole and
   defers to the retention contract by name (both packets regenerable
