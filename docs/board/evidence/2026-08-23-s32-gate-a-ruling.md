@@ -61,8 +61,8 @@ the fix shape fixed by this ruling rather than left to the author:
 The round's constraints. Edits land only at the three sites, plus any
 cross-reference a site edit forces. Where a contradiction can close
 by qualifying or deleting an overclaiming sentence, that beats adding
-new text. No new sections. No schema fields beyond the two named. No
-new claims about existing code.
+new text. The round adds no new sections, no schema fields beyond the
+two named, and no new claims about existing code.
 
 ## Exit condition
 
