@@ -51,7 +51,7 @@ flowchart TD
   S25["S25 R8 fix - card titles truncated at…"]:::done
   S26["S26 rust-holes HOLES ledger with a ho…"]:::ready
   S27["S27 Maintained architecture flowchart…"]:::backlog
-  S28["S28 Wire the CLI core through the Car…"]:::inprogress
+  S28["S28 Wire the CLI core through the Car…"]:::inreview
   S29["S29 Decide how strictly doctor should…"]:::done
   S34["S34 Decide whether the wave-level Gat…"]:::backlog
   S35["S35 Before/after canary extension for…"]:::backlog

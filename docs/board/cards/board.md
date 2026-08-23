@@ -35,10 +35,10 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A @ S. Executor: any.
 
 ## In Progress
-- [ ] **S28** [Wire the CLI core through the CardStore seam](s28-store-seam-wiring.md)
-	Depends: none. Gates: S -> A -> D -> U(code-review) @ S. Executor: smart.
 
 ## In Review
+- [ ] **S28** [Wire the CLI core through the CardStore seam](s28-store-seam-wiring.md)
+	Depends: none. Gates: S -> A -> D -> U(code-review) @ A. Executor: smart.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)

@@ -1,7 +1,8 @@
 ---
 id: S28
 title: Wire the CLI core through the CardStore seam
-status: in-progress
+status: in-review
+commit-range: "9b1c158..79c2d71"
 depends: []
 serialize-with: []
 lineage: primary
@@ -46,7 +47,7 @@ caller; if it stays deferred, this card's log says so and why.
 
 ## Gate checklist
 
-- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+- [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `boardkit check`, `boardkit render --check`,
   `boardkit doctor`; golden-view comparison.
 - [ ] Gate A: adversarial review, focus: does the seam actually
@@ -63,6 +64,31 @@ direct
 
 ## Log
 
+- 2026-08-23 Entered in-review: commit-range 9b1c158..79c2d71 recorded
+  and the review packet generated. Gate A dispatch to the codex lane
+  follows, with the leaner round prompt under the dispatch-verbosity
+  watch; Gate D and the user gate follow the cycle per the phase
+  ladder.
+- 2026-08-23 Gate S passed, run by the board owner after a
+  single-round Claude executor implementation under the leaner
+  dispatch brief: `uv run pytest -q` (429 passed, up from 424),
+  `uv run ruff check` (clean), `boardkit check` (44 cards valid),
+  `boardkit render --check` (views current), `boardkit doctor` (20
+  passed; warnings only the standing next-id note and the then-dirty
+  tree), and the golden-view comparison byte-identical (all three
+  views hashed before and after; render --check re-proves the bytes).
+  Board owner rulings on the executor's open questions: `put` stays
+  deferred - the wiring that landed is the read half, so it produced
+  no writer, and the 2026-08-09 reason (no format-preserving
+  serialization) is unchanged; `transition` and `append_log` remain
+  caller-less with it. The `store=None` default on `build_board`
+  stands - it delegates to `open_store`, the declared single
+  choice-point, and removing it would push mechanical wiring into
+  doctor.py and brief.py outside the card's scope for no inversion
+  gain; Gate A is invited to probe it. Noted, not fixed: `parse_card`
+  and `card_file_pattern` still live in board.py though only the
+  driver calls them - a clean follow-up if a reviewer or a later card
+  wants the purist split.
 - 2026-08-23 Board owner pulled S28 for wave-2 Phase 3 and aligned the
   card with the plan's phase ladder: Gate D and the standing
   U(code-review) gate joined the checklist, and Gate S extended to the
