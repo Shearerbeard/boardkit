@@ -64,6 +64,19 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate A round 1 returned VERDICT: FAIL with one BLOCKING
+  finding, verified by the board owner at both cited sites:
+  `cmd_review_packet` resolves a bare config and `build_review_packet`
+  calls `load_card` on the cards directory, so the review-packet path
+  bypasses the seam a second driver would need - and the phase's
+  done-when names review-packet running through the seam.
+  review_packet.py joins the card's scope as a logged extension on
+  that ground. Reviewer: GPT 5.6-sol via the codex CLI, read-only
+  sandbox; round spend 97,427 tokens under the leaner round prompt.
+  Unverified: pytest, the boardkit commands, and golden-view execution
+  (sandbox limits); the board owner's Gate S runs stand. Board owner
+  accepted the finding; fix round dispatched to the authoring
+  executor.
 - 2026-08-23 Entered in-review: commit-range 9b1c158..79c2d71 recorded
   and the review packet generated. Gate A dispatch to the codex lane
   follows, with the leaner round prompt under the dispatch-verbosity
