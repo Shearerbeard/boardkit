@@ -42,7 +42,7 @@ kanban-plugin: board
 - [ ] **S15** [Restore the human review guide to generated packets](s15-review-packet-guide.md)
 	Depends: none. Gates: S -> A -> U(code-review) @ U. Executor: smart.
 - [ ] **S29** [Decide how strictly doctor should classify an entry-file shim](s29-shim-classification-hardening.md)
-	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: smart.
+	Depends: none. Gates: S -> A -> U(code-review) @ U. Executor: smart.
 - [ ] **S31** [Versioned docking-convention spec with the three consumer postures](s31-docking-convention-spec.md)
 	Depends: none. Gates: S -> A -> D -> U(code-review) @ A. Executor: smart.
 

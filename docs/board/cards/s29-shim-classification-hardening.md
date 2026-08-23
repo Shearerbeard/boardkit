@@ -62,7 +62,7 @@ shim, never a false failure of a legitimate board.
 
 - [x] Gate S: `uv run pytest -q`, `uv run ruff check`, `boardkit check`,
   `vale` on touched markdown.
-- [ ] Gate A: adversarial review, focus: does the chosen shape stop the
+- [x] Gate A: adversarial review, focus: does the chosen shape stop the
   evasion treadmill, or does it just move the next evasion one step out?
 
 ## Branch
@@ -71,6 +71,23 @@ direct
 
 ## Log
 
+- 2026-08-22 Gate A passed. Round 3 verified both round-2 residual
+  dispositions RESOLVED with file:line evidence and returned an
+  explicit zero-findings VERDICT: PASS. Cycle shape: round 1 FAIL (1
+  BLOCKING, 2 MINOR), round 2 FAIL in convergence (the blocker
+  verified resolved under adversarial probing, two minor residuals
+  re-raised, no new scope), round 3 PASS - closed at the two-fix-round
+  bound with no ruling needed. On the card's own focus question, the
+  round-2 reviewer's adversarial probes of the block rule (nested,
+  adjacent, CRLF, mid-line forms) all failed to evade, which is the
+  treadmill stopping. Author of the reviewed range: Claude
+  (claude-opus executor under a claude-fable-5 board owner). Reviewer
+  all rounds: GPT 5.6-sol via the codex CLI, read-only sandbox.
+  Reviewer spend: 100,766 + 105,820 + 97,082 = 303,668 tokens.
+  Unverified in round 3: full pytest (sandbox temp denial); the board
+  owner's own run stands (417 passed). Review record: prompts and
+  outputs for all three rounds in the packet directory. The card now
+  waits at U(code-review), batched with the wave-2 Phase 2 window.
 - 2026-08-22 Commit-range extended to 486d790..2309681 over the second
   fix commit, the packet regenerated, and Gate A round 3 dispatched.
   Two fix rounds are spent: a round 3 short of a clean pass requires a
