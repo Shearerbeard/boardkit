@@ -2,7 +2,7 @@
 id: S32
 title: ArtifactStore ADR - receipts, postures, sidecar mechanics
 status: in-review
-commit-range: "3435716..650b844"
+commit-range: "3435716..038ad96"
 depends: [S28]
 serialize-with: []
 lineage: primary
@@ -54,6 +54,19 @@ direct
 
 ## Log
 
+- 2026-08-23 Commit-range extended to 3435716..038ad96 over the ruled
+  fix commit, the packet regenerated, and Gate A round 4 dispatched -
+  the cycle's final review under the ruling's exit condition. The fix
+  applied the ruling verbatim at net +9 lines confined to the three
+  sites: §4 opens by governing kind review with one added paragraph
+  for ruling and decision receipts; the prefix identifies while the
+  full root verifies everywhere, the collision rule comparing full
+  roots read from the target's own manifest; and the priced check
+  kind gains round and author_models with nothing else changed. The
+  executor also dropped a phrase from its own draft that would have
+  introduced a fresh inaccuracy about the backfill's commit history.
+  Board owner re-ran the checks: pytest 430, ruff clean, boardkit
+  check green, vale clean at 994 lines.
 - 2026-08-23 Gate A round 3 returned VERDICT: FAIL with all three
   round-2 dispositions verified NOT RESOLVED, each with a narrower
   cross-section contradiction: the §4 lifecycle mandates per-round
