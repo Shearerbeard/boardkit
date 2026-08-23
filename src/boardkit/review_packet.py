@@ -17,7 +17,9 @@ prefix that carries most of that churn, and flags the files a later
 commit in the range rewrote. It is an entry point over an indexed
 packet, not the packet's one path: the commit listing below it still
 carries every commit and every file, for a reader who works the range
-commit by commit.
+commit by commit. A card that supplies its own reading order takes the
+entry point back, and the churn concentration then reports rather than
+instructs - one guide never gives two contradictory places to start.
 
 Two card-body conventions feed the packet, both read from the card the
 packet covers:
@@ -42,7 +44,12 @@ guide or log line to the file or patch it names. A hunk anchor keeps
 its `path:line` token as the link text, because that token is what an
 editor and a terminal jump on. A file the range deletes has no
 working-tree target and renders as inline code instead of a link that
-would not resolve.
+would not resolve. Every link this module writes goes out through
+`markdown_link`, which escapes the label and picks the destination form,
+since a git path may legally hold brackets, spaces, parentheses, or `#`.
+A section lifted out of a design record has its own relative targets
+rebased the same way, because they were written against the record's
+directory rather than this one.
 
 The repo diffed against and the output directory come from the loaded
 Config's [review] section; there is no hardcoded default repo.
@@ -89,6 +96,16 @@ FOCUS_SHARE = 0.8
 MAX_FOCUS_FILES = 5
 BULLET_RE = re.compile(r"^\s*[-*]\s+(.*)$")
 INLINE_CODE_RE = re.compile(r"`([^`]+)`")
+# Link emission. Brackets in a label end it early, so they are escaped;
+# destinations holding any of these need CommonMark's angle-bracket form.
+LABEL_ESCAPE_RE = re.compile(r"([\[\]])")
+ANGLE_DESTINATION_RE = re.compile(r"[ ()#<>\\]")
+# An inline markdown link (image links included) in a lifted design-record
+# section, split so only its destination is rewritten. Reference-style
+# links and link-definition lines are left alone: this rewrites what it can
+# parse with certainty and nothing else.
+RECORD_LINK_RE = re.compile(r"(!?\[[^\]]*\]\()(<[^<>]*>|[^()\s]+)(\))")
+SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
 
 
 class Commit(NamedTuple):
@@ -103,12 +120,17 @@ class FileChurn(NamedTuple):
     range's net diff keeps. When a later commit in the range rewrites what
     an earlier one wrote, raw exceeds net and the difference is the part a
     reader can take from the net diff instead of hunk by hunk.
+
+    `binary` marks a file git reports no line counts for. Both counts read
+    zero there, which is not the same fact as zero lines changed, so every
+    reader of the counts has to check this flag first.
     """
 
     path: str
     net: int
     raw: int
     commits: int
+    binary: bool = False
 
     @property
     def superseded(self) -> bool:
@@ -117,9 +139,12 @@ class FileChurn(NamedTuple):
         Deliberately narrow: one commit cannot supersede itself, and files
         whose commits touch disjoint lines keep raw == net and are not
         flagged. Over-flagging would tell a reader to skip hunks that still
-        matter, which is the failure this flag exists to avoid.
+        matter, which is the failure this flag exists to avoid. A binary
+        file is never flagged: its counts are absent rather than small, so
+        `net < raw` there compares two numbers that mean nothing - a text
+        file replaced by binary content would otherwise read as superseded.
         """
-        return self.commits >= 2 and self.net < self.raw
+        return not self.binary and self.commits >= 2 and self.net < self.raw
 
 
 class Packet(NamedTuple):
@@ -194,7 +219,15 @@ def commit_list(repo: Path, commit_range: str) -> list[Commit]:
 
 
 def strip_prefix(target: str, prefix: str) -> str | None:
-    """Resolve a ---/+++ path, handling git's quoted form; None if no match."""
+    """Resolve a ---/+++ path, handling git's quoted form; None if no match.
+
+    git guards a header path that contains a space with a trailing tab, so
+    the unified header stays parseable. That tab is not part of the name,
+    and left on it rides into every reference the packet renders for the
+    file. A name holding a real tab comes through the quoted form instead,
+    where the tab is two characters and this split cannot reach it.
+    """
+    target = target.split("\t", 1)[0]
     if target.startswith(f'"{prefix}') and target.endswith('"'):
         return target[len(prefix) + 1 : -1]
     if target.startswith(prefix):
@@ -228,14 +261,24 @@ def hunk_pointers(repo: Path, sha: str) -> dict[str, list[int]]:
     return pointers
 
 
-def _numstat_rows(output: str) -> Iterator[tuple[int, int, str]]:
-    """(added, deleted, path) per numstat row; a binary file counts as zero."""
+def _numstat_rows(output: str) -> Iterator[tuple[int, int, str, bool]]:
+    """(added, deleted, path, binary) per numstat row.
+
+    git reports a binary file's counts as `-`. That is the absence of a
+    line count, not a count of zero, so the flag rides alongside the
+    zeroed numbers rather than being flattened into them.
+    """
     for line in output.splitlines():
         parts = line.split("\t")
         if len(parts) != 3:
             continue
         added, deleted, path = parts
-        yield (0 if added == "-" else int(added), 0 if deleted == "-" else int(deleted), path)
+        yield (
+            0 if added == "-" else int(added),
+            0 if deleted == "-" else int(deleted),
+            path,
+            added == "-" or deleted == "-",
+        )
 
 
 def file_churn(repo: Path, commit_range: str) -> list[FileChurn]:
@@ -249,21 +292,27 @@ def file_churn(repo: Path, commit_range: str) -> list[FileChurn]:
     """
     raw: dict[str, int] = {}
     commits: dict[str, int] = {}
+    binary: set[str] = set()
     log = git(repo, "log", "--reverse", "--numstat", "--no-renames", "--format=%H", commit_range)
-    for added, deleted, path in _numstat_rows(log):
+    for added, deleted, path, is_binary in _numstat_rows(log):
         raw[path] = raw.get(path, 0) + added + deleted
         commits[path] = commits.get(path, 0) + 1
+        if is_binary:
+            binary.add(path)
     net: dict[str, int] = {}
-    for added, deleted, path in _numstat_rows(
+    for added, deleted, path, is_binary in _numstat_rows(
         git(repo, "diff", "--numstat", "--no-renames", commit_range)
     ):
         net[path] = added + deleted
+        if is_binary:
+            binary.add(path)
     churn = [
         FileChurn(
             path=path,
             net=net.get(path, 0),
             raw=raw.get(path, 0),
             commits=commits.get(path, 0),
+            binary=path in binary,
         )
         for path in set(raw) | set(net)
     ]
@@ -388,8 +437,29 @@ def rel(target: Path, outdir: Path) -> str:
     return Path(os.path.relpath(target, outdir)).as_posix()
 
 
+def destination(target: str) -> str:
+    """One link destination, in the form CommonMark reads it back whole.
+
+    Git filenames legally carry spaces, parentheses, and `#`, none of
+    which survive a bare destination: the space ends it, the parentheses
+    close it early, the `#` reads as a fragment. The angle-bracket form
+    takes all three literally, and inside it only `<`, `>`, and the
+    escape character itself need escaping.
+    """
+    if not ANGLE_DESTINATION_RE.search(target):
+        return target
+    escaped = target.replace("\\", "\\\\").replace("<", "\\<").replace(">", "\\>")
+    return f"<{escaped}>"
+
+
+def markdown_link(label: str, target: str) -> str:
+    """The one place this module emits a link, so every path is escaped once."""
+    escaped = LABEL_ESCAPE_RE.sub(r"\\\1", label)
+    return f"[{escaped}]({destination(target)})"
+
+
 def link(label: str, target: Path, outdir: Path) -> str:
-    return f"[{label}]({rel(target, outdir)})"
+    return markdown_link(label, rel(target, outdir))
 
 
 def file_ref(path: str, repo: Path, outdir: Path) -> str:
@@ -422,6 +492,11 @@ def _count(number: int, noun: str) -> str:
 
 def _guide_entry(entry: FileChurn, packet: Packet) -> str:
     ref = file_ref(entry.path, packet.repo, packet.outdir)
+    if entry.binary:
+        # A binary file has no line counts to do arithmetic on, so it gets
+        # no counts and no supersession verdict here. Its size is in the
+        # commit listing's shortstat and in the patch itself.
+        return f"{ref} - binary, no line counts, changed in {_count(entry.commits, 'commit')}"
     text = (
         f"{ref} - {_count(entry.net, 'line')} net, {entry.raw} touched across "
         f"{_count(entry.commits, 'commit')}"
@@ -462,10 +537,26 @@ def _guide_lines(packet: Packet) -> list[str]:
         focus = focus_prefix(ranked)
         names = ", ".join(file_ref(entry.path, packet.repo, packet.outdir) for entry in focus)
         covered = sum(entry.net for entry in focus) / total
+        # With an author order the card already named the entry point, and a
+        # second "start here" naming other files would contradict it. The
+        # churn concentration stays, as a fact rather than an instruction.
+        concentration = (
+            f"Net churn concentrates in {_count(len(focus), 'file')} carrying "
+            f"{covered:.0%} of it: {names}."
+            if order
+            else f"Start here - {_count(len(focus), 'file')} carrying {covered:.0%} of it: {names}."
+        )
         lines += [
             f"{_count(len(ranked), 'file')} changed, {_count(total, 'line')} in the "
             "range's net diff.",
-            f"Start here - {_count(len(focus), 'file')} carrying {covered:.0%} of it: {names}.",
+            concentration,
+            "",
+        ]
+    elif any(entry.binary for entry in ranked):
+        lines += [
+            f"{_count(len(ranked), 'file')} touched, and the range's net diff counts no",
+            "lines. Binary content is why: git reports no line counts for it, so this",
+            "range's changes are real and only their counts are absent.",
             "",
         ]
     else:
@@ -489,11 +580,39 @@ def _guide_lines(packet: Packet) -> list[str]:
     return lines
 
 
+def rebase_links(body: str, source_dir: Path, outdir: Path) -> str:
+    """Lifted markdown with its relative link targets re-pointed at `outdir`.
+
+    A section lifted out of a design record still names its siblings the
+    way the record does, and those names resolve against the record's
+    directory, not the packet's. Every relative inline target is resolved
+    where it was written and re-emitted relative to the packet. Absolute
+    paths, targets carrying a URI scheme, and bare `#anchor`s are left
+    exactly as they were, as is everything outside a link.
+    """
+
+    def rewrite(match: re.Match[str]) -> str:
+        prefix, target, close = match.group(1), match.group(2), match.group(3)
+        raw = target[1:-1] if target.startswith("<") else target
+        if not raw or raw.startswith(("/", "#")) or SCHEME_RE.match(raw):
+            return match.group(0)
+        path, _, fragment = raw.partition("#")
+        if not path:
+            return match.group(0)
+        rebased = rel(source_dir / path, outdir)
+        if fragment:
+            rebased = f"{rebased}#{fragment}"
+        return f"{prefix}{destination(rebased)}{close}"
+
+    return RECORD_LINK_RE.sub(rewrite, body)
+
+
 def _design_record_lines(packet: Packet) -> list[str]:
     record = card_design_record(packet.card_sections, packet.cards_dir, packet.meta["_file"])
     if record is None:
         return []
     heading, body = type_relationships(record)
+    body = rebase_links(body, record.parent, packet.outdir)
     return [
         "## Design record",
         "",
@@ -505,7 +624,8 @@ def _design_record_lines(packet: Packet) -> list[str]:
         "",
         "## Type relationships",
         "",
-        f"Lifted verbatim from the design record's `{heading}` section.",
+        f"Lifted from the design record's `{heading}` section. Only its relative",
+        "link targets are rewritten, to point from here rather than from the record.",
         "",
         body,
         "",

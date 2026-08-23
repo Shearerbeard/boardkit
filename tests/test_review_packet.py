@@ -343,6 +343,57 @@ def test_guide_names_the_files_carrying_most_of_the_churn(env: Env) -> None:
     )
 
 
+def test_binary_file_reports_no_line_counts_and_is_never_superseded(env: Env) -> None:
+    """git reports no line counts for a binary file. Reading the zeroes as
+    counts would flag a text file replaced by binary content as superseded."""
+    config = env.write_config()
+    (env.repo / "asset.bin").write_text("plain text first\nsecond line\n", encoding="utf-8")
+    text_sha = _commit(env.repo, "C3 add asset.bin as text")
+    (env.repo / "asset.bin").write_bytes(bytes(range(256)) * 4)
+    binary_sha = _commit(env.repo, "C4 replace asset.bin with binary content")
+    _valid_card(env, commit_range=f"{env.last_sha}..{binary_sha}")
+
+    build_review_packet(config, CARD_ID)
+    entry = _entry_for(_review(env), "asset.bin")
+
+    assert "binary, no line counts, changed in 2 commits" in entry
+    assert "lines net" not in entry
+    assert "SUPERSEDED" not in entry
+    assert text_sha != binary_sha
+
+
+def test_a_binary_only_range_does_not_claim_its_work_was_undone(env: Env) -> None:
+    config = env.write_config()
+    (env.repo / "asset.bin").write_bytes(bytes(range(256)))
+    binary_sha = _commit(env.repo, "C3 add a binary file")
+    _valid_card(env, commit_range=f"{env.last_sha}..{binary_sha}")
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    assert "Binary content is why: git reports no line counts for it" in review
+    assert "range's changes are real and only their counts are absent" in review
+    assert "undone again" not in review
+
+
+def test_a_range_whose_text_work_is_all_undone_still_says_so(env: Env) -> None:
+    """The undone claim is the right one when no binary file explains the
+    missing counts, so the binary fix must not swallow it."""
+    config = env.write_config()
+    (env.repo / "blip.txt").write_text("here\n", encoding="utf-8")
+    added_sha = _commit(env.repo, "C3 add blip.txt")
+    (env.repo / "blip.txt").unlink()
+    removed_sha = _commit(env.repo, "C4 remove blip.txt")
+    _valid_card(env, commit_range=f"{env.last_sha}..{removed_sha}")
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    assert "every line this range moves is undone again" in review
+    assert "binary" not in review
+    assert added_sha != removed_sha
+
+
 def test_focus_list_is_capped_when_churn_spreads_flat() -> None:
     """An unbounded 80% prefix over a flat range names most of its files,
     which tells the reader to start everywhere."""
@@ -407,6 +458,36 @@ def test_author_supplied_order_leads_the_guide(env: Env) -> None:
     assert entries[1].startswith("2. [other.txt]")
     assert entries[2].startswith("3. [multi.txt]")
     assert "Order: author-supplied - the card's `Review order` section first" in review
+
+
+def test_author_order_leaves_the_guide_one_entry_point(env: Env) -> None:
+    """Two entry points contradict each other: with an author order the card
+    named the way in, so the churn concentration stops instructing."""
+    config = env.write_config()
+    env.write_card(
+        "s2-example.md",
+        f"id: {CARD_ID}\ntitle: Example card\ncommit-range: {env.range}\n",
+        body="# S2\n\n## Review order\n\n- `keep.txt`\n",
+    )
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    assert "Start here" not in review
+    assert "Net churn concentrates in 2 files carrying 80% of it:" in review
+    assert "Order: author-supplied - the card's `Review order` section first" in review
+    assert _guide_entries(review)[0].startswith("1. [keep.txt]")
+
+
+def test_without_an_author_order_the_churn_line_is_the_entry_point(env: Env) -> None:
+    config = env.write_config()
+    _valid_card(env)
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    assert "Start here - 2 files carrying 80% of it:" in review
+    assert "Net churn concentrates" not in review
 
 
 def test_review_order_naming_a_path_outside_the_range_is_rejected(env: Env) -> None:
@@ -501,6 +582,56 @@ def test_design_record_is_linked_above_the_commit_listing_with_its_type_section(
     assert review.index("## Type relationships") < review.index("## Commits")
     assert "| `Packet` | `Commit` | `str` |" in review
     assert "not this section" not in review
+
+
+def test_lifted_design_record_links_are_rebased_onto_the_packet(env: Env) -> None:
+    """A lifted section names its siblings the way the record does, which
+    resolves against the record's directory, not the packet's."""
+    config = env.write_config()
+    (env.plans_dir).mkdir(exist_ok=True)
+    (env.plans_dir / "ledger.md").write_text("# Holes ledger\n", encoding="utf-8")
+    record = env.write_record(
+        "# Type surface\n\n## Type relationships\n\n"
+        "The [holes ledger](ledger.md) lists them.\n"
+        "The [spec](https://example.com/spec) does not.\n"
+        "See [fill order](#fill-order) and [hosts](/etc/hosts).\n\n"
+        "## Fill order\n\nlater\n"
+    )
+    env.write_card(
+        "s2-example.md",
+        f"id: {CARD_ID}\ntitle: Example card\ncommit-range: {env.range}\n",
+        body=f"# S2\n\n## Design record\n\n[{record.name}](../plans/{record.name})\n",
+    )
+
+    outdir = build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    assert "[holes ledger](../../plans/ledger.md)" in review
+    assert (outdir / "../../plans/ledger.md").exists()
+    # a URI, a bare anchor, and an absolute path are left exactly as written
+    assert "[spec](https://example.com/spec)" in review
+    assert "[fill order](#fill-order)" in review
+    assert "[hosts](/etc/hosts)" in review
+
+
+def test_links_escape_paths_a_commonmark_parser_would_misread(env: Env) -> None:
+    """Spaces and parentheses end a bare destination early; brackets end a
+    label early. Both are legal in a git filename."""
+    config = env.write_config()
+    (env.repo / "notes (draft).txt").write_text("draft\n", encoding="utf-8")
+    (env.repo / "notes[wip].txt").write_text("wip\n", encoding="utf-8")
+    sha = _commit(env.repo, "C3 add awkwardly named files")
+    _valid_card(env, commit_range=f"{env.last_sha}..{sha}")
+
+    build_review_packet(config, CARD_ID)
+    review = _review(env)
+
+    # space and parens: CommonMark's angle-bracket destination takes them literally
+    assert "[notes (draft).txt](<../../repo/notes (draft).txt>)" in review
+    assert "[notes (draft).txt:1](<../../repo/notes (draft).txt>)" in review
+    # brackets: escaped in the label, legal unescaped in a bare destination
+    assert r"[notes\[wip\].txt](../../repo/notes[wip].txt)" in review
+    assert r"[notes\[wip\].txt:1](../../repo/notes[wip].txt)" in review
 
 
 def test_design_record_without_a_type_relationship_section_is_rejected(env: Env) -> None:

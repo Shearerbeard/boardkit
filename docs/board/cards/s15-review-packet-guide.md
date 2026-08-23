@@ -75,6 +75,31 @@ direct
 
 ## Log
 
+- 2026-08-22 Fix round for the four round-1 findings landed, authored
+  by the same Claude executor: the churn line reports instead of
+  instructing when the card supplies a review order; binary numstat
+  rows carry a flag instead of collapsing to zero, with the guide and
+  the zero-total wording branching on it; lifted design-record links
+  rebase from the record's directory to the packet's; and all link
+  emission routes through one escaping path, which also surfaced and
+  fixed git's trailing-tab guard corrupting references to filenames
+  with spaces. Seven new tests, one per behavior. Board owner re-ran
+  the checks: `uv run pytest -q` (407 passed), `uv run ruff check`
+  (clean), `uv run ruff format --check` on touched Python (clean).
+- 2026-08-22 Gate A round 1 returned VERDICT: FAIL with four BLOCKING
+  findings, all in scope: the focus line ignores an author-supplied
+  order and can contradict it; binary changes collapse to zero churn
+  and a binary-only range renders as fully undone; a lifted
+  design-record section keeps its record-relative links, which break
+  from the packet directory; link labels and targets are emitted
+  unescaped and legal git filenames can break them. Author of the
+  diff: Claude (claude-opus executor under a claude-fable-5 board
+  owner). Reviewer: GPT 5.6-sol via the codex CLI, read-only sandbox;
+  round spend 117,119 tokens. Reviewer unverified checks: pytest,
+  ruff, boardkit check and doctor (uv cache unreachable in its
+  sandbox); the board owner's passing Gate S outputs stand for them.
+  Board owner accepted all four findings; fix round dispatched to the
+  authoring executor.
 - 2026-08-22 Entered in-review: commit-range 23dea92..21b6c33 recorded
   and the review packet generated with the card's own new pipeline
   (first dogfood of the ranked guide on a live gate). Gate A dispatch
