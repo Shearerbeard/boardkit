@@ -37,10 +37,13 @@ than dispatching on a guess.
   resolve. The CLI resolves the board itself, in the order
   `${BOARDKIT_HOME:-../boardkit}/docs/DOCKING.md` specifies, so honor a
   user-named board and let resolution run before concluding the repo
-  has none; doctor's `resolved via:` line names the board that
-  answered, which is what to check before dispatching against it.
-  Remedy when it truly has none: `boardkit init` scaffolds the config
-  and the board documents, then prints the fill-in work that remains.
+  has none. Before dispatching against it, read both of doctor's
+  identifying lines: the `boardkit doctor:` header names the
+  `boardkit.toml` that answered, so it is what says which board a
+  dispatch will land on, and the `resolved via:` line names the step
+  that chose it. Remedy when it truly has none: `boardkit init`
+  scaffolds the config and the board documents, then prints the
+  fill-in work that remains.
 - **A filled-in review-tooling document.** The repo's review-tooling file
   is a per-project fill-in, and boardkit ships it with two sections
   deliberately empty. A copy whose tools section or harness-bindings

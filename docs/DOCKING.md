@@ -21,8 +21,9 @@ instead of passing silently.
 This document states the convention as a contract, so a second tool can
 implement it without reading boardkit's source and a reviewer can check an
 implementation against a written order. It describes what
-`src/boardkit/config.py` ships today. Where the two disagree the code is the
-truth and this document is the defect; fix the document.
+`src/boardkit/config.py` ships today, plus the config bypass that lives at
+the CLI layer in `src/boardkit/cli.py`. Where the two disagree the code is
+the truth and this document is the defect; fix the document.
 
 Covered here: the resolution order, the docking directory's contents, the
 common-dir fallback, the postures a consuming repo may take, and what a
@@ -299,12 +300,19 @@ checklist a reviewer runs against one:
 10. **Overlay paths are absolute.** A relative one is refused with its
     reason, and accepted paths are expanded and resolved before use.
 11. **The answering step is carried.** Resolution reports which step chose
-    the board, the tool's diagnostic prints it, and any bypass reports
-    itself under its own name.
-12. **No step consults git's index or tracking state.** The one git call in
+    the board, and the tool's diagnostic prints it.
+12. **A config bypass, where one exists, carries the stated semantics.** A
+    tool that lets a caller name the board's config file directly gives that
+    argument precedence over every step in the order, the selector flag
+    included. The bypass carries no registry provenance, so the registry a
+    validation needs is searched for from the board root rather than assumed
+    from the caller. It reports itself as the source under its own name. A
+    tool that ships no such bypass states this requirement as not
+    applicable, the way requirement 1 handles a missing legacy step.
+13. **No step consults git's index or tracking state.** The one git call in
     the order asks for a path and gets a path back. An implementation that
     reads tracking state breaks the invisible posture.
-13. **Posture is the consuming repo's choice.** The three postures and the
+14. **Posture is the consuming repo's choice.** The three postures and the
     promotion rule above are documented where that repo's contributors will
     read them, and no step in the order reads or enforces a posture.
 

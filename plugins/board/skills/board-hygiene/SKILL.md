@@ -61,14 +61,18 @@ either one is a hard stop, not a thing to route around.
 
 - **A resolvable board.** The CLI resolves one itself, in the order
   `${BOARDKIT_HOME:-../boardkit}/docs/DOCKING.md` specifies. Honor a
-  board the user names, let resolution run before concluding no board
-  exists, and read doctor's `resolved via:` line to confirm the board
-  that answered is the one this session means to tend. Only when
-  nothing answers, tell the user and offer `boardkit init`, which
-  writes the config, the card directory, and the board documents, then
-  prints the fill-in work still to do. A repo with cards but no entry
-  files is a repair (point the manifest or a `--board` flag at it), not
-  a silent init-over.
+  board the user names, and let resolution run before concluding no
+  board exists. Two of doctor's report lines confirm the target, and it
+  takes both: the `boardkit doctor:` header names the `boardkit.toml`
+  that answered, which is what identifies the board, and the
+  `resolved via:` line names the step that chose it. Read the header
+  before trusting that this is the board the session means to tend, and
+  the step line when the answer is a surprise. Only when nothing
+  answers, tell the user and offer `boardkit init`, which writes the
+  config, the card directory, and the board documents, then prints the
+  fill-in work still to do. A repo with cards but no entry files is a
+  repair (point the manifest or a `--board` flag at it), not a silent
+  init-over.
 - **A compatible `boardkit --version`.** The board documents carry a
   contract stamp, the config declares the same version, and board-bound
   skills declare it in frontmatter metadata. Doctor compares all of them.

@@ -58,6 +58,39 @@ direct
 
 ## Log
 
+- 2026-08-22 Fix round 2 landed by the same Claude executor:
+  requirement 11 narrows to source reporting and a new requirement 12
+  carries the bypass contract (outranks every step including the
+  selector flag, no registry provenance, registry search from the
+  board root, reports itself as the source, not-applicable escape
+  mirroring the legacy step), each clause checked against cli.py
+  before writing; and both skills' operational notes name doctor's two
+  identifying lines for what each shows - the header line identifies
+  the board, the resolved-via line names the step - quoting the line
+  prefixes verbatim so the claim is checkable by running the command.
+  Plugin bumped to 0.2.4. The regression's root cause is on the
+  ledger: the round-1 note was written from the spec's prose instead
+  of from doctor's actual output. Board owner made one direct edit,
+  logged here: the preamble's scope sentence now names cli.py beside
+  config.py, since requirement 12 describes CLI-layer behavior.
+  Board owner re-ran the checks: pytest 417, ruff clean, vale clean.
+- 2026-08-22 Gate A round 2 returned VERDICT: FAIL, in convergence:
+  findings 1, 2, 4, and 5 verified RESOLVED with evidence; finding 3
+  re-raised as a narrower residual (requirement 11 covers only source
+  reporting, so the bypass's stated semantics - wins over every step,
+  no registry provenance, registry re-search from the board root -
+  are prose without a conformance requirement, and a second tool
+  could rank its bypass lower and still conform); plus one
+  fix-introduced regression - the skills' replacement note claims
+  resolved-via confirms the board that answered, but that line names
+  the source step while the board's identity is doctor's separate
+  config-path header line, so the note as written could let a
+  dispatch proceed unconfirmed. Reviewer: GPT 5.6-sol via the codex
+  CLI; round spend 127,649 tokens, cumulative 258,908. Reviewer
+  unverified: the uv-wrapped commands (sandbox cache denial);
+  in-sandbox doctor, check, and render --check passed. Board owner
+  accepted both; fix round 2 dispatched - the bound, so a round 3
+  short of a clean pass requires a written ruling.
 - 2026-08-22 Commit-range extended to 406309d..8d0801e over the fix
   commit, the packet regenerated, and Gate A round 2 dispatched with
   the convergence discipline.
