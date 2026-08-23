@@ -2,7 +2,7 @@
 id: S15
 title: Restore the human review guide to generated packets
 status: in-review
-commit-range: "23dea92..21b6c33"
+commit-range: "23dea92..d01c3a1"
 depends: []
 serialize-with: []
 lineage: primary
@@ -75,6 +75,10 @@ direct
 
 ## Log
 
+- 2026-08-22 Commit-range extended to 23dea92..d01c3a1 to cover the
+  fix commit per the fix-commit re-review duty; the packet regenerated
+  over the full range and Gate A round 2 dispatched to the same
+  reviewer lane with the convergence discipline in the brief.
 - 2026-08-22 Fix round for the four round-1 findings landed, authored
   by the same Claude executor: the churn line reports instead of
   instructing when the card supplies a review order; binary numstat
