@@ -15,15 +15,16 @@
 - **Author model**: `claude-opus-5[1m]`, board-owner harness Claude Code.
   Named because a receipt names its author, and this document is the first
   artifact the rule applies to.
-- **Code anchors verified at**: `23dea92`. Re-verify and bump this stamp on
-  any revision, per the Gate D duty in `PROCESS.md`.
+- **Code anchors verified at**: `57b6390`. Every anchor in the premise table
+  was re-verified against this commit at the Gate A round-1 fix. Re-verify
+  and bump this stamp on any revision, per the Gate D duty in `PROCESS.md`.
 
 ## Context and problem statement
 
 Every gate decision this board has taken rests on material that exists only
 on one laptop. `boardkit review-packet` writes `NN-<sha>.diff`,
 `full-range.diff`, and `REVIEW.md` into `docs/board/reviews/<ID>/`
-(`review_packet.py:845-851`), and that directory is gitignored
+(`review_packet.py:846-851`), and that directory is gitignored
 (`.gitignore:6`, written by `boardkit init` at `cli.py:539-548`). The
 reviewer's own transcript lands beside them by hand. `PROCESS.md:387-393`
 states the retention contract plainly: "A packet is regenerable working
@@ -89,9 +90,9 @@ Hard constraints first. Each one is testable against a candidate design.
    routing, and process semantics stay kit-side permanently."
 5. **Posture changes retrievability, not the record.** For one review, the
    verdict, the findings ledger, the model fields, and the digest table MUST
-   be identical under all three postures; only the receipt's `packet` block
-   may differ. Posture SHOULD decide only whether a reader can fetch the
-   bytes the receipt names.
+   be identical under all three postures; only the receipt's `packets`
+   entries may differ. Posture SHOULD decide only whether a reader can fetch
+   the bytes the receipt names.
 6. **No method without a caller.** The seam MUST ship only what S33's
    callers use, per the deferral `store.py:12-19` records for CardStore's
    `put`: "it has no caller yet and no format-preserving serialization, and
@@ -102,7 +103,7 @@ Hard constraints first. Each one is testable against a candidate design.
 8. **Loud failure.** A store that cannot publish MUST fail saying so. It
    MUST NOT quietly downgrade to a weaker posture, and the receipt MUST NOT
    record a publication that did not happen.
-9. **The models are named.** A receipt MUST name the model that authored
+9. **The models are named.** A receipt MUST name every model that authored
    the work and the model that reviewed it. `MODEL-CLASSES.md:155-160` warns
    against model ids downstream, and that warning governs prescriptive text:
    "a recipe, card, brief, or doc that names a specific model id is a drift
@@ -225,6 +226,13 @@ into.
 
 This board sets `sidecar`, per decision 2.
 
+`sidecar` splits by backend, and the split matters to a reader choosing one.
+A `git:` sidecar pins the published bytes with a commit sha the receipt
+names, so the locator resolves to one immutable snapshot. A `dir:` sidecar
+has no such anchor: the locator names a path, and whether that path still
+holds the reviewed bytes is answered only by recomputing the digests.
+Section 5 gives both backends their semantics.
+
 The table above is the posture table `DOCKING.md` set the precedent for, and
 it carries the same property: the CLI reads the posture, and no resolution
 step or validation changes behavior because of it. Posture decides where
@@ -238,7 +246,8 @@ One file per gate outcome, tracked, under a receipts directory beside the
 cards directory:
 
 ```
-docs/board/receipts/<ID>/<gate>-r<N>.md
+docs/board/receipts/<ID>/<gate>-r<N>[-<suffix>].md
+docs/board/receipts/_rulings/<date>-<slug>.md
 ```
 
 The round number is not decoration. The fix-commit re-review duty
@@ -248,38 +257,81 @@ per-round file keeps each round's verdict, ledger, and reviewer intact
 instead of overwriting the earlier ones, which is the same reason
 `--suffix` exists for packets.
 
-YAML frontmatter for the fields a checker reads, then prose for the reader:
+The optional filename suffix is that same `--suffix`, and it separates
+verdicts. `PROCESS.md:379-382` has a card spanning two repos present one
+packet per repo, and each is reviewed and concluded on its own, so each
+earns a receipt: `A-r1.md` and `A-r1-consumer.md`. The other use of
+`--suffix`, the fix-round packet that sits beside a regenerated full-range
+packet, is one verdict over two packets and stays one receipt, with both
+packets in the `packets` list below. `REVIEW-TOOLING.md` fixes which is
+which: "A packet built on the fix diff alone is never the packet a gate is
+graded on." A receipt concludes one verdict and may name several packets.
+
+**Three kinds, because three things close a gate.** `review` carries a
+reviewer's verdict and requires `reviewer_model`. `ruling` carries a board
+owner's written termination of a cycle, covers a list of cards, and has no
+single reviewer. `decision` carries a user gate, names the decider, and has
+no `reviewer_model` at all. Splitting them means no kind has a required
+field it cannot fill, which is what a single shape forced.
+
+YAML frontmatter for the fields a checker reads, then prose for the reader.
+A `review` receipt:
 
 ```yaml
 ---
 receipt: v1
+kind: review                 # review | ruling | decision
 card: S32
 gate: A
 round: 1
-kind: review          # review | ruling
-verdict: FAIL         # PASS | FAIL | DEFERRED | RULING
-findings: 4
+suffix: null                 # the --suffix this receipt concludes on, or null
+verdict: FAIL                # PASS | FAIL | DEFERRED
+findings: 10
 dated: 2026-08-23
-route: opencode-reviewer
-author_model: <the model string that authored the work>
+route: codex-reviewer
+author_models:               # every model that authored a commit in the range
+  - <model string>
 reviewer_model: <the model string that returned the verdict>
 commit_range: 9b1c158..decedc3
-packet:
-  posture: sidecar
-  published: true
-  locator: "git:bk-sidecar@<commit-sha>#S32/gate-a-r1"
-  manifest: "sha256:<64 hex>"
+packets:                     # one entry per packet behind this one verdict
+  - name: primary            # `primary`, or the --suffix that names it
+    posture: sidecar
+    published: true
+    locator: "git:bk-sidecar@<commit-sha>#S32/A-r1"
+    manifest: "sha256:<64 hex>"
 ---
 ```
 
-Then three body sections: `## Packet digests`, a table of one row per
-published file (full SHA-256, then the packet-relative POSIX path);
-`## Findings`, the numbered ledger with each finding's disposition, being
-the fix applied or the reason it was rejected; and `## Checks the reviewer
-did not run`, holding the UNVERIFIED class `PROCESS.md:274-279` defines, so
-a sandbox limitation is never silently read as a passing check.
+`ruling` replaces `card` with `cards` and `round` with a rounds summary,
+because a ruling is exactly the artifact that spans both, and its verdict is
+`RULING`. `decision` replaces `reviewer_model` with `decider`, names the
+gate it closes, and takes verdict `ACCEPTED` or `REJECTED`. The full verdict
+vocabulary across the three kinds is `PASS`, `FAIL`, `DEFERRED`, `RULING`,
+`ACCEPTED`, `REJECTED`, and each kind admits only its own subset, so an
+absent or out-of-kind verdict is a validation error rather than a reading
+the reader has to interpret. Section 8 shows the R-wave ruling written out
+in full against this schema.
 
-Four properties earn their place:
+Then three body sections: `## Packet digests`, a table of one row per
+published file (full SHA-256, then the packet-relative POSIX path, grouped
+by packet name when there is more than one); `## Findings`, the numbered
+ledger with each finding's disposition, being the fix applied or the reason
+it was rejected; and `## Checks the reviewer did not run`, holding the
+UNVERIFIED class `PROCESS.md:274-279` defines, so a sandbox limitation is
+never silently read as a passing check. This review is the worked example:
+its round-1 reviewer could not run the `uv`-backed checks at all.
+
+**`author_models` is a list, and the invariant reads it as one.** A
+`commit_range` can span commits several models wrote, and `PROCESS.md:266-268`
+requires the reviewer to differ from every one of them: "for a multi-commit
+range, the reviewer must differ from every model that wrote any commit in
+it, and a range whose authorship cannot be established defers rather than
+being reviewed blind." The check is set membership rather than string
+inequality: `reviewer_model` MUST NOT appear in `author_models`, and an
+empty `author_models` is the unestablished-authorship case that defers,
+never a vacuous pass.
+
+Five further properties earn their place:
 
 **The verdict field is required and has no empty value.** An absent or
 verdict-less review is a failed review, per `REVIEW-TOOLING.md:33-36`, and a
@@ -302,34 +354,125 @@ they would not notice, and 48 bits is thin for that. The departure from the
 house scheme is deliberate, and recorded here so a later reader does not
 take it for an oversight.
 
-**The manifest root is derived from the table, not from the files.** It is
-`sha256("boardkit-receipt:v1\n" + the sorted digest lines)`, so a reader
-with no packet access can still recompute the root from the receipt's own
-table and detect a receipt that was edited after the fact. Per-file digests
-hash the file bytes. The framing follows the length-prefixed, domain-
-separated pattern `contract_digest` established and its stated reason
-("length-prefixed so two docs cannot concatenate into a third's bytes"). A
-packet-relative path containing a newline is refused rather than encoded,
-which is the fail-loud choice the repo takes everywhere else.
+**The manifest root checks transcription, and nothing stronger.** It is
+`sha256("boardkit-receipt:v1\n" + the sorted digest lines)`, computed over
+the digest table alone, so a reader with no packet access can confirm the
+table arrived whole: a truncated copy-paste, a mangled fetch, a row lost to
+a bad merge. It does not detect tampering, and an earlier draft of this ADR
+claimed it did. Anyone who edits the table can recompute the root, and the
+root covers none of the verdict, models, findings, or dispositions in the
+first place. Per-file digests hash the file bytes. The framing follows the
+length-prefixed, domain-separated pattern `contract_digest` established and
+its stated reason ("length-prefixed so two docs cannot concatenate into a
+third's bytes"). A packet-relative path containing a newline is refused
+rather than encoded, which is the fail-loud choice the repo takes
+everywhere else.
+
+**Tamper-evidence for a receipt comes from git, not from the receipt.** The
+receipt is committed to the tracked repo in the same commit as the card's
+log line, so what makes a later edit visible is the history everyone else
+has already fetched, not a hash the editor also controls. That is a real
+property and a modest one: it detects a quiet edit, and it does not stop a
+board owner from committing a false receipt in the first place. Commit
+signing is the upgrade path, named in the gaps below, and it is the only
+thing here that would raise the floor.
 
 The card's log keeps its one-line gate entry and links the receipt. The log
 line stays the board's own record, per `PROCESS.md`; the receipt is the
 evidence it points at. Their agreement is checkable, and open question 4
 covers which gates get one at all.
 
-### 4. Sidecar mechanics
+### 4. The receipt lifecycle
+
+No CLI command closes a gate today, so the ordering below is a contract S33
+implements rather than a description of something running. It exists because
+the alternative is S33 inventing transactional behavior under deadline.
+
+**When a receipt is written.** One per round, at the moment the round
+concludes, which is when the reviewer's final message yields a verdict.
+A FAIL receipt is written the same as a PASS: the fix-round duty makes
+failed rounds part of the record, and the 2026-08-16 cycle is five rounds
+of evidence that the failures are the interesting part. A round that never
+returns a verdict is a failed delegation per `REVIEW-TOOLING.md`, and it
+produces a `verdict: DEFERRED` receipt naming what happened, never silence.
+
+**The order is hash, write, log, publish.**
+
+1. Hash the packet directory. Local, no network.
+2. Write the receipt with `published: false`. Local.
+3. Append the card's log line, which links the receipt. Local.
+4. Publish the packet, then flip `published` to `true` and record the
+   locator.
+
+Steps 1 through 3 land in one commit, so a card's log line and its receipt
+are never separately revertible. Step 4 is deliberately outside that commit,
+which is open question 2's recommendation made concrete: publication is the
+only step that can fail for reasons nothing local controls, and the design
+refuses to let a network failure block a gate close or, worse, push the
+board owner back to closing gates by hand.
+
+**Failure at each step.** A failure in 1 through 3 aborts the close with
+nothing written, since all three are local and a partial write has no
+excuse. A failure in step 4 leaves a valid receipt marked `published:
+false`, which is the honest state and not an error: the review happened,
+the digests are recorded, the bytes are not yet reachable. `boardkit doctor`
+warns for as long as any receipt sits unpublished, which is the pressure
+that keeps the queue from becoming permanent.
+
+**The flip is the one permitted mutation.** A committed receipt is otherwise
+append-only. Publishing may change exactly two fields, `published` and
+`locator`, in one commit that changes nothing else, and whose message says
+so. Every other field is frozen at write time, and a correction to one of
+them is a new receipt for a new round, never an edit.
+
+That narrowness is what makes the flip auditable. A reader who wants to
+check it reads the receipt's history: the commit that flips `published` must
+touch those two fields and no others, and the digest table must be
+byte-identical across the flip. A flip commit that also moved a verdict or a
+digest is the anomaly, and it is visible with one `git log -p` on the file.
+This is the same modest guarantee as above, resting on git history rather
+than on anything the receipt asserts about itself.
+
+### 5. Sidecar mechanics
 
 The sidecar is a git repository or a directory (open question 3 covers
 which, and both are within decision 2's wording), private, holding one
 directory per published packet, namespaced by the board's registry
 short-code so two boards can share one sidecar without collision.
 
-Publication has three steps: the receipt writer hashes the packet directory;
-the driver copies the files in, commits, and pushes; the resulting commit
-sha becomes the receipt's locator. The commit sha is what makes the locator
-stable, since a branch name or a path alone would move under the reader.
+**The git backend.** Publication has three steps: the receipt writer hashes
+the packet directory; the driver copies the files in, commits, and pushes;
+the resulting commit sha becomes the receipt's locator, in the shape
+`git:<store-name>@<commit-sha>#<board>/<ID>/<gate>-r<N>[-<suffix>]`. The
+commit sha is what makes the locator stable, since a branch name or a path
+alone would move under the reader.
 
-**Its location is machine-local and the tracked config never names it.**
+**The directory backend.** Open question 3 keeps `dir:` reachable, so it
+needs semantics rather than an implied port of the git ones, and its
+guarantee is weaker in a way worth stating plainly.
+
+- **Locator.** `dir:<store-name>#<board>/<ID>/<gate>-r<N>[-<suffix>]`, with
+  no `@` component, because a directory has no commit to name.
+- **What replaces the commit sha.** The manifest root already in the
+  receipt. A directory publication is content-addressed by that value and
+  by nothing else, so a `dir:` locator resolves to a path and the reader's
+  only assurance that the path still holds the reviewed bytes is
+  recomputing the per-file digests. Under git the sha pins the bytes before
+  a digest is computed; under `dir:` nothing does.
+- **Collision.** A publish whose target directory exists refuses and says
+  so. The store is append-only (plan, Rollback), so an existing directory
+  means either a republish of the same round, which needs no write, or a
+  ref collision, which is a defect. Overwriting would silently invalidate
+  every receipt already naming that path.
+- **Fetch.** Copy the directory back out to a caller-named destination.
+  There is no revision to check out and no history to consult, so a fetch
+  that returns nothing is indistinguishable from a packet that was never
+  published; the receipt's `published` field is what tells them apart.
+
+That asymmetry is stated in the posture and failure tables too, so a reader
+choosing a backend sees it without reading this section.
+
+**The location is machine-local and the tracked config never names it.**
 `boardkit.toml` carries the posture and a logical store name; the absolute
 path or remote URL sits in the machine overlay `.boardkit/local.toml`, which
 `.gitignore:9` already excludes and `boardkit init` already writes
@@ -338,9 +481,42 @@ boards, and its rationale carries over unchanged: "The machine overlay is
 the deliberate exception. `local.toml` holds absolute paths to boards
 outside the repo, which makes it a pointer file in the ordinary sense: it
 goes stale when a checkout it names moves ... Staleness there is surfaced
-rather than prevented." Section 8 weighs that choice against S12.
+rather than prevented." Section 9 weighs that choice against S12.
 
-### 5. Failure modes
+**The overlay needs a schema it does not have yet.** Today `local.toml`
+accepts one top-level table and one row key: the parser raises on any
+top-level key but `boards` (`config.py:252-254`) and on any row key but
+`path` (`config.py:258-260`), and a row's `path` must be absolute. A store
+name, a remote URL, and a backend scheme all fail that parser today. The
+extension is stated here so S33 implements a schema rather than inventing
+one:
+
+```toml
+# .boardkit/local.toml, machine-local, never committed
+[boards.aura]
+path = "/absolute/path/to/board"        # unchanged
+
+[stores.bk-sidecar]
+location = "git:/absolute/path/to/sidecar.git"
+```
+
+- A new top-level `stores` table, keyed by the logical store name the
+  tracked `boardkit.toml` refers to. `boards` keeps its meaning untouched.
+- `location` is the only key a row may carry, and it is a scheme-prefixed
+  store ref under the grammar of `DOCKING.md` requirement 8: `git:` or
+  `dir:`, with a bare string meaning `dir:`. A `git:` value may be a remote
+  URL or an absolute local path; a `dir:` value must be an absolute path,
+  refused when relative for the same reason `boards` refuses one.
+- The same strictness applies in both directions, per `contract.py:143-151`:
+  an unknown key in a `stores` row is an error, and a tracked config naming
+  a store the overlay does not define fails saying which name is missing and
+  which file to add it to. That is the error `DOCKING.md` already specifies
+  for an unresolved `external` board, reused rather than reinvented.
+- A board whose posture is `sidecar` with no matching overlay row cannot
+  publish. It still writes receipts, marked `published: false`, which is
+  the second machine's correct behavior rather than a failure.
+
+### 6. Failure modes
 
 Each row is a failure the design expects, with what the reader sees.
 
@@ -353,9 +529,11 @@ Each row is a failure the design expects, with what the reader sees.
 | Receipt committed, publish never ran | The reconciliation check below finds a receipt whose `published: true` names a locator nothing can fetch, or a `published: false` that has sat unpublished across sessions. `boardkit doctor` warns. |
 | A packet carries a secret | The sidecar is private, and the receipt exposes file names and digests only. A digest still confirms a guess about a small file's exact content. Named as a residual, not mitigated. |
 | Two boards share one sidecar | Short-code namespacing prevents collision. A board whose short-code changes orphans its earlier packets, which the locator makes visible. |
+| A `dir:` sidecar's published bytes change underneath a receipt | Nothing detects it at fetch time, because the locator names a path rather than a snapshot. Recomputing the digests is the only check, and it reports a mismatch without saying which side moved. This is the weaker guarantee open question 3 trades away. |
+| A publish targets a `dir:` path that already exists | Refused, since the store is append-only. Overwriting would invalidate every receipt already naming that path. |
 | Packet regenerated on another machine | The bytes differ, so the digests do not match. This is not a bug and not a validation path. See the premise check below: `REVIEW.md` embeds an absolute machine path by construction. |
 
-### 6. The outside-vetter validation path
+### 7. The outside-vetter validation path
 
 The target is S41 step 5, and what the vetter can actually check varies with
 what they can reach.
@@ -364,19 +542,30 @@ what they can reach.
 card, follow its log line to the receipt, then run the verification the
 receipt supports without any packet: recompute the manifest root from the
 digest table, confirm the card's log line and the receipt agree on gate,
-round, verdict, and date, confirm `author_model` and `reviewer_model`
-differ, and confirm the receipt's `commit_range` resolves in the history
-they just cloned. That establishes who reviewed which exact bytes, what they
-concluded, and that the record has stood unedited since it was committed. It
-leaves one thing unestablished: whether those bytes said what the receipt's
-findings claim. The reader is holding an attestation bound into the repo's
-own history, and this ADR calls it an attestation so nobody mistakes it for
-independent verification.
+round, verdict, and date, confirm `reviewer_model` does not appear in
+`author_models`, and confirm the receipt's `commit_range` resolves in the
+history they just cloned.
+
+Every one of those checks is a consistency check on what the board asserts.
+Together they establish that the board claims a named reviewer, distinct
+from every author, reached this verdict over these commits and these
+digests, that the claim was committed at a particular point in the repo's
+history, and that nothing has quietly contradicted it since. They do not
+establish that the reviewer existed, ran, or ever saw the bytes the digest
+table names. Nothing in the receipt is signed, and the same board owner
+writes the log line, the receipt, and the digests. An outsider is reading an
+attestation and checking it for self-consistency, which is worth doing and
+is not verification. The design says so here rather than
+letting the word "digest" imply otherwise.
 
 **With sidecar access, which a collaborator can be granted.** Fetch the
 packet by locator, recompute each file's digest, compare against the table.
-This is full verification, and it is the Gate M test S33 owes: digests
-validate from a clean clone, and a deliberately tampered packet fails.
+That closes the gap between the receipt and the bytes: the reader now knows
+the digests describe the packet they are holding. It is the Gate M test S33
+owes, where digests validate from a clean clone and a deliberately tampered
+packet fails. What stays open even here is provenance, since the packet is
+still material the board owner produced; reading the reviewer's transcript
+inside it is judgment, not proof.
 
 **Under `in-repo` posture.** Both halves come from the clone alone, which
 is why the posture exists for consumers whose material is not sensitive.
@@ -384,7 +573,7 @@ is why the posture exists for consumers whose material is not sensitive.
 A `verify-receipt` command is the natural home for the first path, and this
 ADR does not specify its flags; S33 owns that surface.
 
-### 7. The R-wave backfill
+### 8. The R-wave backfill
 
 Mike ruled this at the 2026-08-22 Gate U: start fresh, plus one receipt for
 the 2026-08-16 ruling. The design follows the ruling and adds only what
@@ -396,22 +585,78 @@ Manufacturing ten receipts now would mean writing digests for packets that
 were never archived, in a format whose whole purpose is to distinguish a
 checkable claim from an unchecked one.
 
-**One ruling receipt.** It records the 2026-08-16 cycle: `kind: ruling`,
-`verdict: RULING`, the ten cards it covers, the five rounds with their
-verdicts and finding counts, the reviewer transport and both model families,
-and `packet: published: false` with no locator, because the packets and
-verbatims stayed on one machine. Its digest table has one row: the tracked
-evidence file the ruling lives in. That digest is redundant with git's own
-object hash for a tracked file, and it is kept anyway, so that every receipt
-has the same shape and can be checked by a reader with a hash tool and no
-git. The receipt is a pointer plus an attestation, which is exactly what the
-history supports.
+**One ruling receipt**, at
+`docs/board/receipts/_rulings/2026-08-16-r-wave.md`. Written out against the
+`ruling` schema, so the shape is settled here rather than at implementation
+time:
+
+```yaml
+---
+receipt: v1
+kind: ruling
+cards: [S13, S16, S18, S19, S20, S21, S22, S23, S24, S25]
+gate: A
+verdict: RULING
+dated: 2026-08-16
+route: codex-reviewer
+author_models: [<the model that authored the wave>]
+reviewer_model: <the model that ran every round>
+rounds:                      # one entry per round the cycle ran
+  - round: 1
+    object: "the ten card diffs, one packet each"
+    verdict: FAIL
+    findings: 24
+  - round: 2
+    object: "six fix commits"
+    verdict: MIXED           # 1 PASS, 5 FAIL
+    findings: 5
+  - round: 3
+    object: "2121d41"
+    verdict: FAIL
+    findings: 3
+  - round: 4
+    object: "8487140"
+    verdict: FAIL
+    findings: 3
+  - round: 5
+    object: "3a4b001"
+    verdict: FAIL
+    findings: 1
+ruling: docs/board/evidence/2026-08-16-gate-a-review-cycle.md
+gate_ticked: false           # the ruling explicitly did not tick Gate A
+packets: []                  # never archived; nothing to point at
+---
+```
+
+Three things the shape has to carry, and does. `cards` is a list because the
+cycle was batched across ten. `rounds` is a list of summaries rather than a
+single count, because the interesting fact about this cycle is its shape:
+each round narrower than the last. And `packets: []` with an empty digest
+table is the honest encoding of material that stayed on one machine, which
+is why `published` had to be a real field rather than an inference.
+
+`MIXED` appears only inside a ruling's `rounds` list, never as a receipt's
+own verdict. Round 2 above returned one PASS and five FAILs across six
+cards, and flattening that to either value would misreport it. A
+receipt-level verdict stays one of the four in the vocabulary, because a
+receipt concludes one thing.
+
+`gate_ticked: false` is specific to a ruling, and it comes straight from
+point 4 of the 2026-08-16 ruling: "**Gate A does not tick on any of the ten
+cards.**" A ruling that ends a cycle without a pass is exactly the case a
+reader would otherwise misread, since every other receipt in the directory
+records a gate that closed.
+
+Its digest table has one row, the tracked evidence file the ruling lives in.
+That digest is redundant with git's own object hash for a tracked file, and
+it is kept anyway, so that every receipt has the same shape and can be
+checked by a reader with a hash tool and no git.
 
 This makes the backfill the format's first proof that driver 2 works: the
 R-wave's real evidentiary state is legible from the tracked repo, including
 the part that is missing.
 
-### 8. The machine-local pointer pattern, weighed beside S12
+### 9. The machine-local pointer pattern, weighed beside S12
 
 The pattern comes from the 2026-08-12 consumer-seam entry, drained in
 Phase 0. Its proposal, verbatim: "the kit's entry-file templates could ship
@@ -498,17 +743,19 @@ it is a packet-generation defect that predates both cards.
   ship `in-repo` without fixing it or excluding that file from
   publication. Flagged to S12 as adjacent public-surface work.
 - Receipt-versus-log agreement has no validator. Owner: S33.
-- Nothing tracked inside boardkit names `docs/adr/` as the ADR home. The
-  routing line the S32 pull ruling cites ("ADR / decision-record changes
-  (`docs/adr/`, `DECISIONS.md`): run `adr-review`") lives in the
-  `gate-probes` skill outside this repo. The ruling stands and this document
-  is at that path; what is missing is the in-repo statement of it. Owner:
-  a documentation card, or S12 as it works the outsider-facing surface.
+- No living contract document names `docs/adr/` as the ADR home. S32's card
+  log records the ruling, and the routing line it cites ("ADR /
+  decision-record changes (`docs/adr/`, `DECISIONS.md`): run `adr-review`")
+  lives in the `gate-probes` skill outside this repo. Neither is where a
+  fresh agent looks: `AGENTS.md`'s read order and `PROCESS.md` say nothing
+  about ADRs, so the convention survives in a card log that scrolls and a
+  skill this repo does not ship. Owner: a documentation card, or S12 as it
+  works the outsider-facing surface.
 - The aura board's cards describe a house `docs/adr/` convention with a
   date prefix, while this board's ruling numbers from 0001. Two families,
   two conventions, no forcing function to reconcile them. Recorded so the
   divergence is deliberate rather than discovered.
-- Commit signing would turn several attestations in section 6 into
+- Commit signing would turn several attestations in section 7 into
   verifications. Out of scope here, and a candidate for its own ADR.
 
 ## Open questions
@@ -550,27 +797,49 @@ a path whose content can change underneath it. A plain directory is the
 right answer for a synced-folder setup and should stay reachable, with its
 weaker guarantee stated where a reader will see it.
 
-**OQ4. Which gates get a receipt: every gate, or only the ones a reviewer
-returns a verdict for.** Decision 2 says "a compact review receipt per
-gate", which reads either way. *Recommendation: receipts for gates that
-produce a verdict from a named reviewer, being A, F, and a ruling that
-closes a cycle, plus U as the decision record.* Gate S is deterministic
-command output with no reviewer and no findings ledger, and a receipt whose
-model fields are empty would weaken the format's meaning for the gates that
-need it. Gates D and M sit closer to the line: both produce a written
-judgment, and if either turns out to be what a vetter reaches for, adding it
-is a value in an existing field rather than a format change.
+**OQ4. Which gates get a receipt: every gate, as decision 2 literally says,
+or the narrowed set below.** This one is a departure from the ruled input
+rather than a gap in it, and it is flagged for Gate U approval on that
+basis. Decision 2 reads "The tracked repo carries only a compact review
+receipt per gate", and the honest reading of "per gate" is every gate.
+
+*Recommendation: narrow it to the gates that conclude something a reader
+would audit, being A and F as `review`, a cycle-ending ruling as `ruling`,
+and U as `decision`.* Two reasons, and the second is the one that changed
+the design.
+
+Gate S is deterministic command output. It has no reviewer, no verdict a
+model returned, and no findings ledger, so a `review` receipt for it would
+have empty model fields, and an empty model field is exactly what driver 2
+says the format must not contain. Gate S evidence is the pasted command
+output the card's checklist already requires.
+
+The other reason is that "every gate" and "named-reviewer verdicts only"
+are not the only two options, and an earlier draft of this ADR tried to have
+both by listing Gate U under a rule that required a `reviewer_model` Gate U
+does not have. That contradiction is what produced the three kinds in
+section 3: `review` for a reviewer's verdict, `ruling` for a board owner
+ending a cycle, `decision` for a user gate with a decider and no reviewer.
+With the kinds split, "which gates" stops being a question about the schema
+and becomes a question about scope alone.
+
+Gates D and M sit closest to the line. Both produce a written judgment a
+vetter might reach for, and both fit `decision` without a format change, so
+including them later costs a value in an existing field. If Mike prefers
+decision 2's literal reading, the cost is bounded in the same way: every
+gate gets a `decision` receipt, Gate S receipts carry command output instead
+of a findings ledger, and nothing in sections 1 through 5 changes.
 
 ## Premises checked against the code
 
-Every claim this ADR makes about existing behavior, verified at `23dea92`
+Every claim this ADR makes about existing behavior, verified at `57b6390`
 the way `DOCKING.md` was written against the shipped resolver. Re-verify on
 revision.
 
 | Premise | Verdict | Anchor |
 | --- | --- | --- |
 | Packets are gitignored working material, written to `docs/board/reviews/<ID>/` | still true | `.gitignore:6`, `boardkit.toml` `[review] output_dir`, `cli.py:539-548` |
-| A packet is `NN-<sha>.diff`, `full-range.diff`, `REVIEW.md`, plus non-regenerable material a rerun does not delete | still true | `review_packet.py:845-851`, `GENERATED_NAMES` at `:85`, `clean_generated` at `:762` |
+| A packet is `NN-<sha>.diff`, `full-range.diff`, `REVIEW.md`, plus non-regenerable material a rerun does not delete | still true | `review_packet.py:846-851`, `GENERATED_NAMES` at `:85`, `clean_generated` at `:762` |
 | `REVIEW.md` embeds an absolute machine path | still true; two sections above depend on it | `config.py:726` resolves `review.repo` absolute; `review_packet.py:748` renders ``Repo: `{repo}` `` |
 | No `ArtifactStore` and no posture key exist today | still true | `store.py` defines `CardStore` only; no `posture` anywhere in `src/` |
 | Config parsing is strict in both directions | still true | `contract.py:143-151`, `config.py:675-677`, `config.py:687-689` |
@@ -585,7 +854,7 @@ revision.
 | Gate F finding F2 rejected packet-existence validation for this reason | still true | `reviews/2026-07-18-codex-gate-f.md`, F2 |
 | `PROCESS.md` requires the ledger to name author and reviewer models | still true | `PROCESS.md:271-274` |
 | The no-model-ids rule targets prescriptive text and exempts the cost ledger | still true | `MODEL-CLASSES.md:155-160` |
-| Nothing tracked in boardkit names `docs/adr/` | changed from the pull ruling's premise | the routing line is in the external `gate-probes` skill; recorded as a named gap |
+| No living contract doc names `docs/adr/` as the ADR home | still true, with a correction | S32's card log names it (`s32-artifact-store-adr.md`, Log, 2026-08-23), and the routing line is in the external `gate-probes` skill; no entry-file or process doc carries it. An earlier draft of this ADR said nothing tracked named the path at all, which was wrong |
 | The suite and lint are green before this change | still true | `uv run pytest -q` 430 passed; `uv run ruff check` clean |
 
 ## Links
@@ -596,7 +865,7 @@ revision.
 - Card [S34](../board/cards/s34-wave-gate-design.md), the wave-gate decision
   that depends on S32.
 - Card [S12](../board/cards/s12-public-repo-seam.md), the public-repo seam
-  weighed in section 8.
+  weighed in section 9.
 - Card [S28](../board/cards/s28-store-seam-wiring.md), the CardStore wiring
   this seam sits beside.
 - [Wave-2 plan](../plans/2026-08-19-wave-2-plan.md), decision 2 and Phase 4.
