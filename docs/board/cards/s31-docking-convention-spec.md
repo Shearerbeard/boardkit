@@ -8,7 +8,7 @@ lineage: primary
 executor: smart
 gates: "S -> A -> D -> U(code-review)"
 user-gates: [code-review]
-commit-range: "406309d..1ee9c7f"
+commit-range: "406309d..8d0801e"
 epic: S41
 ---
 
@@ -58,6 +58,9 @@ direct
 
 ## Log
 
+- 2026-08-22 Commit-range extended to 406309d..8d0801e over the fix
+  commit, the packet regenerated, and Gate A round 2 dispatched with
+  the convergence discipline.
 - 2026-08-22 Fix round landed by the same Claude executor: the
   resolved-via vocabulary closes at six values including the bypass's
   own `--config`; the no-stale-pointer claim scopes to the two
