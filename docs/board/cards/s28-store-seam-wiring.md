@@ -54,7 +54,7 @@ caller; if it stays deferred, this card's log says so and why.
   invert the dependency (could a second driver be written without
   touching board.py), or does every caller still reach the markdown
   traversal directly?
-- [ ] Gate D: drift audit of the living documents that describe the
+- [x] Gate D: drift audit of the living documents that describe the
   store seam before the user gate.
 - [ ] Gate U (code-review): packet to Mike; stop.
 
@@ -64,6 +64,12 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate D passed: a fresh small-class Claude auditor with
+  no implementation context swept DOCKING.md, REVIEW-TOOLING.md,
+  PROCESS.md, AGENTS.md, and README.md against the seam change and
+  returned DRIFT AUDIT: CLEAN with zero findings. Evidence:
+  [2026-08-23-s28-gate-d.md](../evidence/2026-08-23-s28-gate-d.md).
+  The card now waits at its U(code-review) gate.
 - 2026-08-23 Gate A passed. Round 2 verified the disposition RESOLVED
   with file:line evidence (the store passed at cli.py:486-495,
   id-only resolution through store.load_cards, the substitute-store
