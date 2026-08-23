@@ -47,7 +47,7 @@ copy diverges.
 - [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `boardkit check`, `boardkit render --check`,
   `boardkit doctor`; `vale` on touched markdown.
-- [ ] Gate A: adversarial review of the spec against the shipped
+- [x] Gate A: adversarial review of the spec against the shipped
   resolver's actual behavior.
 - [ ] Gate D: drift audit before the user gate.
 - [ ] Gate U (code-review): packet to Mike; stop.
@@ -58,6 +58,23 @@ direct
 
 ## Log
 
+- 2026-08-22 Gate A passed. Round 3 verified both round-2 dispositions
+  RESOLVED with the reviewer executing the bypass empirically (an
+  invalid --board bypassed from /tmp, the source reported as
+  --config) and returned an explicit zero-findings VERDICT: PASS.
+  Cycle shape: round 1 FAIL (4 BLOCKING, 1 MINOR), round 2 FAIL in
+  convergence (four resolved, one narrower residual, one
+  fix-introduced regression), round 3 PASS - closed at the
+  two-fix-round bound with no ruling needed. Author of the reviewed
+  range: Claude (claude-opus executor under a claude-fable-5 board
+  owner, plus one logged board-owner preamble edit). Reviewer all
+  rounds: GPT 5.6-sol via the codex CLI, read-only sandbox. Reviewer
+  spend: 131,259 + 127,649 + 123,919 = 382,827 tokens. Unverified in
+  round 3: pytest and the uv wrappers (sandbox limits); the board
+  owner's own runs stand (417 passed). Review record: prompts and
+  outputs for all three rounds in the packet directory. The card now
+  waits at Gate D and U(code-review), batched with the Phase 2
+  window.
 - 2026-08-22 Commit-range extended to 406309d..a65962e over the second
   fix commit, the packet regenerated, and Gate A round 3 dispatched.
   Two fix rounds are spent: a round 3 short of a clean pass requires a
