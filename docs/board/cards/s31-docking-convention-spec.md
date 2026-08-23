@@ -8,7 +8,7 @@ lineage: primary
 executor: smart
 gates: "S -> A -> D -> U(code-review)"
 user-gates: [code-review]
-commit-range: "406309d..8d0801e"
+commit-range: "406309d..a65962e"
 epic: S41
 ---
 
@@ -58,6 +58,10 @@ direct
 
 ## Log
 
+- 2026-08-22 Commit-range extended to 406309d..a65962e over the second
+  fix commit, the packet regenerated, and Gate A round 3 dispatched.
+  Two fix rounds are spent: a round 3 short of a clean pass requires a
+  written board-owner ruling before the cycle continues.
 - 2026-08-22 Fix round 2 landed by the same Claude executor:
   requirement 11 narrows to source reporting and a new requirement 12
   carries the bypass contract (outranks every step including the
