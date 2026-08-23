@@ -63,7 +63,7 @@ in nvim/LazyVim) jump straight from a log line to the diff it names.
 
 - [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `vale` on touched markdown.
-- [ ] Gate A: adversarial review, focus: does the generated guide
+- [x] Gate A: adversarial review, focus: does the generated guide
   mislead (supersession flag hiding a hunk that still matters, rank
   order implying reviewed-first equals safe-to-skim-later)?
 - [ ] Gate U (code-review): review packet to Mike, batched with the
@@ -75,6 +75,21 @@ direct
 
 ## Log
 
+- 2026-08-22 Gate A passed. Round 3 verified all three round-2
+  residual dispositions RESOLVED with file:line evidence, found no
+  fix-introduced regressions, and returned an explicit zero-findings
+  VERDICT: PASS. Cycle shape: round 1 FAIL (4 BLOCKING), round 2 FAIL
+  in convergence (1 resolved, 3 residuals re-raised, no new scope),
+  round 3 PASS - closed at the two-fix-round bound with no ruling
+  needed. Author of the reviewed range: Claude (claude-opus executor
+  under a claude-fable-5 board owner). Reviewer all rounds: GPT
+  5.6-sol via the codex CLI, read-only sandbox. Reviewer spend:
+  117,119 + 100,439 + 117,780 = 335,338 tokens. Reviewer unverified
+  in round 3: pytest and the uv-wrapped commands (sandbox limits); the
+  board owner's own runs stand for them (411 passed, ruff and format
+  clean). Review record: prompts and outputs for all three rounds in
+  the packet directory. The card now waits at U(code-review), batched
+  with the wave-2 Phase 2 window.
 - 2026-08-22 Commit-range extended to 23dea92..2b29e0e over the second
   fix commit, the packet regenerated over the full range, and Gate A
   round 3 dispatched. Two fix rounds are now spent: if round 3 is not

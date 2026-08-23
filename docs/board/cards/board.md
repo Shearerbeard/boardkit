@@ -44,7 +44,7 @@ kanban-plugin: board
 
 ## In Review
 - [ ] **S15** [Restore the human review guide to generated packets](s15-review-packet-guide.md)
-	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: smart.
+	Depends: none. Gates: S -> A -> U(code-review) @ U. Executor: smart.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)
