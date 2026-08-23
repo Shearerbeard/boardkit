@@ -1,13 +1,14 @@
 ---
 id: S29
 title: Decide how strictly doctor should classify an entry-file shim
-status: in-progress
+status: in-review
 depends: []
 serialize-with: []
 lineage: primary
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
+commit-range: "486d790..97a4459"
 ---
 
 # S29: Decide how strictly doctor should classify an entry-file shim
@@ -70,6 +71,9 @@ direct
 
 ## Log
 
+- 2026-08-22 Entered in-review: commit-range 486d790..97a4459 recorded
+  and the review packet generated. Gate A dispatch to the codex lane
+  follows; the packet presentation batches with the Phase 2 window.
 - 2026-08-22 Gate S passed, run by the board owner after a two-round
   Claude-subagent execution (implementation, then an amendment round
   aligning the no-shim remedy branch with the convention and

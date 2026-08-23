@@ -52,7 +52,7 @@ flowchart TD
   S26["S26 rust-holes HOLES ledger with a ho…"]:::ready
   S27["S27 Maintained architecture flowchart…"]:::backlog
   S28["S28 Wire the CLI core through the Car…"]:::backlog
-  S29["S29 Decide how strictly doctor should…"]:::inprogress
+  S29["S29 Decide how strictly doctor should…"]:::inreview
   S34["S34 Decide whether the wave-level Gat…"]:::backlog
   S35["S35 Before/after canary extension for…"]:::backlog
   S1 -.- S6
