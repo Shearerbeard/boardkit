@@ -2,7 +2,7 @@
 id: S28
 title: Wire the CLI core through the CardStore seam
 status: in-review
-commit-range: "9b1c158..79c2d71"
+commit-range: "9b1c158..decedc3"
 depends: []
 serialize-with: []
 lineage: primary
@@ -64,6 +64,27 @@ direct
 
 ## Log
 
+- 2026-08-23 Commit-range extended to 9b1c158..decedc3 over the fix
+  commit and the packet regenerated over the full range; Gate A
+  round 2 dispatched with the convergence discipline.
+- 2026-08-23 Fix round landed by the same Claude executor as decedc3:
+  the packet's card lookup resolves through the CLI-resolved store by
+  declared id (`resolve_card` over `store.load_cards`), deleting the
+  last cards-directory glob outside the store and the packet's own
+  frontmatter parser; `cmd_review_packet` now resolves the board
+  context and passes its store; a substitute-store test pins the path
+  (a card served by the store while a different card sits on disk).
+  Board owner re-ran the checks: pytest 430, ruff clean, check,
+  render --check, and doctor green, golden views byte-identical.
+  Board owner rulings on the executor's notes: the two reworded
+  packet error messages stand (the filename stopped voting on
+  identity; the card's no-behavior-change list - views, check output,
+  resolution order - is untouched), and schema errors stay non-fatal
+  in `resolve_card` (a malformed sibling card must not block every
+  packet on the board; the strict path remains `get_card`). The
+  rendered-output path arithmetic the executor reported (packet and
+  brief display links built from `_file`) is a real residual for a
+  follow-up, not a lookup bypassing the seam.
 - 2026-08-23 Gate A round 1 returned VERDICT: FAIL with one BLOCKING
   finding, verified by the board owner at both cited sites:
   `cmd_review_packet` resolves a bare config and `build_review_packet`
