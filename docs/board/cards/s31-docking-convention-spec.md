@@ -58,6 +58,40 @@ direct
 
 ## Log
 
+- 2026-08-22 Fix round landed by the same Claude executor: the
+  resolved-via vocabulary closes at six values including the bypass's
+  own `--config`; the no-stale-pointer claim scopes to the two
+  computed steps with the overlay named as the deliberate pointer-file
+  exception; the conformance checklist grows to thirteen named
+  requirements covering the selector grammar, the flag/variable
+  asymmetry, default selection, the store-ref grammar, and the loud
+  failures, each re-verified against config.py; the git invariant
+  restates as never-consult-tracking-state at all three sites; and
+  both skills drop the step enumeration for the operational note plus
+  the spec pointer, with the plugin bumped to 0.2.3. Board owner
+  re-ran the checks: pytest 417, ruff clean, vale clean on all six
+  touched markdown files. Noted for the batch gate: the closed
+  six-value resolved-via vocabulary is the one spec claim a future CLI
+  flag could falsify silently; a pinned test is the candidate fix.
+- 2026-08-22 Gate A round 1 returned VERDICT: FAIL with four BLOCKING
+  and one MINOR finding, all in the reviewed diff: the resolved-via
+  source list omits the `--config` value the CLI emits; the opening
+  no-stale-pointer claim is contradicted by the local.toml overlay the
+  spec itself calls a moved-overlay hazard; the eight-point
+  conformance checklist omits selector grammar, default selection,
+  store-ref schemes, and empty-variable semantics, so two conformant
+  implementations could diverge and S36 could not execute from the
+  checklist alone; the filesystem-only wording contradicts the git
+  common-dir subprocess call, where the real invariant is
+  never-consult-tracking-state; and the two board skills still
+  enumerate the five steps beside the spec pointer, which the board
+  owner had ratified and now reverses on the reviewer's
+  one-fact-one-place argument. Author of the diff: Claude
+  (claude-opus executor under a claude-fable-5 board owner). Reviewer:
+  GPT 5.6-sol via the codex CLI; round spend 131,259 tokens. Reviewer
+  unverified: pytest and the uv-wrapped commands (sandbox limits);
+  in-sandbox doctor, check, and render --check all passed. Board owner
+  accepted all five; fix round dispatched to the authoring executor.
 - 2026-08-22 Entered in-review: commit-range 406309d..1ee9c7f recorded
   (the split with S29's concurrent doc-pair edits kept each card's
   commit to its own sections) and the review packet generated. Gate A

@@ -59,19 +59,16 @@ substitutes for the other.
 Two conditions must hold or the rest of this skill does not apply. Missing
 either one is a hard stop, not a thing to route around.
 
-- **A resolvable board.** The CLI resolves one in this order: a
-  `--board` value (short-code or path), `BOARDKIT_BOARD`, a walk-up
-  `.boardkit/` (committed `manifest.toml` plus the gitignored
-  `local.toml` machine overlay for external boards), the git common-dir
-  fallback that lets a linked worktree reach its main checkout's
-  `.boardkit/`, then the legacy `boardkit.toml` walk-up, which
-  `${BOARDKIT_HOME:-../boardkit}/docs/DOCKING.md` specifies in full.
-  Honor a board the user names and check those sources before
-  concluding no board exists. Only when none of them answers, tell the user and offer
-  `boardkit init`, which writes the config, the card directory, and the
-  board documents, then prints the fill-in work still to do. A repo
-  with cards but no entry files is a repair (point the manifest or a
-  `--board` flag at it), not a silent init-over.
+- **A resolvable board.** The CLI resolves one itself, in the order
+  `${BOARDKIT_HOME:-../boardkit}/docs/DOCKING.md` specifies. Honor a
+  board the user names, let resolution run before concluding no board
+  exists, and read doctor's `resolved via:` line to confirm the board
+  that answered is the one this session means to tend. Only when
+  nothing answers, tell the user and offer `boardkit init`, which
+  writes the config, the card directory, and the board documents, then
+  prints the fill-in work still to do. A repo with cards but no entry
+  files is a repair (point the manifest or a `--board` flag at it), not
+  a silent init-over.
 - **A compatible `boardkit --version`.** The board documents carry a
   contract stamp, the config declares the same version, and board-bound
   skills declare it in frontmatter metadata. Doctor compares all of them.

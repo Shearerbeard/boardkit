@@ -5,9 +5,18 @@
 
 Docking is how a tool finds the state it owns from wherever a session is
 standing. boardkit docks at `.boardkit/`: a directory at a repository's root
-naming the boards that repo participates in and where each one lives. Every
-step of the lookup is computed at run time from the filesystem, so there is
-no symlink or pointer file to go stale when a checkout moves.
+naming the boards that repo participates in and where each one lives. The
+walk-up and the worktree fallback are computed against the filesystem at the
+moment they run, so those two steps store no link that a moved checkout
+could invalidate.
+
+The machine overlay is the deliberate exception. `local.toml` holds absolute
+paths to boards outside the repo, which makes it a pointer file in the
+ordinary sense: it goes stale when a checkout it names moves. That is why it
+is machine-local and never committed. Staleness there is surfaced rather
+than prevented - resolution reports the step that answered and the config it
+landed on, so a board reached through a moved overlay shows up in the report
+instead of passing silently.
 
 This document states the convention as a contract, so a second tool can
 implement it without reading boardkit's source and a reviewer can check an
@@ -139,10 +148,11 @@ and 2.
 **The winning step is reported, not discarded.** `boardkit doctor` prints
 `resolved via: <source>`, and carries the same value as `resolution_source`
 under `--json`. The source is `--board`, `BOARDKIT_BOARD`, the path of the
-`.boardkit/` that answered, `git common-dir <path>`, or `legacy walk-up`. A
-stale environment variable or a moved overlay can still select a board that
-is not the one the session meant; naming the step that chose is what makes
-that visible instead of silent.
+`.boardkit/` that answered, `git common-dir <path>`, `legacy walk-up`, or
+`--config` when the bypass below took the board. Those six values are the
+whole vocabulary. A stale environment variable or a moved overlay can still
+select a board that is not the one the session meant; naming the step that
+chose is what makes that visible instead of silent.
 
 **`--config <path>` bypasses the order.** It names a `boardkit.toml`
 directly and wins over every step above, including the flag. Treat it as an
@@ -177,10 +187,10 @@ Two properties earn this step its place:
 - A linked worktree resolves its main checkout's board with zero
   per-worktree setup. No symlink to create, no manifest to copy, nothing to
   re-point when the worktree is thrown away and remade.
-- The lookup stats the filesystem and never asks git what is tracked. The
-  one git call reports a path, not a tracking state, so an untracked or
-  excluded `.boardkit/` resolves exactly like a committed one. That is the
-  property the three postures below depend on.
+- The step never asks git what is tracked. Its one git call asks for a path
+  and gets a path back, so an untracked or excluded `.boardkit/` resolves
+  exactly like a committed one. That is the property the three postures
+  below depend on.
 
 The step assumes the common git directory sits inside the main checkout, at
 `<main>/.git`. A repository built with a separate git directory, or a bare
@@ -191,8 +201,8 @@ where the checkout went.
 ## Consumer postures
 
 A repo that docks chooses how much of the docking directory its history
-carries. All three postures resolve identically, because resolution stats
-the filesystem.
+carries. All three postures resolve identically, because no step in the
+order consults git's index or tracking state.
 
 - **Committed.** `.boardkit/manifest.toml` is tracked; `.gitignore` carries
   `.boardkit/local.toml` so the machine overlay stays local. For a repo
@@ -244,40 +254,71 @@ Keep the two filenames as they are. An adopter that renames them buys
 nothing and costs every reader who has to learn which tool calls the overlay
 what.
 
-Then implement the order. These eight requirements define a conformant
-implementation, and they are the checklist a reviewer runs against one:
+Then implement the order. Every behavior this document states has a
+requirement below, so an implementation that satisfies all of them cannot
+diverge from boardkit's in a way a session would notice. This is the
+checklist a reviewer runs against one:
 
-1. Five steps in the stated precedence, first hit wins, with the flag above
-   the variable above the walk-up above the common-dir fallback above the
-   legacy walk-up. A tool with no legacy layout to support states that step
-   as not applicable rather than renumbering the rest.
-2. The walk-up accepts a directory only when the registry file is present
-   inside it, and continues upward otherwise.
-3. The common-dir fallback accepts only an absolute `--git-common-dir`
-   answer, requires the registry file at the candidate, and returns nothing
-   on every other outcome.
-4. A malformed registry or overlay fails loudly at the step that read it and
-   never falls through to a later step.
-5. Overlay paths are absolute, and a relative one is refused with its
-   reason.
-6. Resolution carries which step answered, and the tool's diagnostic prints
-   it.
-7. Resolution reads the filesystem only. No step may consult git's index or
-   tracking state, or the invisible posture breaks.
-8. The three postures are the consuming repo's choice, and the promotion
-   rule above is documented where that repo's contributors will read it.
+1. **Precedence.** Five steps, first hit wins, with the flag above the
+   variable above the walk-up above the common-dir fallback above the legacy
+   walk-up. A tool with no legacy layout to support states that step as not
+   applicable rather than renumbering the rest.
+2. **Selector grammar.** A selector is a path when it contains a path
+   separator, or is exactly `.`, `..`, or `~`, or starts with `~/`; anything
+   else is a short-code. The test reads the string's shape and never checks
+   what exists, so a directory that happens to share a short-code's name
+   cannot hijack the code.
+3. **Path selectors.** A path selector resolves to the tool's board config
+   file, or to a directory holding one. Anything else is an error naming
+   what was missing, never a fall-through to a later step.
+4. **Flag and variable are not symmetric.** The flag is honored whenever it
+   is present, so an empty value is refused as an unknown short-code rather
+   than passed over. The variable is skipped when it is set to the empty
+   string, so a blanked export falls through to the walk-up instead of
+   failing.
+5. **Short-code selectors need a registry.** A code from the flag or the
+   variable resolves against the registry found by steps 3 and 4, searched
+   from the working directory. An unknown code fails naming the codes that
+   exist; no reachable registry fails saying so.
+6. **Walk-up.** The walk-up accepts a directory only when the registry file
+   is present inside it, and continues upward otherwise. The board it
+   selects is the registry's `default`, and a `default` naming no declared
+   row is an error.
+7. **Common-dir fallback.** It accepts only an absolute `--git-common-dir`
+   answer, requires the registry file at the candidate beside that
+   directory, and returns nothing on every other outcome.
+8. **Store-ref grammar.** A row's location is scheme-prefixed: the directory
+   scheme is implemented, a bare string means that scheme, relative values
+   resolve against the directory containing the docking directory, the
+   keyword for an external board defers to the overlay, a reserved scheme is
+   refused as reserved, and an unknown scheme is an error naming the schemes
+   that exist.
+9. **Loud failure.** A malformed registry or overlay fails at the step that
+   read it and never falls through to a later step. A resolved board that
+   holds no board config of its own is an error naming the gap.
+10. **Overlay paths are absolute.** A relative one is refused with its
+    reason, and accepted paths are expanded and resolved before use.
+11. **The answering step is carried.** Resolution reports which step chose
+    the board, the tool's diagnostic prints it, and any bypass reports
+    itself under its own name.
+12. **No step consults git's index or tracking state.** The one git call in
+    the order asks for a path and gets a path back. An implementation that
+    reads tracking state breaks the invisible posture.
+13. **Posture is the consuming repo's choice.** The three postures and the
+    promotion rule above are documented where that repo's contributors will
+    read them, and no step in the order reads or enforces a posture.
 
-A second consumer that satisfies all eight has adopted the convention; the
-adoption card records where each requirement landed.
+A second consumer that satisfies every requirement has adopted the
+convention; the adoption card records where each one landed.
 
 ## Divergence and library extraction
 
 The convention is duplicated on purpose. Two independent implementations of
-an eight-point contract cost less than a shared library does at two
+the requirements above cost less than a shared library does at two
 consumers, and the copies stay honest as long as they agree.
 
 Divergence is the trigger. When a second consumer's copy has to differ on
-any of the eight requirements - a step it cannot implement, a precedence its
+any requirement in that list - a step it cannot implement, a precedence its
 host makes impossible, a posture that does not apply - that divergence is
 recorded on the adopting card and becomes the case for extracting the
 resolver into a library the consumers share. S36 (rust-holes docking
