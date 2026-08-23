@@ -63,3 +63,25 @@ Update a card's status and log entry in the same turn as the change they
 record. Never leave a status change to be logged later. Before ending a
 session that touched the board, run `boardkit check`; a session should not
 close with the board in a drifted state.
+
+## Entry files and their shims
+
+A shim's text is a convention, not a matter of taste. It is the line
+`boardkit init` scaffolds:
+
+```
+Read `AGENTS.md` first; it is the stable agent handoff for this repo.
+```
+
+A title that is only the file's own name (`# CLAUDE.md`) may stand above
+it. HTML comments may sit anywhere around it, and the contract stamp is
+one. Nothing else belongs in the file: put a rule in a shim and two
+harnesses read different instructions out of the same checkout.
+
+`boardkit doctor` compares each shim against that text exactly, dropping
+only comment spans, that title, and whitespace differences. Reword a shim
+and the `entry.parity` check warns, even when the rewording says the same
+thing: doctor cannot tell a faithful rewrite from a second instruction set,
+so it stops guessing and names anything that is not the stated text. The
+finding is a warning, never an error, so a repo that wants its own wording
+keeps it and carries the warning.

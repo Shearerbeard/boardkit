@@ -1,4 +1,5 @@
-"""Tests for the R6 host-repo hazard checks and the R7 parity check (S24).
+"""Tests for the R6 host-repo hazard checks and the R7 parity check (S24,
+with the shim convention S29 settled on).
 
 Real git repos, tiny and local: the checks under test exist because of
 real hosts (a board on a feature branch, a dirty wiki with unpushed
@@ -11,9 +12,14 @@ from pathlib import Path
 from conftest import config_text
 
 from boardkit.config import load_config
-from boardkit.doctor import _check_entry_parity, _check_host, _Checks
+from boardkit.contract import TEMPLATES_DIR
+from boardkit.doctor import SHIM_TEMPLATES, _check_entry_parity, _check_host, _Checks
 
 IDENTITY = ["-c", "user.email=t@t", "-c", "user.name=t"]
+
+# The convention S29 settled on: doctor compares a shim against the text
+# `boardkit init` scaffolds, so the fixtures scaffold it the same way.
+SHIM = "Read `AGENTS.md` first; it is the stable agent handoff for this repo.\n"
 
 
 def _git(cwd: Path, *args: str) -> None:
@@ -82,7 +88,20 @@ def test_unpushed_commits_warn_and_pushed_clean_passes(tmp_path: Path) -> None:
 
 def test_parity_shim_layout_passes(tmp_path: Path) -> None:
     (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
-    (tmp_path / "CLAUDE.md").write_text("Read `AGENTS.md` first.\n", encoding="utf-8")
+    (tmp_path / "CLAUDE.md").write_text(SHIM, encoding="utf-8")
+    checks = _Checks()
+    _check_entry_parity(checks, tmp_path)
+    assert "entry.parity" in checks.passed
+
+
+def test_parity_accepts_the_shims_init_scaffolds(tmp_path: Path) -> None:
+    """S29 acceptance: the convention is whatever `boardkit init` writes, so
+    the shipped templates verbatim are the case that must pass."""
+    (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
+    for name, template in SHIM_TEMPLATES.items():
+        (tmp_path / name).write_text(
+            (TEMPLATES_DIR / template).read_text(encoding="utf-8"), encoding="utf-8"
+        )
     checks = _Checks()
     _check_entry_parity(checks, tmp_path)
     assert "entry.parity" in checks.passed
@@ -113,6 +132,11 @@ def test_parity_agents_with_no_shims_warns(tmp_path: Path) -> None:
     checks = _Checks()
     _check_entry_parity(checks, tmp_path)
     assert "no shim points at it" in _findings(checks)["entry.parity"]
+    # A repo with no shims is being told to write one, so this branch owes
+    # the convention and its home as much as the divergence branch does.
+    remedy = next(f for f in checks.findings if f.check == "entry.parity").remedy
+    assert "Entry files and their shims" in remedy
+    assert "`boardkit init` scaffolds" in remedy
 
 
 def test_parity_shimlike_opening_with_own_rules_warns(tmp_path: Path) -> None:
@@ -127,17 +151,23 @@ def test_parity_shimlike_opening_with_own_rules_warns(tmp_path: Path) -> None:
 
 
 def test_parity_short_divergent_shim_warns(tmp_path: Path) -> None:
-    """Fix re-review round 3: a one-line pointer with a directive glued to
-    it - or hidden behind a heading - is not a shim."""
+    """The four evasions the R-wave review cycle found, one per round. Under
+    the S29 convention none of them is the canonical text, so all four flag
+    without doctor having to recognize what each one is doing."""
     (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
-    (tmp_path / "GEMINI.md").write_text("Read `AGENTS.md` first.\n", encoding="utf-8")
+    (tmp_path / "GEMINI.md").write_text(SHIM, encoding="utf-8")
     for body in (
+        # A directive glued to the pointer sentence.
         "Read `AGENTS.md` first. Always use tabs.\n",
         "# CLAUDE.md\nAlways use tabs.\n",
         # A directive wearing heading syntax is still a directive.
         "Read `AGENTS.md` first.\n# Always use tabs\n",
         # Text after a stamp that closes mid-line is prose, not stamp.
         "Read `AGENTS.md` first.\n<!-- stamp\nstamp --> Always use tabs.\n",
+        # One sentence that names AGENTS.md while contradicting it: the
+        # limit the heuristic could not reach, and the reason it was
+        # replaced.
+        "Read `AGENTS.md` first, except for its commit rules, which are wrong.\n",
     ):
         (tmp_path / "CLAUDE.md").write_text(body, encoding="utf-8")
         checks = _Checks()
@@ -145,14 +175,51 @@ def test_parity_short_divergent_shim_warns(tmp_path: Path) -> None:
         assert "follow different rules" in _findings(checks)["entry.parity"], body
 
 
+def test_parity_drops_only_a_title_that_is_the_files_own_name(tmp_path: Path) -> None:
+    """The convention says the optional title is the file's own name, so the
+    check drops exactly that and nothing else. A title naming another file
+    is content, and content beyond the pointer text flags."""
+    (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
+    (tmp_path / "GEMINI.md").write_text(SHIM, encoding="utf-8")
+    (tmp_path / "CLAUDE.md").write_text(f"# CLAUDE.md\n\n{SHIM}", encoding="utf-8")
+    checks = _Checks()
+    _check_entry_parity(checks, tmp_path)
+    assert "entry.parity" in checks.passed
+
+    (tmp_path / "CLAUDE.md").write_text(f"# AGENTS.md\n\n{SHIM}", encoding="utf-8")
+    checks = _Checks()
+    _check_entry_parity(checks, tmp_path)
+    assert "CLAUDE.md" in _findings(checks)["entry.parity"]
+    assert "follow different rules" in _findings(checks)["entry.parity"]
+
+
+def test_parity_warns_on_a_faithful_rewording(tmp_path: Path) -> None:
+    """The limit the S29 convention accepts, pinned so it stays deliberate:
+    a shim that means the right thing in its own words still warns, and the
+    remedy names the convention and where its text lives."""
+    (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
+    (tmp_path / "GEMINI.md").write_text(SHIM, encoding="utf-8")
+    (tmp_path / "CLAUDE.md").write_text(
+        "# CLAUDE.md\n\nRead `AGENTS.md` first. It is the handoff for this repo.\n",
+        encoding="utf-8",
+    )
+    checks = _Checks()
+    _check_entry_parity(checks, tmp_path)
+    finding = next(f for f in checks.findings if f.check == "entry.parity")
+    assert finding.severity == "warn"
+    assert "CLAUDE.md" in finding.message
+    assert "GEMINI.md" not in finding.message
+    assert "Entry files and their shims" in finding.remedy
+    assert SHIM.strip() in finding.remedy
+
+
 def test_parity_accepts_a_multiline_stamp(tmp_path: Path) -> None:
     """Round 4: a stamp spanning lines is boilerplate throughout, not
     substantive prose whose punctuation reads as directives."""
     (tmp_path / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
-    (tmp_path / "GEMINI.md").write_text("Read `AGENTS.md` first.\n", encoding="utf-8")
+    (tmp_path / "GEMINI.md").write_text(SHIM, encoding="utf-8")
     (tmp_path / "CLAUDE.md").write_text(
-        "# CLAUDE.md\n\n<!-- boardkit-contract: v2.\nGenerated stamp. -->\n\n"
-        "Read `AGENTS.md` first; it is the stable agent handoff for this repo.\n",
+        f"# CLAUDE.md\n\n<!-- boardkit-contract: v2.\nGenerated stamp. -->\n\n{SHIM}",
         encoding="utf-8",
     )
     checks = _Checks()
@@ -165,7 +232,7 @@ def test_parity_resolves_the_host_root_above_a_docked_board(tmp_path: Path) -> N
     live at the host repo root, not the board root."""
     host = _repo(tmp_path)
     (host / "AGENTS.md").write_text("# Agent instructions\n", encoding="utf-8")
-    (host / "CLAUDE.md").write_text("Read `AGENTS.md` first.\n", encoding="utf-8")
+    (host / "CLAUDE.md").write_text(SHIM, encoding="utf-8")
     board_root = host / ".boardkit" / "boards" / "bk"
     board_root.mkdir(parents=True)
     checks = _Checks()

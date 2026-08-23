@@ -41,7 +41,7 @@ Admission test: where does the diff land.
 | [S26](s26-rust-holes-ledger.md) | rust-holes HOLES ledger with a hook-grade check | ready | - | smart | S -> A -> U(code-review) @ S |
 | [S27](s27-architecture-flowchart.md) | Maintained architecture flowchart of the kit and its skills | backlog | - | any | S -> A |
 | [S28](s28-store-seam-wiring.md) | Wire the CLI core through the CardStore seam | backlog | - | smart | S -> A -> U(code-review) |
-| [S29](s29-shim-classification-hardening.md) | Decide how strictly doctor should classify an entry-file shim | ready | - | smart | S -> A -> U(code-review) @ S |
+| [S29](s29-shim-classification-hardening.md) | Decide how strictly doctor should classify an entry-file shim | in-progress | - | smart | S -> A -> U(code-review) @ A |
 | [S30](s30-small-fix-batch.md) | Wave-2 small-fix batch with the ignore and doctor truthing items | in-progress | - | smart | S -> A -> D -> U(code-review) @ D |
 | [S31](s31-docking-convention-spec.md) | Versioned docking-convention spec with the three consumer postures | ready | - | smart | S -> A -> D -> U(code-review) @ S |
 | [S32](s32-artifact-store-adr.md) | ArtifactStore ADR - receipts, postures, sidecar mechanics | backlog | S28 | smart | S -> A -> D -> U |

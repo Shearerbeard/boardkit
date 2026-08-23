@@ -27,8 +27,6 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A @ S. Executor: smart.
 - [ ] **S26** [rust-holes HOLES ledger with a hook-grade check](s26-rust-holes-ledger.md)
 	Depends: none. Gates: S -> A -> U(code-review) @ S. Executor: smart.
-- [ ] **S29** [Decide how strictly doctor should classify an entry-file shim](s29-shim-classification-hardening.md)
-	Depends: none. Gates: S -> A -> U(code-review) @ S. Executor: smart.
 - [ ] **S31** [Versioned docking-convention spec with the three consumer postures](s31-docking-convention-spec.md)
 	Depends: none. Gates: S -> A -> D -> U(code-review) @ S. Executor: smart.
 - [ ] **S38** [Pick the board's visual home](s38-visual-surface-decision.md)
@@ -39,6 +37,8 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A @ S. Executor: any.
 
 ## In Progress
+- [ ] **S29** [Decide how strictly doctor should classify an entry-file shim](s29-shim-classification-hardening.md)
+	Depends: none. Gates: S -> A -> U(code-review) @ A. Executor: smart.
 - [ ] **S30** [Wave-2 small-fix batch with the ignore and doctor truthing items](s30-small-fix-batch.md)
 	Depends: none. Gates: S -> A -> D -> U(code-review) @ D. Executor: smart.
 
