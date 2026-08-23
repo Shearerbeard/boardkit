@@ -8,7 +8,7 @@ lineage: primary
 executor: smart
 gates: "S -> A -> U(code-review)"
 user-gates: [code-review]
-commit-range: "486d790..406309d"
+commit-range: "486d790..2309681"
 ---
 
 # S29: Decide how strictly doctor should classify an entry-file shim
@@ -71,6 +71,10 @@ direct
 
 ## Log
 
+- 2026-08-22 Commit-range extended to 486d790..2309681 over the second
+  fix commit, the packet regenerated, and Gate A round 3 dispatched.
+  Two fix rounds are spent: a round 3 short of a clean pass requires a
+  written board-owner ruling before the cycle continues.
 - 2026-08-22 Fix round 2 landed by the same Claude executor: the
   `_shim_body` docstring now states the actual title rule (first line
   surviving comment-block and blank-line removal) with the two
