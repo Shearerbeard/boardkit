@@ -49,7 +49,7 @@ copy diverges.
   `boardkit doctor`; `vale` on touched markdown.
 - [x] Gate A: adversarial review of the spec against the shipped
   resolver's actual behavior.
-- [ ] Gate D: drift audit before the user gate.
+- [x] Gate D: drift audit before the user gate.
 - [ ] Gate U (code-review): packet to Mike; stop.
 
 ## Branch
@@ -58,6 +58,12 @@ direct
 
 ## Log
 
+- 2026-08-22 Gate D passed via the batched Phase 2 drift audit (DRIFT
+  AUDIT: CLEAN, zero findings): the spec's cross-references, stamps,
+  and one-fact-one-place ownership of the resolution order all held.
+  Evidence:
+  [2026-08-22-phase2-gate-d.md](../evidence/2026-08-22-phase2-gate-d.md).
+  The card now waits at its batched U(code-review) gate.
 - 2026-08-22 Gate A passed. Round 3 verified both round-2 dispositions
   RESOLVED with the reviewer executing the bypass empirically (an
   invalid --board bypassed from /tmp, the source reported as

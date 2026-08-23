@@ -56,6 +56,7 @@ flowchart TD
   S34["S34 Decide whether the wave-level Gat…"]:::backlog
   S35["S35 Before/after canary extension for…"]:::backlog
   S42["S42 Fix doctor host checks that misfi…"]:::backlog
+  S43["S43 Land the phase 2 residue - canary…"]:::inprogress
   S1 -.- S6
   S1 -.- S9
   S2 --> S7

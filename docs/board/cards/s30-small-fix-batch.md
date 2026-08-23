@@ -61,7 +61,7 @@ none of them design-bearing:
   `boardkit doctor`; `vale` on touched markdown.
 - [x] Gate A: opencode-lane review of the diff, fresh context, packet
   staged per the working-dir contract.
-- [ ] Gate D: drift audit of the living documents before the user gate.
+- [x] Gate D: drift audit of the living documents before the user gate.
 - [ ] Gate U (code-review): batched packet to Mike; stop.
 
 ## Branch
@@ -70,6 +70,12 @@ direct
 
 ## Log
 
+- 2026-08-22 Gate D passed via the batched Phase 2 drift audit: a
+  fresh small-class Claude auditor checked the living documents'
+  claims and anchors against the repo and board and returned DRIFT
+  AUDIT: CLEAN with zero findings. Evidence:
+  [2026-08-22-phase2-gate-d.md](../evidence/2026-08-22-phase2-gate-d.md).
+  The card now waits at its batched U(code-review) gate.
 - 2026-08-22 Session close canary evidence filed at
   [2026-08-22-s30-s14-session-close.md](../evidence/2026-08-22-s30-s14-session-close.md);
   S30 remains in-progress at Gate D for the planned batched user gate.
