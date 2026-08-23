@@ -35,6 +35,8 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A @ S. Executor: any.
 
 ## In Progress
+- [ ] **S28** [Wire the CLI core through the CardStore seam](s28-store-seam-wiring.md)
+	Depends: none. Gates: S -> A -> D -> U(code-review) @ S. Executor: smart.
 
 ## In Review
 
@@ -45,8 +47,6 @@ kanban-plugin: board
 	Depends: S2. Gates: S -> A -> U. Executor: smart.
 - [ ] **S27** [Maintained architecture flowchart of the kit and its skills](s27-architecture-flowchart.md)
 	Depends: none. Gates: S -> A. Executor: any.
-- [ ] **S28** [Wire the CLI core through the CardStore seam](s28-store-seam-wiring.md)
-	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 - [ ] **S32** [ArtifactStore ADR - receipts, postures, sidecar mechanics](s32-artifact-store-adr.md)
 	Depends: S28. Gates: S -> A -> D -> U. Executor: smart.
 - [ ] **S33** [Receipts and sidecar implementation per the ADR](s33-receipts-and-sidecar.md)

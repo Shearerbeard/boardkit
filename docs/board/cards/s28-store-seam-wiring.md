@@ -1,12 +1,12 @@
 ---
 id: S28
 title: Wire the CLI core through the CardStore seam
-status: backlog
+status: in-progress
 depends: []
 serialize-with: []
 lineage: primary
 executor: smart
-gates: "S -> A -> U(code-review)"
+gates: "S -> A -> D -> U(code-review)"
 user-gates: [code-review]
 ---
 
@@ -46,11 +46,16 @@ caller; if it stays deferred, this card's log says so and why.
 
 ## Gate checklist
 
-- [ ] Gate S: `uv run pytest -q`, `uv run ruff check`, `boardkit check`.
+- [ ] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
+  `uv run ruff check`, `boardkit check`, `boardkit render --check`,
+  `boardkit doctor`; golden-view comparison.
 - [ ] Gate A: adversarial review, focus: does the seam actually
   invert the dependency (could a second driver be written without
   touching board.py), or does every caller still reach the markdown
   traversal directly?
+- [ ] Gate D: drift audit of the living documents that describe the
+  store seam before the user gate.
+- [ ] Gate U (code-review): packet to Mike; stop.
 
 ## Branch
 
@@ -58,6 +63,14 @@ direct
 
 ## Log
 
+- 2026-08-23 Board owner pulled S28 for wave-2 Phase 3 and aligned the
+  card with the plan's phase ladder: Gate D and the standing
+  U(code-review) gate joined the checklist, and Gate S extended to the
+  plan's probe list with the golden-view comparison. Gate A runs on
+  the codex lane (GPT 5.6-sol) per this session's provider
+  authorization; the plan's opencode naming predates it. The executor
+  dispatch uses the leaner point-at-the-card brief under the
+  dispatch-verbosity watch (FEEDBACK.md).
 - 2026-08-16 Minted by the board owner from S13 Gate A finding 4
   (reviewer gpt-5.6-sol via codex): seam unused by production code,
   board metadata absent from the protocol. The put-deferral half of the

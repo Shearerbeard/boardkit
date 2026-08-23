@@ -40,7 +40,7 @@ Admission test: where does the diff land.
 | [S25](s25-title-hash-truncation.md) | R8 fix - card titles truncated at an inline hash | done | - | any | S -> A -> U(code-review) |
 | [S26](s26-rust-holes-ledger.md) | rust-holes HOLES ledger with a hook-grade check | ready | - | smart | S -> A -> U(code-review) @ S |
 | [S27](s27-architecture-flowchart.md) | Maintained architecture flowchart of the kit and its skills | backlog | - | any | S -> A |
-| [S28](s28-store-seam-wiring.md) | Wire the CLI core through the CardStore seam | backlog | - | smart | S -> A -> U(code-review) |
+| [S28](s28-store-seam-wiring.md) | Wire the CLI core through the CardStore seam | in-progress | - | smart | S -> A -> D -> U(code-review) @ S |
 | [S29](s29-shim-classification-hardening.md) | Decide how strictly doctor should classify an entry-file shim | done | - | smart | S -> A -> U(code-review) |
 | [S30](s30-small-fix-batch.md) | Wave-2 small-fix batch with the ignore and doctor truthing items | done | - | smart | S -> A -> D -> U(code-review) |
 | [S31](s31-docking-convention-spec.md) | Versioned docking-convention spec with the three consumer postures | done | - | smart | S -> A -> D -> U(code-review) |
