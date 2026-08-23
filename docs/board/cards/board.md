@@ -27,8 +27,6 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A @ S. Executor: smart.
 - [ ] **S26** [rust-holes HOLES ledger with a hook-grade check](s26-rust-holes-ledger.md)
 	Depends: none. Gates: S -> A -> U(code-review) @ S. Executor: smart.
-- [ ] **S31** [Versioned docking-convention spec with the three consumer postures](s31-docking-convention-spec.md)
-	Depends: none. Gates: S -> A -> D -> U(code-review) @ S. Executor: smart.
 - [ ] **S38** [Pick the board's visual home](s38-visual-surface-decision.md)
 	Depends: S16. Gates: S -> A -> D -> U @ S. Executor: smart.
 - [ ] **S39** [Machine-bootstrap recipe and account inventory](s39-machine-bootstrap-recipe.md)
@@ -39,6 +37,8 @@ kanban-plugin: board
 ## In Progress
 - [ ] **S30** [Wave-2 small-fix batch with the ignore and doctor truthing items](s30-small-fix-batch.md)
 	Depends: none. Gates: S -> A -> D -> U(code-review) @ D. Executor: smart.
+- [ ] **S31** [Versioned docking-convention spec with the three consumer postures](s31-docking-convention-spec.md)
+	Depends: none. Gates: S -> A -> D -> U(code-review) @ A. Executor: smart.
 
 ## In Review
 - [ ] **S15** [Restore the human review guide to generated packets](s15-review-packet-guide.md)
@@ -69,6 +69,8 @@ kanban-plugin: board
 	Depends: S28. Gates: S -> A -> U(code-review). Executor: smart.
 - [ ] **S41** [Co-worker consumption readiness](s41-co-worker-consumption.md)
 	Depends: none. Gates: S -> U. Executor: smart.
+- [ ] **S42** [Fix doctor host checks that misfire on in-repo board homes](s42-doctor-docked-board-misfires.md)
+	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 
 ## Done
 - [ ] **S5** [Run the never-run Gate T on native opencode routing](s5-gate-t-native-opencode.md)

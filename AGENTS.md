@@ -15,7 +15,9 @@ file first.
    incompletely; stop and tell the user instead of improvising process.
 3. `docs/board/MODEL-CLASSES.md`, for which class of model may own which
    card, and the invariants that govern review.
-4. `boardkit.toml` at the repo root, for where the cards directory lives.
+4. `boardkit.toml`, for where the cards directory lives. It sits at the repo
+   root unless a `.boardkit/` docking directory names another board home;
+   see "Where the board docks" below.
 5. Run `boardkit check`. boardkit is a Python CLI that is not published to
    a package index; it runs from a local checkout. Set `BOARDKIT_HOME` to
    that checkout's path (the default assumes it sits next to this repo) and
@@ -46,6 +48,21 @@ file first.
 Read `docs/board/REVIEW-TOOLING.md` before running any review or delegation
 tool; it pins the actual tools this repo uses and overrides generic
 delegation guidance a skill might otherwise load.
+
+## Where the board docks
+
+The board this repo works sits at the repo root, beside this file, or in a
+board home a `.boardkit/` docking directory names. The CLI works out which
+from the filesystem, so run it from anywhere in the checkout; `boardkit
+doctor` prints a `resolved via:` line naming the step that answered, which
+is what to read when a command seems to be looking at the wrong board.
+
+Whether `.boardkit/` is committed, gitignored, or excluded per-clone through
+`.git/info/exclude` is this repo's own choice, and resolution behaves the
+same under all three. `${BOARDKIT_HOME:-../boardkit}/docs/DOCKING.md` is the
+versioned spec for the resolution order and the directory's contents. It
+also carries the rule for promoting an excluded directory to a tracked
+ignore line once a second person adopts it.
 
 ## Board owner rule
 

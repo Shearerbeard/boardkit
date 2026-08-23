@@ -14,6 +14,8 @@ import re
 from boardkit.contract import BOARDKIT_HOME_VAR, TEMPLATES_DIR
 
 TEMPLATE = TEMPLATES_DIR / "AGENTS.md.template"
+DOCKING_SPEC_REL = "docs/DOCKING.md"
+DOCKING_SPEC = TEMPLATES_DIR.parents[3] / DOCKING_SPEC_REL
 
 EXPORT_RE = re.compile(rf"^\s*export {BOARDKIT_HOME_VAR}=\S+\s*$", re.MULTILINE)
 UV_RUN_RE = re.compile(
@@ -74,3 +76,15 @@ def test_uv_run_line_reads_the_variable_it_told_the_reader_to_export() -> None:
 
     assert uv_run, "the bootstrap no longer runs `boardkit check` through uv"
     assert BOARDKIT_HOME_VAR in uv_run.group(0)
+
+
+def test_the_docking_pointer_names_a_spec_the_kit_actually_ships() -> None:
+    """The template sends a consumer to the docking spec by path (S31).
+
+    A pointer into another checkout cannot be followed by the reader who
+    finds it stale, so the path is pinned against the file it names: rename
+    or move the spec and this fails instead of shipping a dead reference to
+    every repo `boardkit init` scaffolds.
+    """
+    assert DOCKING_SPEC.is_file(), f"the kit no longer ships {DOCKING_SPEC}"
+    assert f"${{{BOARDKIT_HOME_VAR}:-../boardkit}}/{DOCKING_SPEC_REL}" in _normalized()

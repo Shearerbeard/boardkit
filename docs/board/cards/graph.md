@@ -18,7 +18,7 @@ flowchart TD
     S12["S12 Public-repo seam for contract doc…"]:::ready
     S15["S15 Restore the human review guide to…"]:::inreview
     S30["S30 Wave-2 small-fix batch with the i…"]:::inprogress
-    S31["S31 Versioned docking-convention spec…"]:::ready
+    S31["S31 Versioned docking-convention spec…"]:::inprogress
     S32["S32 ArtifactStore ADR - receipts, pos…"]:::backlog
     S33["S33 Receipts and sidecar implementati…"]:::backlog
     S36["S36 rust-holes adopts the docking con…"]:::backlog
@@ -55,6 +55,7 @@ flowchart TD
   S29["S29 Decide how strictly doctor should…"]:::inreview
   S34["S34 Decide whether the wave-level Gat…"]:::backlog
   S35["S35 Before/after canary extension for…"]:::backlog
+  S42["S42 Fix doctor host checks that misfi…"]:::backlog
   S1 -.- S6
   S1 -.- S9
   S2 --> S7

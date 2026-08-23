@@ -64,16 +64,12 @@ moved ahead of a repo says so instead of behaving strangely.
 
 ## Board resolution and the family registry
 
-The CLI finds its board in this order, first hit wins: a `--board` value
-(short-code or path), `BOARDKIT_BOARD`, a walk-up `.boardkit/` directory, a
-git common-dir fallback (a linked worktree resolves its main checkout's
-`.boardkit/` with zero per-worktree setup), then the legacy `boardkit.toml`
-walk-up. `.boardkit/` holds a committed `manifest.toml` - the boards the
-repo participates in, keyed by short-code, each with a scheme-prefixed
-location (`dir:` today; the keyword `external` defers to a gitignored
-`local.toml` machine overlay for boards outside the repo, such as a wiki
-checkout) - and optional in-repo board homes under `.boardkit/boards/<code>/`,
-committed or gitignored per repo. Board-level config stays in
+The CLI computes which board it targets from the filesystem instead of
+reading a stored pointer, so a linked worktree or a moved checkout needs no
+per-clone setup. `docs/DOCKING.md` is the versioned spec: the five-step
+resolution order, what `.boardkit/` holds, the git common-dir fallback, and
+the three postures a consuming repo may take (committed, gitignored, or
+invisible through `.git/info/exclude`). Board-level config stays in
 `boardkit.toml` at each board's root.
 
 `boardkit dag --to <id|epic>` answers goal-directed questions over one
@@ -83,9 +79,9 @@ gates sit on which edges - and `--render` emits the plan as Mermaid. A
 standing `graph.md` view (status-colored, epic and lane clusters)
 regenerates with the other views.
 
-The manifest is also the family registry: rows may carry `engine`,
-`id_prefix`, `scope`, and `status`, so pre-boardkit, hand-maintained, and
-TODO-file surfaces are first-class rows. `boardkit boards` (with `--json`
+`.boardkit/manifest.toml` is also the family registry: rows may carry
+`engine`, `id_prefix`, `scope`, and `status`, so pre-boardkit,
+hand-maintained, and TODO-file surfaces are first-class rows. `boardkit boards` (with `--json`
 for tooling) enumerates the family from it, fills a `dir:` board's prefix
 from that board's own config, verifies cached row fields against it, and
 refuses an id-prefix collision unless every colliding row is marked

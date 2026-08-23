@@ -36,8 +36,10 @@ than dispatching on a guess.
   are no roles, no routes, and no pin sources, so there is nothing to
   resolve. The CLI resolves the board itself (`--board`,
   `BOARDKIT_BOARD`, walk-up `.boardkit/`, git common-dir fallback,
-  legacy `boardkit.toml` walk-up), so honor a user-named board and let
-  resolution run before concluding the repo has none. Remedy when it
+  legacy `boardkit.toml` walk-up, specified in full in
+  `${BOARDKIT_HOME:-../boardkit}/docs/DOCKING.md`), so honor a
+  user-named board and let resolution run before concluding the repo
+  has none. Remedy when it
   truly has none: `boardkit init` scaffolds the config and the board
   documents, then prints the fill-in work that remains.
 - **A filled-in review-tooling document.** The repo's review-tooling file
