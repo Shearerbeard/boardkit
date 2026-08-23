@@ -54,6 +54,26 @@ direct
 
 ## Log
 
+- 2026-08-23 Gate A round 2 returned VERDICT: FAIL, in convergence:
+  seven of ten round-1 dispositions verified RESOLVED with file:line
+  evidence (stamp, manifest, vetter wording, author_models, suffix,
+  lifecycle, overlay schema); three re-raised as narrower residuals
+  with no new scope. The residuals: the worked ruling receipt is
+  internally contradictory (claims an empty digest table beside a
+  one-row table, packets: [] carries no published field though the
+  text calls published essential, and the example names a singular
+  reviewer_model against the prose's no-single-reviewer rule); the
+  dir: locator derives from card, gate, and round while the text
+  calls publication content-addressed solely by the manifest root,
+  which the locator does not contain; and OQ4's literal per-gate
+  branch stays unencodable, since the decision kind is defined for
+  user gates while D, M, and S receipts fit no kind without the
+  format change the text says is not needed. Reviewer: GPT 5.6-sol
+  via the codex CLI; round spend 132,178 tokens, cumulative 264,498.
+  Unverified: pytest and the uv wrappers (sandbox limits); in-sandbox
+  boardkit check, render --check, doctor, ruff, and vale all passed.
+  Board owner accepted all three; fix round 2 dispatched - the bound,
+  so a round 3 short of a clean pass requires a written ruling.
 - 2026-08-23 Commit-range extended to 3435716..bb671ca over the fix
   commit and the packet regenerated over the full range; Gate A
   round 2 dispatched with the convergence discipline. The fix round
