@@ -36,11 +36,19 @@ Verdict: **DRIFT AUDIT: CLEAN** - zero findings at any severity.
   heuristic, the code-constant WIP limit, or a missing review guide;
   no fact stated in two places with two values.
 
-## Post-audit note
+## Post-audit note and delta
 
 The audit ran before the Phase 2 residue card (S43, minted the same
 day) landed its edits to `boardkit.toml`, the PROCESS canary section,
 the board-hygiene skill, REVIEW-TOOLING, and the dispatch-brief data.
-A targeted delta audit over those files runs before the Phase 2 user
-gate presents; this record covers the batch state at the time of the
-audit.
+A targeted delta audit over exactly those files ran the same day,
+after S43's Gate A closed, on the same auditor class: **DRIFT AUDIT:
+CLEAN**, no findings. Verified in the delta: the canary role resolves
+its codex fallback; the PROCESS pair stays byte-identical; the
+degraded close keeps the hard-stop rule sharp (unreachable routes
+only; a canary that ran and missed grades by the miss classes); the
+fix-round section defers to the re-review duty and the retention
+contract; the hygiene skill states the same degraded-close rule as
+PROCESS; the plugin manifest reads 0.2.5; the `--suffix` and
+`--commit-range` flags exist as documented; check and doctor run
+clean.
