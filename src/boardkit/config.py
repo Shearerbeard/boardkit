@@ -1,8 +1,10 @@
 """Load and validate boardkit.toml, and resolve which board to load.
 
-The config file anchors three things: where the card registry lives (and
-its id scheme), where review packets read/write, and which transport
-serves each delegation role. All keys are required; unknown keys are a
+The config file anchors four things: where the card registry lives (and
+its id scheme), where review packets read/write, which transport serves
+each delegation role, and (optionally) the board's artifact posture —
+where review packets are published and where receipts live (ADR 0001).
+All keys are required; unknown keys are a
 hard error rather than silently ignored, so a typo in the config never
 falls back to a stale default. The same strictness is the version skew
 guard: an old kit reading a new config fails loudly on the sections it
@@ -46,7 +48,10 @@ MANIFEST_FILENAME = "manifest.toml"
 LOCAL_FILENAME = "local.toml"
 BOARD_ENV_VAR = "BOARDKIT_BOARD"
 
-TOP_LEVEL_SECTIONS = {"board", "review", "contract", "routes", "roles", "charter"}
+TOP_LEVEL_SECTIONS = {"board", "review", "contract", "routes", "roles", "charter", "artifacts"}
+# Optional sections: charter (R10) and artifacts (ADR 0001; a config that
+# names no posture behaves exactly as before, driver 7).
+OPTIONAL_SECTIONS = {"charter", "artifacts"}
 BOARD_KEYS = {"cards_dir", "id_prefix", "sentinel_ids"}
 # The board-wide in-progress cap default. PROCESS.md board mechanics sets
 # it at two; making it a config key retires the board.py hard-coded constant.
@@ -55,11 +60,23 @@ REVIEW_KEYS = {"repo", "output_dir"}
 CHARTER_KEYS = {"owns", "not", "route"}
 LANE_KEYS = {"name", "wip", "exempt"}
 
+# ADR 0001, settled OQ1: the optional [artifacts] table holds the board's
+# evidence posture, the logical store name a sidecar resolves through the
+# machine overlay, and the receipts directory. `store` is required exactly
+# when the posture resolves through the overlay.
+ARTIFACTS_KEYS = {"posture", "store", "receipts_dir"}
+POSTURES = {"ephemeral", "in-repo", "sidecar"}
+DEFAULT_POSTURE = "ephemeral"
+
 # `external` boards resolve through local.toml; everything else is a
 # scheme-prefixed store ref. A relative directory literally named
 # "external" must be written `dir:external`.
 EXTERNAL_KEYWORD = "external"
-KNOWN_SCHEMES = {"dir"}
+# One grammar serves board locations and sidecar store refs (ADR 0001
+# section 1): `dir:` for a plain directory, `git:` for a sidecar
+# repository. `git:` has no board driver, so a git: manifest row parses
+# and then fails loudly at resolution like any unresolvable location.
+KNOWN_SCHEMES = {"dir", "git"}
 RESERVED_SCHEMES = {"linear"}
 
 
@@ -110,12 +127,29 @@ class CharterConfig:
 
 
 @dataclass(frozen=True)
+class ArtifactsConfig:
+    """The board's evidence posture (ADR 0001, settled OQ1).
+
+    `posture` decides where review packets are published; it changes
+    retrievability, never the record (driver 5). `store` is the logical
+    store name a `sidecar` posture resolves through the machine overlay —
+    the tracked config never names a location. `receipts_dir` holds the
+    tracked receipts, beside the cards directory by default.
+    """
+
+    posture: str
+    store: str | None
+    receipts_dir: Path
+
+
+@dataclass(frozen=True)
 class Config:
     root: Path
     board: BoardConfig
     review: ReviewConfig
     contract: ContractConfig
     charter: CharterConfig | None
+    artifacts: ArtifactsConfig
 
 
 def find_config(start: Path) -> Path:
@@ -242,17 +276,34 @@ def load_manifest(boardkit_dir: Path) -> Manifest:
     return Manifest(root=boardkit_dir.parent.resolve(), path=path, default=default, boards=boards)
 
 
-def load_overlay(boardkit_dir: Path) -> dict[str, Path]:
-    """The machine-local `local.toml` overlay: short-code -> board root path."""
+class Overlay(NamedTuple):
+    """The machine-local `local.toml` overlay, machine state, never committed.
+
+    `boards` resolves `external` board rows to absolute paths; `stores`
+    resolves the logical store names a sidecar posture refers to (ADR 0001
+    section 5) to scheme-prefixed refs — `git:` may be a remote URL or an
+    absolute local path, `dir:` must be absolute.
+    """
+
+    boards: dict[str, Path]
+    stores: dict[str, StoreRef]
+
+
+def _looks_remote_git(value: str) -> bool:
+    """A `git:` store ref that is a remote URL rather than a local path."""
+    return "://" in value or value.startswith(("git@", "ssh:"))
+
+
+def load_overlay(boardkit_dir: Path) -> Overlay:
     path = boardkit_dir / LOCAL_FILENAME
     if not path.is_file():
-        return {}
+        return Overlay(boards={}, stores={})
     with path.open("rb") as f:
         data = tomllib.load(f)
-    unknown = data.keys() - {"boards"}
+    unknown = data.keys() - {"boards", "stores"}
     if unknown:
         raise ValueError(f"{path}: unknown top-level key(s): {sorted(unknown)}")
-    overlay: dict[str, Path] = {}
+    boards: dict[str, Path] = {}
     for code, row in require_table("boards", data.get("boards", {})).items():
         row_data = require_table(f"boards.{code}", row)
         unknown_row = row_data.keys() - {"path"}
@@ -275,8 +326,33 @@ def load_overlay(boardkit_dir: Path) -> dict[str, Path]:
         # which is resolved, so an unresolved overlay path (a symlink, or
         # /tmp against /private/tmp) would silently match nothing and drop
         # this board's registry findings on the floor.
-        overlay[code] = overlay_path.resolve()
-    return overlay
+        boards[code] = overlay_path.resolve()
+    stores: dict[str, StoreRef] = {}
+    for name, row in require_table("stores", data.get("stores", {})).items():
+        context = f"{path}: [stores.{name}]"
+        row_data = require_table(f"stores.{name}", row)
+        unknown_row = row_data.keys() - {"location"}
+        if unknown_row:
+            raise ValueError(f"{context}: unknown key(s): {sorted(unknown_row)}")
+        if "location" not in row_data:
+            raise ValueError(f"{context}: missing required key 'location'")
+        ref = parse_store_ref(row_data["location"], context)
+        if ref.scheme == EXTERNAL_KEYWORD:
+            # The overlay IS the machine-local layer; deferring from it has
+            # nowhere left to go.
+            raise ValueError(f"{context}: a store location cannot be '{EXTERNAL_KEYWORD}'")
+        if ref.scheme == "git" and _looks_remote_git(ref.value):
+            stores[name] = ref
+            continue
+        store_path = Path(ref.value).expanduser()
+        if not store_path.is_absolute():
+            raise ValueError(
+                f"{context}: 'location' must be absolute (got {ref.value!r}); "
+                "a relative path resolves against the process working directory, "
+                "not this file"
+            )
+        stores[name] = StoreRef(scheme=ref.scheme, value=str(store_path.resolve()))
+    return Overlay(boards=boards, stores=stores)
 
 
 def find_boardkit(start: Path) -> Path | None:
@@ -336,7 +412,7 @@ def _resolve_code(boardkit_dir: Path, code: str, source: str) -> BoardResolution
     ref = entry.location
     if ref.scheme == EXTERNAL_KEYWORD:
         overlay = load_overlay(boardkit_dir)
-        root = overlay.get(code)
+        root = overlay.boards.get(code)
         if root is None:
             raise ValueError(
                 f"board '{code}' is external; add its path to "
@@ -490,7 +566,7 @@ def registry_rows(boardkit_dir: Path) -> tuple[list[RegistryRow], list[str]]:
     errors: list[str] = []
     for code, entry in sorted(manifest.boards.items()):
         if entry.location.scheme == EXTERNAL_KEYWORD:
-            resolved_root = overlay.get(code)
+            resolved_root = overlay.boards.get(code)
         else:
             resolved_root = (manifest.root / entry.location.value).resolve()
         effective_prefix = entry.id_prefix
@@ -684,7 +760,7 @@ def load_config(path: Path | None) -> Config:
             "[roles.<name>] table per required role, then run `boardkit doctor` to "
             "check the result."
         )
-    missing_top = TOP_LEVEL_SECTIONS - {"charter"} - data.keys()
+    missing_top = TOP_LEVEL_SECTIONS - OPTIONAL_SECTIONS - data.keys()
     if missing_top:
         raise ValueError(f"{config_path}: missing required section(s): {sorted(missing_top)}")
 
@@ -728,7 +804,53 @@ def load_config(path: Path | None) -> Config:
     )
     contract = parse_contract(data["contract"], data["routes"], data["roles"])
     charter = _parse_charter(data["charter"]) if "charter" in data else None
-    return Config(root=root, board=board, review=review, contract=contract, charter=charter)
+    artifacts = _parse_artifacts(data, root, board.cards_dir)
+    return Config(
+        root=root,
+        board=board,
+        review=review,
+        contract=contract,
+        charter=charter,
+        artifacts=artifacts,
+    )
+
+
+def _parse_artifacts(data: dict, root: Path, cards_dir: Path) -> ArtifactsConfig:
+    """The optional [artifacts] table; absent means the ephemeral default.
+
+    Strict in both directions like every other section: an unknown key is
+    an error, and a sidecar posture without a logical store name is an
+    error, because the overlay resolves by that name. The receipts
+    directory defaults to a `receipts` sibling of the cards directory
+    (ADR 0001 section 3).
+    """
+    if "artifacts" not in data:
+        return ArtifactsConfig(
+            posture=DEFAULT_POSTURE, store=None, receipts_dir=cards_dir.parent / "receipts"
+        )
+    table = require_table("artifacts", data["artifacts"])
+    unknown = table.keys() - ARTIFACTS_KEYS
+    if unknown:
+        raise ValueError(f"[artifacts]: unknown key(s): {sorted(unknown)}")
+    posture = table.get("posture", DEFAULT_POSTURE)
+    if posture not in POSTURES:
+        raise ValueError(f"[artifacts]: posture '{posture}' not in {sorted(POSTURES)}")
+    store = table.get("store")
+    if store is not None and (not isinstance(store, str) or not store):
+        raise ValueError("[artifacts]: store must be a non-empty string")
+    if posture == "sidecar" and store is None:
+        raise ValueError(
+            "[artifacts]: posture 'sidecar' requires a 'store' naming the logical "
+            "store the machine overlay resolves"
+        )
+    receipts_raw = table.get("receipts_dir")
+    if receipts_raw is None:
+        receipts_dir = cards_dir.parent / "receipts"
+    else:
+        if not isinstance(receipts_raw, str) or not receipts_raw:
+            raise ValueError("[artifacts]: receipts_dir must be a non-empty string path")
+        receipts_dir = (root / receipts_raw).resolve()
+    return ArtifactsConfig(posture=posture, store=store, receipts_dir=receipts_dir)
 
 
 def _parse_lanes(lanes_data: object) -> dict[str, LaneConfig]:

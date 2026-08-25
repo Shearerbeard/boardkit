@@ -50,8 +50,16 @@ from boardkit.contract import (
 )
 from boardkit.dag import DagError, render_dag_mermaid, render_dag_text
 from boardkit.doctor import render_json, render_text, run_doctor
+from boardkit.receipts import (
+    ReceiptError,
+    close_review_round,
+    pending_review_receipts,
+    publish_pending,
+    receipt_log_errors,
+    verify_receipt,
+)
 from boardkit.review_packet import ReviewPacketError, build_review_packet
-from boardkit.store import CardStore, open_store
+from boardkit.store import CardStore, StoreError, open_store
 
 TEMPLATE_SOURCE = DATA_DIR / "_template.md"
 
@@ -286,6 +294,9 @@ def cmd_check(args: argparse.Namespace) -> int:
     errors += charter_route_errors(config, config.root, registry_dir)
     ref_errors, ref_warnings = card_ref_findings(result.cards, config.root, registry_dir)
     errors += ref_errors
+    # The verdict lives in two tracked places, the card log and the receipt;
+    # this is the validator that keeps them agreeing (ADR 0001, Consequences).
+    errors += receipt_log_errors(config, result.cards)
     if errors:
         return _fail(errors)
     if config.charter is None:
@@ -502,6 +513,128 @@ def cmd_review_packet(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_verify_receipt(args: argparse.Namespace) -> int:
+    """The tracked-repo-only validation path of ADR 0001 section 7.
+
+    Prints one line per check. These are consistency checks on what the
+    board asserts - the digest table's transcription, the log's agreement
+    with the receipt, the reviewer's distinctness, the range's resolution -
+    not proof the reviewer existed or saw the bytes; nothing is signed.
+    """
+    config, store, _ = _resolve_board_context(args)
+    path = Path(args.receipt).resolve()
+    if not path.is_file():
+        return _fail([f"no receipt at {path}"])
+    try:
+        result = build_board(config, store)
+    except BoardError as exc:
+        return _fail(exc.errors)
+    checks = verify_receipt(config, result.cards, path)
+    for check in checks:
+        print(f"{'OK' if check.ok else 'FAIL'}: {check.name}: {check.detail}")
+    failed = [check for check in checks if not check.ok]
+    print(
+        f"{'FAIL' if failed else 'OK'}: {len(checks) - len(failed)} of "
+        f"{len(checks)} checks passed for {path.name}"
+    )
+    return 1 if failed else 0
+
+
+def cmd_close_review(args: argparse.Namespace) -> int:
+    """Close a review round: hash, write the receipt, log, then publish.
+
+    The ADR 0001 section 4 ordering: steps 1-3 are one local unit, the
+    publish is a separate step whose failure leaves the valid unpublished
+    receipt standing and fails loudly (driver 8, settled OQ2). kind=review
+    only; rulings and decisions are written by hand at their events.
+    """
+    config, store, _ = _resolve_board_context(args)
+    commit_range = args.commit_range
+    if commit_range is None:
+        try:
+            card = store.get_card(args.card_id)
+        except StoreError as exc:
+            return _fail(exc.errors)
+        commit_range = card.get("commit-range")
+        if not commit_range:
+            return _fail(
+                [
+                    f"{card['_file']}: no 'commit-range' frontmatter; pass "
+                    "--commit-range or record it on the card"
+                ]
+            )
+    try:
+        path = close_review_round(
+            config,
+            store,
+            card_id=args.card_id,
+            gate=args.gate,
+            round=args.round,
+            suffix=args.suffix,
+            verdict=args.verdict,
+            findings=args.findings,
+            route=args.route,
+            author_models=args.author_models,
+            reviewer_model=args.reviewer_model,
+            commit_range=str(commit_range),
+            findings_text=args.findings_text,
+            checks_not_run=args.checks_not_run,
+            packet_names=args.packets,
+        )
+    except (ReceiptError, StoreError) as exc:
+        return _fail(exc.errors if isinstance(exc, ReceiptError) else [str(exc)])
+    print(f"OK: receipt -> {path}")
+
+    try:
+        results = publish_pending(config, path)
+    except (ReceiptError, StoreError, ValueError) as exc:
+        # Loud, and the receipt stands unpublished (ADR section 4, step 4).
+        errors = exc.errors if isinstance(exc, ReceiptError) else [str(exc)]
+        print(
+            "publish failed; the receipt stands with published: false and "
+            "`boardkit doctor` will warn until `boardkit publish-pending` drains it",
+            file=sys.stderr,
+        )
+        return _fail(errors)
+    for published in results:
+        if published.published:
+            print(f"OK: published {published.locator}")
+        else:
+            print(f"NOTE: posture '{config.artifacts.posture}': packet stays working material")
+    return 0
+
+
+def cmd_publish_pending(args: argparse.Namespace) -> int:
+    """Drain the unpublished-receipt queue: publish and flip each one.
+
+    Every published: false receipt gets one publish attempt; failures are
+    collected and reported together, and any failure exits nonzero with
+    the receipt left standing unpublished (driver 8).
+    """
+    config, _store, _ = _resolve_board_context(args)
+    try:
+        pending = pending_review_receipts(config)
+    except ReceiptError as exc:
+        return _fail(exc.errors)
+    if not pending:
+        print("OK: no unpublished receipts")
+        return 0
+    failures: list[str] = []
+    for path in pending:
+        try:
+            results = publish_pending(config, path)
+        except (ReceiptError, StoreError, ValueError) as exc:
+            detail = exc.errors if isinstance(exc, ReceiptError) else [str(exc)]
+            failures.extend(f"{path.name}: {e}" for e in detail)
+            continue
+        rel = path.relative_to(config.artifacts.receipts_dir)
+        locators = ", ".join(p.locator for p in results if p.locator)
+        print(f"OK: {rel}: {locators or 'nothing to publish'}")
+    if failures:
+        return _fail(failures)
+    return 0
+
+
 def cmd_init(args: argparse.Namespace) -> int:
     root = Path(args.config).resolve().parent if args.config is not None else Path.cwd()
     config_path = root / CONFIG_FILENAME
@@ -672,6 +805,88 @@ def build_parser() -> argparse.ArgumentParser:
         help="print the orientation canary's grading key (markdown)",
     )
     canary_key.set_defaults(handler=cmd_canary_key)
+
+    verify = subparsers.add_parser(
+        "verify-receipt",
+        help="run the tracked-repo-only checks against one receipt (ADR 0001 section 7)",
+    )
+    verify.set_defaults(handler=cmd_verify_receipt)
+    verify.add_argument("receipt", help="path to the receipt file to verify")
+
+    close = subparsers.add_parser(
+        "close-review",
+        help=(
+            "close a review round: hash the packet, write the tracked receipt "
+            "(published: false), append the card's log line, then publish. "
+            "Covers kind=review receipts only; rulings and decisions are "
+            "written by hand at the events they record"
+        ),
+    )
+    close.set_defaults(handler=cmd_close_review)
+    close.add_argument("card_id", help="card id, for example S2")
+    close.add_argument("gate", help="the gate this round concludes, for example A or F")
+    close.add_argument("round", type=int, help="the review round number (1-based)")
+    close.add_argument(
+        "--verdict",
+        required=True,
+        choices=["PASS", "FAIL", "DEFERRED"],
+        help="the reviewer's verdict; a round that never returned one is DEFERRED",
+    )
+    close.add_argument(
+        "--findings",
+        required=True,
+        type=int,
+        help="the finding count; zero findings is an explicit PASS with 0",
+    )
+    close.add_argument("--route", required=True, help="the contract route the review ran on")
+    close.add_argument(
+        "--author-model",
+        dest="author_models",
+        action="append",
+        default=[],
+        help="a model that authored a commit in the range; repeat for several",
+    )
+    close.add_argument(
+        "--reviewer-model", required=True, help="the model that returned the verdict"
+    )
+    close.add_argument(
+        "--commit-range",
+        default=None,
+        help="range A..B the review covered (default: the card's commit-range frontmatter)",
+    )
+    close.add_argument(
+        "--suffix",
+        default=None,
+        help="the review-packet --suffix this receipt concludes on (multi-repo cards)",
+    )
+    close.add_argument(
+        "--packet",
+        dest="packets",
+        action="append",
+        default=None,
+        help=(
+            "a packet name behind this one verdict, for a fix-round receipt "
+            "covering several packets (default: the primary packet, or the "
+            "--suffix packet)"
+        ),
+    )
+    close.add_argument(
+        "--findings-text",
+        default="None.",
+        help="the '## Findings' body: the numbered ledger with dispositions",
+    )
+    close.add_argument(
+        "--checks-not-run",
+        default="None.",
+        help="the '## Checks the reviewer did not run' body (the UNVERIFIED class)",
+    )
+
+    pending = subparsers.add_parser(
+        "publish-pending",
+        help="retry publication for every receipt sitting published: false, "
+        "flipping exactly published + locator on success",
+    )
+    pending.set_defaults(handler=cmd_publish_pending)
 
     init = subparsers.add_parser("init", help="scaffold a new board in the current directory")
     init.set_defaults(handler=cmd_init)

@@ -27,6 +27,9 @@ SUBCOMMANDS = {
     "dispatch-brief",
     "review-packet",
     "canary-key",
+    "verify-receipt",
+    "close-review",
+    "publish-pending",
     "init",
 }
 

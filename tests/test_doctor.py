@@ -66,6 +66,8 @@ EXPECTED_CHECK_IDS = {
     "board.gate-vocabulary",
     "board.next-id-race",
     "views.current",
+    "receipts.valid",
+    "receipts.unpublished",
     "host.base-branch",
     "host.tree-state",
     "env.boardkit-home",

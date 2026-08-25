@@ -16,6 +16,15 @@ repo = "."
 # Directory (relative to this file) review packets are written to.
 output_dir = "docs/board/reviews"
 
+# ADR 0001: this board publishes its review packets to a sidecar store
+# (decision 2 of the wave-2 plan). The tracked config names the logical
+# store only; the location is machine-local in .boardkit/local.toml as
+# [stores.bk-sidecar] location = "git:..." (never committed).
+[artifacts]
+posture = "sidecar"
+store = "bk-sidecar"
+receipts_dir = "docs/board/receipts"
+
 # The R10 board charter (dogfood, authored at S20). `owns` is mirrored
 # byte-for-byte into this board's registry row in .boardkit/manifest.toml;
 # `boardkit check` fails when they drift.

@@ -53,6 +53,7 @@ from boardkit.contract import (
     route_placeholders,
     sections,
 )
+from boardkit.receipts import ReceiptError, ReviewReceipt, parse_receipt
 
 CONTRACT_DOC_DESTS = dict(CONTRACT_DOCS)
 ENTRY_SHIM_DESTS = dict(ENTRY_SHIMS)
@@ -130,6 +131,8 @@ ALL_CHECKS = (
     "board.gate-vocabulary",
     "board.next-id-race",
     "views.current",
+    "receipts.valid",
+    "receipts.unpublished",
     "host.base-branch",
     "host.tree-state",
     "env.boardkit-home",
@@ -685,6 +688,56 @@ def _check_board(checks: _Checks, config: Config) -> None:
     checks.ok("views.current")
 
 
+def _check_receipts(checks: _Checks, config: Config) -> None:
+    """ADR 0001: receipts parse, and none sits unpublished across sessions.
+
+    The unpublished warning is the pressure that keeps the two-phase
+    lifecycle's queue from becoming permanent (settled OQ2): a receipt
+    marked `published: false` is the honest state right after a close or
+    on a machine without the overlay row, and a finding while it lasts.
+    Ephemeral entries never publish, so they are their own final state and
+    stay out of the count; `pending_review_receipts` shares this filter.
+    """
+    receipts_dir = config.artifacts.receipts_dir
+    if not receipts_dir.is_dir():
+        checks.ok("receipts.valid")
+        checks.ok("receipts.unpublished")
+        return
+    unpublished: list[str] = []
+    invalid: list[str] = []
+    for path in sorted(receipts_dir.rglob("*.md")):
+        try:
+            receipt = parse_receipt(path)
+        except ReceiptError as exc:
+            invalid.append(f"{path}: {'; '.join(exc.errors)}")
+            continue
+        if isinstance(receipt, ReviewReceipt) and any(
+            not entry.published and entry.posture != "ephemeral"
+            for entry in receipt.packets
+        ):
+            unpublished.append(str(path.relative_to(config.root)))
+    if invalid:
+        checks.error(
+            "receipts.valid",
+            "; ".join(invalid),
+            "fix the receipt against the ADR 0001 schema; a receipt that does "
+            "not parse is evidence nobody can check",
+        )
+    else:
+        checks.ok("receipts.valid")
+    if unpublished:
+        checks.warn(
+            "receipts.unpublished",
+            f"{len(unpublished)} receipt(s) sit unpublished: " + ", ".join(unpublished),
+            "run `boardkit publish-pending` to publish and flip `published` + "
+            "`locator` (the one permitted mutation, ADR 0001 section 4); on a "
+            "machine without the store's overlay row, add it to "
+            ".boardkit/local.toml first",
+        )
+    else:
+        checks.ok("receipts.unpublished")
+
+
 def _check_worktrees(checks: _Checks, cwd: Path) -> None:
     porcelain = _git_text(cwd, "worktree", "list", "--porcelain")
     if porcelain is None:
@@ -957,6 +1010,7 @@ def run_doctor(
     _check_roles_filled(checks, config)
     _check_pin_sources(checks, config)
     _check_board(checks, config)
+    _check_receipts(checks, config)
     _check_host(checks, config)
     home_finding = boardkit_home_finding(os.environ.get(BOARDKIT_HOME_VAR), INSTALL_ROOT, root)
     if home_finding is None:

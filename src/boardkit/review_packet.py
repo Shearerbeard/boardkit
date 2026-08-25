@@ -707,7 +707,8 @@ def _commit_lines(packet: Packet) -> list[str]:
             f"### {index}. {short} {commit.subject}",
             "",
             f"{stat}",
-            f"Patch: {link(patch, outdir / patch, outdir)} | `git -C {repo} show {short}`",
+            f"Patch: {link(patch, outdir / patch, outdir)} | `git show {short}` "
+            "(from the repo root)",
             "",
         ]
         for path, starts in hunk_pointers(repo, commit.sha).items():
@@ -740,16 +741,21 @@ def _retention_lines() -> list[str]:
 
 def render_review(packet: Packet) -> str:
     """REVIEW.md: the guide first, then the design record, then the index."""
-    meta, repo, outdir = packet.meta, packet.repo, packet.outdir
+    meta, outdir = packet.meta, packet.outdir
     card = packet.cards_dir / meta["_file"]
     lines = [
         f"# Review packet: {meta['id']} {meta['title']}",
         "",
-        f"Card: {link(meta['_file'], card, outdir)} | Repo: `{repo}`",
+        # No machine path anywhere in this file (ADR 0001's named gap): an
+        # absolute repo path would write one contributor's directory layout
+        # into the permanent history of any board that tracks its packets
+        # (the in-repo posture). The commands run from the repo root.
+        f"Card: {link(meta['_file'], card, outdir)}",
+        "Repo: the repository under review; run the `git` commands from its root.",
         f"Range: `{packet.commit_range}` ({len(packet.commits)} commits)",
         "",
         f"Whole card at once: {link('full-range.diff', outdir / 'full-range.diff', outdir)}, or",
-        f"`git -C {repo} diff {packet.commit_range}`",
+        f"`git diff {packet.commit_range}` (from the repo root)",
         "",
         *_guide_lines(packet),
         *_design_record_lines(packet),
