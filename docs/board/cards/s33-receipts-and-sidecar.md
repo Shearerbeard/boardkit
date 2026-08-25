@@ -62,7 +62,7 @@ schema, and the driver contracts.
 - [x] Gate A: opencode-lane review, fresh context.
 - [x] Gate M: the clean-clone digest validation and tamper test, plus
   the wave smoke test on one of this wave's own cards.
-- [ ] Gate D: drift audit before the user gate.
+- [x] Gate D: drift audit before the user gate.
 - [ ] Gate U (code-review): Mike reads the receipt as an outside
   vetter would; stop.
 
@@ -72,6 +72,22 @@ direct
 
 ## Log
 
+- 2026-08-24 Gate D passed: a fresh-context auditor (this harness's
+  read-only explorer; this harness offers no cheaper in-harness class,
+  so the lower-cost rule is met by context isolation rather than a
+  smaller model) audited the card log against git, the implementation
+  against the ADR's settled decisions, the living documents, the ADR
+  premise table, and the R-wave receipt against its evidence file
+  (round and findings counts, card list, `gate_ticked: false`, and the
+  digest all match). The auditor re-ran the suite itself: 518 passed,
+  ruff clean, check and doctor green. DRIFT AUDIT: 2 FINDINGS, both
+  being the divergences already logged at Gate S (DOCKING.md does not
+  document the `[stores]` overlay table; PROCESS.md gate-close prose
+  does not name `close-review`/`publish-pending`); the auditor
+  confirmed they are the only doc drifts. Both stand as logged
+  divergences and are Gate U material for a documentation card. The
+  ADR premise rows S33 made false are past-tense state under the
+  table's 57b6390 stamp; no bump owed. The card waits at Gate U.
 - 2026-08-24 Gate M passed, run by the board owner end to end. From a
   clean clone at /tmp/s33-clean-clone: `verify-receipt` passes 5/5 on
   A-r1, 5/5 on A-r2, and 4/4 on the R-wave ruling receipt (schema,
