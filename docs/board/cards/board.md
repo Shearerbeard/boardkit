@@ -37,8 +37,6 @@ kanban-plugin: board
 ## In Progress
 
 ## In Review
-- [ ] **S32** [ArtifactStore ADR - receipts, postures, sidecar mechanics](s32-artifact-store-adr.md)
-	Depends: S28. Gates: S -> A -> D -> U @ U. Executor: smart.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)
@@ -101,6 +99,8 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> D -> U(code-review). Executor: smart.
 - [ ] **S31** [Versioned docking-convention spec with the three consumer postures](s31-docking-convention-spec.md)
 	Depends: none. Gates: S -> A -> D -> U(code-review). Executor: smart.
+- [ ] **S32** [ArtifactStore ADR - receipts, postures, sidecar mechanics](s32-artifact-store-adr.md)
+	Depends: S28. Gates: S -> A -> D -> U. Executor: smart.
 - [ ] **S43** [Land the phase 2 residue - canary fallback, degraded close, review notes](s43-phase2-residue-canary-fallback.md)
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 

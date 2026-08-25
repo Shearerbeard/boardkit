@@ -1,7 +1,7 @@
 ---
 id: S32
 title: ArtifactStore ADR - receipts, postures, sidecar mechanics
-status: in-review
+status: done
 commit-range: "3435716..038ad96"
 depends: [S28]
 serialize-with: []
@@ -46,7 +46,7 @@ per-harness machine-local pointer pattern is weighed here beside S12.
 - [x] Gate A: adversarial prose review per the roster, ledger appended
   to the ADR.
 - [x] Gate D: drift audit before the user gate.
-- [ ] Gate U: Mike approves the ADR; S33 does not start without it.
+- [x] Gate U: Mike approves the ADR; S33 does not start without it.
 
 ## Branch
 
@@ -54,6 +54,18 @@ direct
 
 ## Log
 
+- 2026-08-24 Gate U passed: Mike approved the ADR, settling the four open
+  questions per their recommendations (posture key in a new optional
+  `[artifacts]` table; two-phase failed publish with a `boardkit doctor`
+  warning; git sidecar transport with `dir:` accepted; receipts narrowed to
+  A and F as `review`, cycle-ending rulings as `ruling`, U as `decision`,
+  the `check` kind defined but unadopted) and approving both flagged Gate A
+  amendments, which the board owner applied to the text: the backfill
+  exception in section 4 and the failure-table qualification for equal-root
+  `dir:` republishes. The ADR's status flips to accepted, and its review
+  ledger - still carrying the pre-Gate-A placeholder - is replaced with the
+  four-round cycle summary. The premise table needed no re-verification:
+  the anchored files are unchanged since 57b6390. S33 is unblocked.
 - 2026-08-23 Gate D passed: a fresh small-class Claude auditor with
   no implementation context checked the ADR against PROCESS,
   DOCKING, REVIEW-TOOLING, MODEL-CLASSES, and the plan's decision 2,

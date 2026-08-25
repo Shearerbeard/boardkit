@@ -2,7 +2,9 @@
 
 <!-- boardkit-contract: v2 -->
 
-- **Status**: proposed. Accepted at S32's Gate U, or amended there.
+- **Status**: accepted at S32's Gate U, 2026-08-24, with the four open
+  questions settled per their recommendations and the two flagged Gate A
+  amendments applied. See the Open questions section and the review ledger.
 - **Date**: 2026-08-23
 - **Deciders**: Mike at Gate U; the board owner session that pulled S32.
 - **Card**: [S32](../board/cards/s32-artifact-store-adr.md). Implemented by
@@ -417,7 +419,9 @@ inventing transactional behavior under deadline.
 A `ruling` or `decision` receipt is written once, at the event it records,
 in the same commit as its card-log line. It has no publish phase and no
 `published` flip, because it names no packet to publish, and its digest rows
-attest tracked documents.
+attest tracked documents. A backfill is the one exception: a receipt written
+later for an event already past is written at backfill time, and its `dated`
+field carries the event's date. Section 8's R-wave receipt is this case.
 
 **When a review receipt is written.** One per round, at the moment the round
 concludes, which is when the reviewer's final message yields a verdict.
@@ -580,7 +584,7 @@ Each row is a failure the design expects, with what the reader sees.
 | A packet carries a secret | The sidecar is private, and the receipt exposes file names and digests only. A digest still confirms a guess about a small file's exact content. Named as a residual, not mitigated. |
 | Two boards share one sidecar | Short-code namespacing prevents collision. A board whose short-code changes orphans its earlier packets, which the locator makes visible. |
 | A `dir:` sidecar's published bytes change underneath a receipt | Recomputing the manifest root is the only check there is, and a mismatch cannot say which side moved, since a directory keeps no history to consult. This is the weaker guarantee open question 3 trades away. |
-| A publish targets a `dir:` path that already exists | Refused, since the store is append-only. Overwriting would invalidate every receipt already naming that path. |
+| A publish targets a `dir:` path that already exists with different content | Refused, since the store is append-only. Overwriting would invalidate every receipt already naming that path. An equal-root republish is idempotent and needs no write, per section 5. |
 | Packet regenerated on another machine | The bytes differ, so the digests do not match. This is not a bug and not a validation path. See the premise check below: `REVIEW.md` embeds an absolute machine path by construction. |
 
 ### 7. The outside-vetter validation path
@@ -832,6 +836,16 @@ it is a packet-generation defect that predates both cards.
 Each is an either-or the ruled inputs leave open, with a recommendation. All
 four are Mike's to settle at Gate U, or S33's to settle with evidence.
 
+**Settled at Gate U, 2026-08-24: all four recommendations accepted.** OQ1:
+the posture key lives in a new optional `[artifacts]` table holding
+`posture`, the logical store name, and a `receipts_dir`. OQ2: a failed
+publish is two-phase - the receipt is written with `published: false`, the
+publish runs as a separate step, and `boardkit doctor` warns while any
+receipt sits unpublished. OQ3: the sidecar transport is a git repository,
+with `dir:` accepted under the same grammar. OQ4: receipts narrow to the
+recommended set - A and F as `review`, a cycle-ending ruling as `ruling`, U
+as `decision`; the `check` kind below stays defined but unadopted.
+
 **OQ1. Where the posture key lives: `[board] posture` or a new `[artifacts]`
 table.** Decision 2 says "a per-board posture key in `boardkit.toml`" and
 does not say which table. The compatibility argument is a wash: `[board]`
@@ -989,6 +1003,32 @@ revision.
 
 ## Review ledger
 
-Gate A has not run. The adversarial prose review appends its numbered
-findings ledger here, with an explicit verdict and both model names, per
-`REVIEW-TOOLING.md`. An empty ledger is not a pass.
+Gate A ran four rounds, reviewer GPT 5.6-sol via the codex CLI (read-only
+sandbox) against author Claude (claude-opus executor under a claude-fable-5
+board owner). The numbered findings live in the round packets; the card's
+log carries the per-round detail.
+
+1. **Round 1 - FAIL, 10 findings.** All accepted: a wrong verification
+   stamp, the manifest root's overclaimed tamper-evidence, vetter-path
+   wording, a singular ruling schema, a singular `author_model`, a dropped
+   suffix, an unspecified lifecycle, no overlay schema, no `dir:` semantics,
+   and OQ4's unnamed departure from decision 2.
+2. **Round 2 - FAIL, in convergence.** Seven of ten dispositions verified
+   RESOLVED; three residuals re-raised: the internally contradictory worked
+   ruling receipt, the content-addressing contradiction in the `dir:`
+   locator, and OQ4's still-unencodable literal branch.
+3. **Round 3 - FAIL, 3 findings not resolved.** The convergence bound spent,
+   so the written ruling
+   ([2026-08-23-s32-gate-a-ruling.md](../board/evidence/2026-08-23-s32-gate-a-ruling.md))
+   fixed the fix shape and the exit condition.
+4. **Round 4 - FAIL under the ruling's exit condition, ending the cycle.**
+   The check-schema fix verified RESOLVED; two survivors presented at Gate U
+   as flagged amendments: the missing backfill exception in section 4, and
+   the failure table's unqualified refusal of existing `dir:` targets. Both
+   were settled at Gate U (2026-08-24) and the amendments applied to the
+   text above.
+
+Reviewer spend: 132,320 + 132,178 + 127,759 + 104,087 = 496,344 tokens.
+Unverified by the reviewer: the `uv`-backed checks (sandbox limits); the
+board owner's runs stand (pytest 430 passed, ruff clean, `boardkit check`
+green, vale clean).
