@@ -120,3 +120,47 @@ restating them, keeping only the report contract and the round's
 delta inline; measure prompt size and reviewer spend against review
 quality over a few cards before changing any template. Proposes; the
 maintainer disposes.
+
+## 2026-08-25 close-review-appends-log-at-end
+
+```yaml
+date: 2026-08-25
+harness: kimi-code
+agent: kimi-k3
+workstreams: [boardkit]
+repo: boardkit (its own board, S33 gate closes)
+source: docs/board/cards/s33-receipts-and-sidecar.md log; the two close-review-appended lines at the end of its Log section
+```
+
+`boardkit close-review` appends its receipt log lines at the END of a
+card's Log section, while the house convention for hand-written entries
+is newest-first at the top. S33's log now shows the split: the manual
+gate entries run newest-first from the top, and the two `close-review`
+lines (A-r1, A-r2) sit at the bottom under the oldest entry, so the
+chronological read order flips mid-file. Candidate fix: close-review
+inserts its line at the top of the Log section instead of appending,
+matching the convention the rest of the process already follows.
+Proposes; the maintainer disposes.
+
+## 2026-08-25 transcripts-added-after-publication
+
+```yaml
+date: 2026-08-25
+harness: kimi-code
+agent: kimi-k3
+workstreams: [boardkit]
+repo: boardkit (its own board, S33 gate closes)
+source: docs/board/cards/s33-receipts-and-sidecar.md Gate A log entry, 2026-08-24
+```
+
+On S33's first real close-review runs, the reviewer transcripts were
+copied into the packet directories only AFTER publication, so they are
+not part of the attested byte set the receipt digests cover - the one
+artifact a later vetter most wants to read is exactly the one the
+receipt does not attest. Nothing in the tooling enforced the ordering;
+it was caught by the board owner reading its own log. Candidate fix:
+the documented close sequence (and ideally close-review itself, e.g. a
+warning when a transcript-shaped file is missing from the packet dir)
+puts the transcript into the packet dir BEFORE publication, so the
+evidence a receipt points at is complete. Proposes; the maintainer
+disposes.

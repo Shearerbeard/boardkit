@@ -20,12 +20,13 @@ flowchart TD
     S30["S30 Wave-2 small-fix batch with the i…"]:::done
     S31["S31 Versioned docking-convention spec…"]:::done
     S32["S32 ArtifactStore ADR - receipts, pos…"]:::done
-    S33["S33 Receipts and sidecar implementati…"]:::inreview
+    S33["S33 Receipts and sidecar implementati…"]:::done
     S36["S36 rust-holes adopts the docking con…"]:::backlog
     S37["S37 Recomputable freshness stamp on t…"]:::backlog
     S38["S38 Pick the board's visual home"]:::ready
     S39["S39 Machine-bootstrap recipe and acco…"]:::ready
     S40["S40 README developer path, canary bri…"]:::ready
+    S48["S48 Document stores overlay and close…"]:::ready
   end
   S1["S1 Wave-close retro with snapshots a…"]:::ready
   S2["S2 Wire pre-vet, deferrals, and pack…"]:::ready
@@ -73,4 +74,5 @@ flowchart TD
   S31 --> S36
   S28 --> S37
   S16 --> S38
+  S33 --> S48
 ```

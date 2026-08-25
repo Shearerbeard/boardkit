@@ -1,7 +1,7 @@
 ---
 id: S33
 title: Receipts and sidecar implementation per the ADR
-status: in-review
+status: done
 commit-range: "a289224..16644f7"
 depends: [S32]
 serialize-with: []
@@ -63,7 +63,7 @@ schema, and the driver contracts.
 - [x] Gate M: the clean-clone digest validation and tamper test, plus
   the wave smoke test on one of this wave's own cards.
 - [x] Gate D: drift audit before the user gate.
-- [ ] Gate U (code-review): Mike reads the receipt as an outside
+- [x] Gate U (code-review): Mike reads the receipt as an outside
   vetter would; stop.
 
 ## Branch
@@ -72,6 +72,18 @@ direct
 
 ## Log
 
+- 2026-08-25 Gate U passed: Mike approved the card, the two
+  process-feedback entries, and the docs follow-up card as presented
+  ("aprpoved - where would the feedback entries be filed to?"). The
+  board owner answered the filing question (repo-root FEEDBACK.md, the
+  kit's own intake queue, since the friction arose on boardkit's own
+  board), filed both entries there (close-review log-append-at-end vs
+  the newest-first convention; transcripts copied into packet dirs
+  after publication, outside the attested byte set), and minted S48
+  for the two Gate D doc divergences (DOCKING.md `[stores]` overlay
+  prose; PROCESS.md gate-close prose naming `close-review` and
+  `publish-pending`). Reviewer-spend recovery remains owed at wave
+  close. Card done.
 - 2026-08-24 Gate D passed: a fresh-context auditor (this harness's
   read-only explorer; this harness offers no cheaper in-harness class,
   so the lower-cost rule is met by context isolation rather than a

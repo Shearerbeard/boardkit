@@ -33,12 +33,12 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> D -> U @ S. Executor: smart.
 - [ ] **S40** [README developer path, canary brief template, plan navigation](s40-readme-developer-path.md)
 	Depends: none. Gates: S -> A @ S. Executor: any.
+- [ ] **S48** [Document stores overlay and close-review in the living docs](s48-document-stores-and-close-review.md)
+	Depends: S33. Gates: S -> U(acceptance) @ S. Executor: any.
 
 ## In Progress
 
 ## In Review
-- [ ] **S33** [Receipts and sidecar implementation per the ADR](s33-receipts-and-sidecar.md)
-	Depends: S32. Gates: S -> A -> M -> D -> U(code-review) @ U. Executor: smart.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)
@@ -101,6 +101,8 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> D -> U(code-review). Executor: smart.
 - [ ] **S32** [ArtifactStore ADR - receipts, postures, sidecar mechanics](s32-artifact-store-adr.md)
 	Depends: S28. Gates: S -> A -> D -> U. Executor: smart.
+- [ ] **S33** [Receipts and sidecar implementation per the ADR](s33-receipts-and-sidecar.md)
+	Depends: S32. Gates: S -> A -> M -> D -> U(code-review). Executor: smart.
 - [ ] **S43** [Land the phase 2 residue - canary fallback, degraded close, review notes](s43-phase2-residue-canary-fallback.md)
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 
