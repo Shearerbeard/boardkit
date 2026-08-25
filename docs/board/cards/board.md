@@ -38,7 +38,7 @@ kanban-plugin: board
 
 ## In Review
 - [ ] **S33** [Receipts and sidecar implementation per the ADR](s33-receipts-and-sidecar.md)
-	Depends: S32. Gates: S -> A -> M -> D -> U(code-review) @ A. Executor: smart.
+	Depends: S32. Gates: S -> A -> M -> D -> U(code-review) @ M. Executor: smart.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)

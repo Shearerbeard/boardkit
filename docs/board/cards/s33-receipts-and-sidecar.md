@@ -2,7 +2,7 @@
 id: S33
 title: Receipts and sidecar implementation per the ADR
 status: in-review
-commit-range: "a289224..34e9f4f"
+commit-range: "a289224..16644f7"
 depends: [S32]
 serialize-with: []
 lineage: primary
@@ -59,7 +59,7 @@ schema, and the driver contracts.
 - [x] Gate S: load skill `gate-probes`, then `uv run pytest -q`,
   `uv run ruff check`, `boardkit check`, `boardkit render --check`,
   `boardkit doctor`; `vale` on touched markdown.
-- [ ] Gate A: opencode-lane review, fresh context.
+- [x] Gate A: opencode-lane review, fresh context.
 - [ ] Gate M: the clean-clone digest validation and tamper test, plus
   the wave smoke test on one of this wave's own cards.
 - [ ] Gate D: drift audit before the user gate.
@@ -72,6 +72,43 @@ direct
 
 ## Log
 
+- 2026-08-24 Gate A passed: round 2 returned VERDICT: PASS, findings: 0,
+  both round-1 dispositions verified RESOLVED with file:line evidence
+  (the `author_models: []` rendering, the loud ruling/decision list
+  checks, the writer round-trip test, the five ruling/decision verify
+  tests), no regressions, no scope expansion. Cycle shape: round 1 FAIL
+  (2 findings), fix 16644f7, round 2 PASS. Reviewer both rounds:
+  GLM-5.2-Fast via the opencode lane; author: kimi-k3 coder agents in
+  this harness. The close ran through the card's own tooling - the
+  acceptance exercised on itself: `close-review` wrote A-r1 (FAIL,
+  packet suffix r1) and A-r2 (PASS, primary packet) and published both
+  to the bk-sidecar at the locators the receipts record, each receipt
+  and its log line landing as one local unit. Two first-use frictions,
+  logged for process feedback rather than fixed here: `close-review`
+  appends its log lines at the END of the Log section (the house
+  convention is newest-first), and the reviewer transcripts were copied
+  into the packet directories only after publication, so they are not
+  in the attested byte set - future closes should drop the transcript
+  into the packet dir before running `close-review`.
+- 2026-08-24 Gate A round 1 returned VERDICT: FAIL, findings: 2 (1
+  BLOCKING, 1 MINOR). BLOCKING: `render_review` emitted a bare
+  `author_models` key for the empty case, which parses back as None and
+  aborts `close_review_round` on exactly the DEFERRED
+  unestablished-authorship receipt the ADR requires - the board owner
+  reproduced the YAML None parse before accepting. MINOR: no test
+  exercised `verify_receipt` on ruling or decision receipts. Reviewer:
+  GLM-5.2-Fast via the opencode lane (baseten provider), pre-vetted
+  (echo plus staged read probe); author: this harness's coder agent, so
+  the invariant holds. Dispositions: both accepted; fix round 1 landed
+  as 16644f7 (empty `author_models` renders as `[]`, loud failures for
+  illegitimately empty ruling/decision list fields, writer round-trip
+  and ruling/decision verify tests; pytest 518 passed, ruff clean,
+  re-run by the board owner). Unverified by the reviewer (no repo in
+  the sandbox): pytest, ruff, `boardkit check` - the board owner's runs
+  stand. Reviewer spend not captured from the plain-text opencode run;
+  recovery owed at wave close. Commit-range extended to
+  a289224..16644f7, packet regenerated, round 2 dispatched with the
+  convergence discipline.
 - 2026-08-24 Gate S passed; the card enters in-review with commit-range
   a289224..34e9f4f and the packet generated. The executor (this
   harness's coder agent, two dispatches: the implementation, then the
@@ -100,3 +137,5 @@ direct
   and no git operations, per the roles rule.
 - 2026-08-22 Minted at the wave-2 Gate U (Phase 0) per the plan's
   card map; Mike approved the plan and its dispositions that day.
+- 2026-08-24 Gate A round 1: FAIL, 2 finding(s). Reviewer glm-5.2-fast via opencode-reviewer; authors kimi-k3. Receipt: [A-r1](../receipts/S33/A-r1.md).
+- 2026-08-24 Gate A round 2: PASS, 0 finding(s). Reviewer glm-5.2-fast via opencode-reviewer; authors kimi-k3. Receipt: [A-r2](../receipts/S33/A-r2.md).
