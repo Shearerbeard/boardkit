@@ -60,7 +60,7 @@ schema, and the driver contracts.
   `uv run ruff check`, `boardkit check`, `boardkit render --check`,
   `boardkit doctor`; `vale` on touched markdown.
 - [x] Gate A: opencode-lane review, fresh context.
-- [ ] Gate M: the clean-clone digest validation and tamper test, plus
+- [x] Gate M: the clean-clone digest validation and tamper test, plus
   the wave smoke test on one of this wave's own cards.
 - [ ] Gate D: drift audit before the user gate.
 - [ ] Gate U (code-review): Mike reads the receipt as an outside
@@ -72,6 +72,18 @@ direct
 
 ## Log
 
+- 2026-08-24 Gate M passed, run by the board owner end to end. From a
+  clean clone at /tmp/s33-clean-clone: `verify-receipt` passes 5/5 on
+  A-r1, 5/5 on A-r2, and 4/4 on the R-wave ruling receipt (schema,
+  manifest root, reviewer-distinctness, commit-range resolution,
+  card-log agreement). From a fresh clone of the sidecar: every digest
+  row in both receipts recomputes from the packet bytes at the locator
+  sha, and the manifest root matches the receipt (`211cabe0...` for
+  A-r2). Tamper test: one appended byte in the fetched full-range.diff
+  changes the digest away from the receipt's value - detected, as
+  required. The wave smoke test is this card itself: two real Gate A
+  rounds closed through `close-review` with publication to the
+  bk-sidecar and no hand steps, which is also acceptance criterion 1.
 - 2026-08-24 Gate A passed: round 2 returned VERDICT: PASS, findings: 0,
   both round-1 dispositions verified RESOLVED with file:line evidence
   (the `author_models: []` rendering, the loud ruling/decision list
