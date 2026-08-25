@@ -45,7 +45,7 @@ Admission test: where does the diff land.
 | [S30](s30-small-fix-batch.md) | Wave-2 small-fix batch with the ignore and doctor truthing items | done | - | smart | S -> A -> D -> U(code-review) |
 | [S31](s31-docking-convention-spec.md) | Versioned docking-convention spec with the three consumer postures | done | - | smart | S -> A -> D -> U(code-review) |
 | [S32](s32-artifact-store-adr.md) | ArtifactStore ADR - receipts, postures, sidecar mechanics | done | S28 | smart | S -> A -> D -> U |
-| [S33](s33-receipts-and-sidecar.md) | Receipts and sidecar implementation per the ADR | backlog | S32 | smart | S -> A -> M -> D -> U(code-review) |
+| [S33](s33-receipts-and-sidecar.md) | Receipts and sidecar implementation per the ADR | in-review | S32 | smart | S -> A -> M -> D -> U(code-review) @ A |
 | [S34](s34-wave-gate-design.md) | Decide whether the wave-level Gate F packet is worth generating | backlog | S32 | smart | S -> A -> D -> U |
 | [S35](s35-before-after-canary.md) | Before/after canary extension for the PROCESS templates | backlog | S34 | smart | S -> A |
 | [S36](s36-rust-holes-docking.md) | rust-holes adopts the docking convention as second consumer | backlog | S31 | smart | S -> A -> U(code-review) |
@@ -60,4 +60,4 @@ Admission test: where does the diff land.
 
 ## Epics
 
-- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 4/12 done - S8 (ready), S12 (ready), S15 (done), S30 (done), S31 (done), S32 (done), S33 (backlog), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready)
+- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 4/12 done - S8 (ready), S12 (ready), S15 (done), S30 (done), S31 (done), S32 (done), S33 (in-review), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready)

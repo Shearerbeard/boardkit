@@ -20,7 +20,7 @@ flowchart TD
     S30["S30 Wave-2 small-fix batch with the i…"]:::done
     S31["S31 Versioned docking-convention spec…"]:::done
     S32["S32 ArtifactStore ADR - receipts, pos…"]:::done
-    S33["S33 Receipts and sidecar implementati…"]:::backlog
+    S33["S33 Receipts and sidecar implementati…"]:::inreview
     S36["S36 rust-holes adopts the docking con…"]:::backlog
     S37["S37 Recomputable freshness stamp on t…"]:::backlog
     S38["S38 Pick the board's visual home"]:::ready

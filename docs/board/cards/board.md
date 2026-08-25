@@ -37,6 +37,8 @@ kanban-plugin: board
 ## In Progress
 
 ## In Review
+- [ ] **S33** [Receipts and sidecar implementation per the ADR](s33-receipts-and-sidecar.md)
+	Depends: S32. Gates: S -> A -> M -> D -> U(code-review) @ A. Executor: smart.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)
@@ -45,8 +47,6 @@ kanban-plugin: board
 	Depends: S2. Gates: S -> A -> U. Executor: smart.
 - [ ] **S27** [Maintained architecture flowchart of the kit and its skills](s27-architecture-flowchart.md)
 	Depends: none. Gates: S -> A. Executor: any.
-- [ ] **S33** [Receipts and sidecar implementation per the ADR](s33-receipts-and-sidecar.md)
-	Depends: S32. Gates: S -> A -> M -> D -> U(code-review). Executor: smart.
 - [ ] **S34** [Decide whether the wave-level Gate F packet is worth generating](s34-wave-gate-design.md)
 	Depends: S32. Gates: S -> A -> D -> U. Executor: smart.
 - [ ] **S35** [Before/after canary extension for the PROCESS templates](s35-before-after-canary.md)
