@@ -406,6 +406,25 @@ def test_close_refuses_to_overwrite_an_existing_receipt(tmp_path: Path) -> None:
         _close(tmp_path)
 
 
+def test_deferred_round_with_unestablished_authorship_round_trips(tmp_path: Path) -> None:
+    """The ADR's defer case through the writer, not parse_receipt alone:
+    empty author_models must render as `[]` (a bare key parses back as None),
+    land on disk, parse, and pass the agreement check."""
+    _board(tmp_path)
+    path = _close(
+        tmp_path,
+        verdict="DEFERRED",
+        author_models=[],
+        findings_text="The delegation returned no verdict; the round is deferred.",
+    )
+    receipt = parse_receipt(path)
+    assert isinstance(receipt, ReviewReceipt)
+    assert receipt.verdict == "DEFERRED"
+    assert receipt.author_models == ()
+    config = load_config(tmp_path / "boardkit.toml")
+    assert receipt_log_errors(config, DirStore(config).list_cards()) == []
+
+
 def test_a_failed_log_append_leaves_nothing_written(tmp_path: Path) -> None:
     _board(tmp_path)
     # No Log section: append_log raises, and the receipt comes back off disk.

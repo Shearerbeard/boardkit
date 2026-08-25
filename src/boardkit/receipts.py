@@ -340,7 +340,10 @@ def render_review(receipt: ReviewReceipt) -> str:
         f"findings: {receipt.findings}",
         f"dated: {receipt.dated}",
         f"route: {receipt.route}",
-        "author_models:",
+        # A bare `author_models:` parses back as None, not the empty list the
+        # DEFERRED case legitimately carries - render it explicitly, the same
+        # way `packets: []` is rendered below.
+        "author_models:" if receipt.author_models else "author_models: []",
         *(f"  - {model}" for model in receipt.author_models),
         f"reviewer_model: {receipt.reviewer_model}",
         f"commit_range: {receipt.commit_range}",
@@ -666,6 +669,10 @@ def _build_ruling(meta: dict, body: ReceiptBody, errors: list[str]) -> RulingRec
         gate_ticked = False
     author_models = _string_list(meta, "author_models", errors)
     reviewer_models = _string_list(meta, "reviewer_models", errors)
+    if not reviewer_models:
+        # Driver 9: a receipt names the model that reviewed. A ruling has no
+        # defer case - the DEFERRED escape belongs to `review` alone.
+        errors.append("'reviewer_models' must name at least one model")
     overlap = set(reviewer_models) & set(author_models)
     if overlap:
         errors.append(f"reviewer_models appear in author_models: {sorted(overlap)}")
@@ -696,6 +703,11 @@ def _build_decision(meta: dict, body: ReceiptBody, errors: list[str]) -> Decisio
     packets = _packets(meta, errors, require_manifest=False)
     if packets:
         errors.append("a decision names no packet to publish; its packets list is empty")
+    author_models = _string_list(meta, "author_models", errors)
+    if not author_models:
+        # A decision verdict is ACCEPTED or REJECTED - no DEFERRED case - so
+        # unestablished authorship has no honest encoding here (driver 9).
+        errors.append("'author_models' must name at least one model")
     return DecisionReceipt(
         card=_common_str(meta, "card", errors),
         gate=_common_str(meta, "gate", errors),
@@ -703,7 +715,7 @@ def _build_decision(meta: dict, body: ReceiptBody, errors: list[str]) -> Decisio
         verdict=str(meta.get("verdict")),
         dated=_dated(meta, errors),
         decider=_common_str(meta, "decider", errors),
-        author_models=_string_list(meta, "author_models", errors),
+        author_models=author_models,
         packets=packets,
         body=body,
     )
@@ -856,8 +868,7 @@ def pending_review_receipts(config: Config) -> list[Path]:
             continue
         receipt = parse_receipt(path)
         if isinstance(receipt, ReviewReceipt) and any(
-            not entry.published and entry.posture != "ephemeral"
-            for entry in receipt.packets
+            not entry.published and entry.posture != "ephemeral" for entry in receipt.packets
         ):
             pending.append(path)
     return pending

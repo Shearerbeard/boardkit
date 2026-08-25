@@ -8,6 +8,7 @@ shape: digests validate against fetched bytes, and altered bytes fail.
 
 from __future__ import annotations
 
+import hashlib
 import subprocess
 from pathlib import Path
 
@@ -253,3 +254,162 @@ def test_doctor_clears_once_published(board: Path) -> None:
     checks = _Checks()
     _check_receipts(checks, config)
     assert checks.findings == []
+
+
+# --- Ruling and decision receipts (the other two kinds) -----------------------
+
+RULING_TEMPLATE = """\
+---
+receipt: v1
+kind: ruling
+cards: [S1]
+gate: A
+verdict: RULING
+dated: 2026-08-16
+route: codex-reviewer
+author_models: [claude-fable-5]
+reviewer_models: [gpt-5.6-sol]
+rounds:
+  - round: 1
+    object: "the card diff"
+    verdict: FAIL
+    findings: 3
+ruling: evidence/cycle.md
+gate_ticked: false
+packets: []
+---
+
+# Ruling receipt
+
+## Digests
+
+| SHA-256 | Path |
+| --- | --- |
+| {digest} | `evidence/cycle.md` |
+
+## Findings
+
+In the ruling document.
+
+## Checks the reviewer did not run
+
+The uv-backed checks.
+"""
+
+DECISION_TEMPLATE = """\
+---
+receipt: v1
+kind: decision
+card: S1
+gate: U
+round: 1
+verdict: ACCEPTED
+dated: 2026-08-24
+decider: Mike
+author_models: [claude-fable-5]
+packets: []
+---
+
+# Decision receipt: S1 Gate U
+
+## Digests
+
+| SHA-256 | Path |
+| --- | --- |
+| {digest} | `receipts/S1/A-r1.md` |
+
+## Findings
+
+Accepted on the round-1 ledger.
+
+## Checks the reviewer did not run
+
+None - a user gate has no reviewer.
+"""
+
+
+def _tracked_file(board: Path, rel: str, content: str) -> str:
+    """A file in the board root a receipt can attest; returns its digest."""
+    path = board / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _verify(board: Path, receipt_path: Path):
+    config = load_config(board / "boardkit.toml")
+    return verify_receipt(config, DirStore(config).list_cards(), receipt_path)
+
+
+def test_verify_receipt_on_a_ruling(board: Path) -> None:
+    """The ruling branch: per-row re-digest of the tracked file it attests."""
+    digest = _tracked_file(board, "evidence/cycle.md", "the ruling\n")
+    rulings = board / "receipts" / "_rulings"
+    rulings.mkdir(parents=True)
+    path = rulings / "2026-08-16-cycle.md"
+    path.write_text(RULING_TEMPLATE.format(digest=digest), encoding="utf-8")
+
+    checks = _verify(board, path)
+    assert checks and all(check.ok for check in checks)
+    names = {check.name for check in checks}
+    assert "digest[evidence/cycle.md]" in names
+    assert "reviewer-distinct" in names
+
+
+def test_verify_receipt_on_a_ruling_catches_a_tampered_digest(board: Path) -> None:
+    digest = _tracked_file(board, "evidence/cycle.md", "the ruling\n")
+    rulings = board / "receipts" / "_rulings"
+    rulings.mkdir(parents=True)
+    path = rulings / "2026-08-16-cycle.md"
+    path.write_text(RULING_TEMPLATE.format(digest=digest), encoding="utf-8")
+    # The tracked file moves underneath the receipt.
+    (board / "evidence" / "cycle.md").write_text("edited after the fact\n", encoding="utf-8")
+
+    checks = _verify(board, path)
+    digest_check = next(c for c in checks if c.name == "digest[evidence/cycle.md]")
+    assert not digest_check.ok
+
+
+def test_verify_receipt_on_a_ruling_catches_a_missing_file(board: Path) -> None:
+    rulings = board / "receipts" / "_rulings"
+    rulings.mkdir(parents=True)
+    path = rulings / "2026-08-16-cycle.md"
+    path.write_text(RULING_TEMPLATE.format(digest="ab" * 32), encoding="utf-8")
+
+    checks = _verify(board, path)
+    digest_check = next(c for c in checks if c.name == "digest[evidence/cycle.md]")
+    assert not digest_check.ok
+    assert "not in this clone" in digest_check.detail
+
+
+def test_verify_receipt_on_a_decision(board: Path) -> None:
+    """A decision attests the receipts it decides over, and its card's log
+    carries the decision line linking it."""
+    review_path = _close(board)  # the receipt this decision decides over
+    digest = hashlib.sha256(review_path.read_bytes()).hexdigest()
+    decision = board / "receipts" / "S1" / "U-r1.md"
+    decision.write_text(DECISION_TEMPLATE.format(digest=digest), encoding="utf-8")
+    card = board / "cards" / "s1-first-card.md"
+    card.write_text(
+        card.read_text(encoding="utf-8")
+        + "- 2026-08-24 Gate U(code-review): ACCEPTED by Mike on the round-1 "
+        "ledger. Receipt: [U-r1](../receipts/S1/U-r1.md).\n",
+        encoding="utf-8",
+    )
+
+    checks = _verify(board, decision)
+    assert checks and all(check.ok for check in checks)
+    names = {check.name for check in checks}
+    assert "digest[receipts/S1/A-r1.md]" in names
+    assert "card-log-agreement" in names
+
+
+def test_verify_receipt_on_a_decision_flags_log_disagreement(board: Path) -> None:
+    review_path = _close(board)
+    digest = hashlib.sha256(review_path.read_bytes()).hexdigest()
+    decision = board / "receipts" / "S1" / "U-r1.md"
+    decision.write_text(DECISION_TEMPLATE.format(digest=digest), encoding="utf-8")
+    # No log line links the decision receipt.
+    checks = _verify(board, decision)
+    agreement = next(c for c in checks if c.name == "card-log-agreement")
+    assert not agreement.ok
