@@ -1,7 +1,7 @@
 ---
 id: S45
 title: rust-holes repo self-check with template provenance stamp
-status: ready
+status: in-progress
 depends: []
 serialize-with: []
 lineage: none
@@ -61,3 +61,8 @@ direct; external commits recorded in the Log as they land.
 
 - 2026-08-23 Minted by feedback drain 8 from the rust-holes
   second-dev audit (adopted RH1 draft, adversarially reviewed there).
+- 2026-08-25 Pulled to in-progress under the cleanup execution plan
+  (rust-holes `docs/plans/2026-08-25-cleanup-execution.md`). Executor
+  lane: opencode on bedrock, dispatched from a rust-holes worktree
+  because opencode refuses the primary checkout path; reviewer lane:
+  codex. Brief generated at digest 5b86d0ba5e6e.
