@@ -1,7 +1,8 @@
 ---
 id: S47
 title: model-class tags in the rust-holes dispatch brief
-status: in-progress
+status: in-review
+commit-range: 605056b..9d6f6f9
 depends: []
 serialize-with: [S4]
 lineage: none
@@ -66,3 +67,11 @@ direct; external commits recorded in the Log as they land.
   bedrock, write-only dispatch from the rust-holes worktree (shell
   steps stall headless, see S45's log); reviewer lane: codex. S4 is
   not in progress, so the serialize-with holds.
+- 2026-08-26 Executor (bedrock lane, write-only) landed the two class
+  tags and the explanatory sentence in one pass. Board-owner repairs
+  before Gate S: wrapped two lines to 72 columns, removed one
+  trailing-space quote line. Gate S passed: `bin/check` exits 0; grep
+  for model or provider ids across `templates/` returns nothing; the
+  brief still instantiates by fill-the-brackets alone; vale clean.
+  Commit `9d6f6f9` on rust-holes master; commit-range set; packet
+  generated; Gate A dispatched to the codex lane.
