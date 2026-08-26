@@ -2,7 +2,7 @@
 id: S46
 title: rust-holes CONSUMING.md onboarding doc
 status: in-review
-commit-range: 49b5501..264bbe1
+commit-range: 49b5501..f0d843d
 depends: [S4]
 serialize-with: []
 lineage: none
@@ -106,3 +106,9 @@ direct; external commits recorded in the Log as they land.
   unnamed; now names the `Shearerbeard/claude-skills` marketplace.
   Range spans S45's `32d7eac`, which touches only `bin/check`; round
   2's prompt names it out of scope. Round 2 dispatched.
+- 2026-08-26 Gate A round 2 (codex lane): FAIL, 1 BLOCKING (the
+  round-1 commit-standard fix was incomplete: a trailer clause still
+  restated PROCESS.md) + 1 MINOR (the read-order fix claimed README
+  describes every file; it catalogs templates and examples). Both
+  ACCEPTED and repaired in `f0d843d`. Second fix round; a round-3 FAIL
+  takes the board-owner ruling. Round 3 dispatched.
