@@ -32,7 +32,7 @@ flowchart TD
   S1["S1 Wave-close retro with snapshots a…"]:::ready
   S2["S2 Wire pre-vet, deferrals, and pack…"]:::ready
   S3["S3 claude-skills defect sweep from t…"]:::ready
-  S4["S4 Declare the typed-holes skill can…"]:::ready
+  S4["S4 Declare the typed-holes skill can…"]:::inprogress
   S5["S5 Run the never-run Gate T on nativ…"]:::done
   S6["S6 Template baseline digest, templat…"]:::backlog
   S7["S7 Thin transport wrapper spike with…"]:::backlog

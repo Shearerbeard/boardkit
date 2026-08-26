@@ -1,7 +1,7 @@
 ---
 id: S4
 title: Declare the typed-holes skill canonical over PLAYBOOK
-status: ready
+status: in-progress
 depends: []
 serialize-with: [S47]
 lineage: none
@@ -60,3 +60,10 @@ direct; external commits recorded in the Log as they land.
   claude-skills retro §6a sentence for use when this card runs; the
   public SKILL.md diff stays user-gated and outside this card's
   scope.
+- 2026-08-26 Pulled to in-progress under the cleanup execution plan
+  (rust-holes `docs/plans/2026-08-25-cleanup-execution.md`); S47's
+  edits are committed, so the serialize-with is satisfied. Executor
+  lane: opencode on bedrock, write-only dispatch from the rust-holes
+  worktree with the canonical skill staged beside the brief;
+  reviewer lane: codex. Scope stays the card's five files; the public
+  skill sentence is a separate, user-gated step outside this card.

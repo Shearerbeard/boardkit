@@ -13,8 +13,6 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A @ S. Executor: smart.
 - [ ] **S3** [claude-skills defect sweep from the topology audit](s3-skills-defect-sweep.md)
 	Depends: none. Gates: S -> A @ S. Executor: any.
-- [ ] **S4** [Declare the typed-holes skill canonical over PLAYBOOK](s4-rust-holes-canonical.md)
-	Depends: none. Gates: S -> A @ S. Executor: any.
 - [ ] **S8** [Board-root portability and checkout-independent references](s8-board-root-portability.md)
 	Depends: none. Gates: S -> A @ S. Executor: smart.
 - [ ] **S9** [Session-model classification and example freshness](s9-model-class-freshness.md)
@@ -37,6 +35,8 @@ kanban-plugin: board
 	Depends: S33. Gates: S -> U(acceptance) @ S. Executor: any.
 
 ## In Progress
+- [ ] **S4** [Declare the typed-holes skill canonical over PLAYBOOK](s4-rust-holes-canonical.md)
+	Depends: none. Gates: S -> A @ S. Executor: any.
 
 ## In Review
 - [ ] **S45** [rust-holes repo self-check with template provenance stamp](s45-rust-holes-self-check.md)
