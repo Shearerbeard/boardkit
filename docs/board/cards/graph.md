@@ -61,7 +61,7 @@ flowchart TD
   S43["S43 Land the phase 2 residue - canary…"]:::done
   S44["S44 Consolidate the repeated path lit…"]:::backlog
   S45["S45 rust-holes repo self-check with t…"]:::inreview
-  S47["S47 model-class tags in the rust-hole…"]:::inreview
+  S47["S47 model-class tags in the rust-hole…"]:::done
   S1 -.- S6
   S1 -.- S9
   S4 -.- S47

@@ -44,7 +44,7 @@ against the skill, not against PLAYBOOK prose.
 
 ## Gate checklist
 
-- [ ] Gate S: `vale` on touched files; the never-publish rule intact.
+- [x] Gate S: `vale` on touched files; the never-publish rule intact.
 - [ ] Gate A: adversarial review, focus: did thinning PLAYBOOK drop any
   rule that has no home in the skill?
 

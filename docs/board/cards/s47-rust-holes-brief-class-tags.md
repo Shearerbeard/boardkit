@@ -1,7 +1,7 @@
 ---
 id: S47
 title: model-class tags in the rust-holes dispatch brief
-status: in-review
+status: done
 commit-range: 605056b..0f0311c
 depends: []
 serialize-with: [S4]
@@ -48,9 +48,9 @@ never shares a model with the unit's author.
 
 ## Gate checklist
 
-- [ ] Gate S: rust-holes `bin/check` green (S45 ships it); vale on
+- [x] Gate S: rust-holes `bin/check` green (S45 ships it); vale on
   touched markdown; the no-model-id grep recorded.
-- [ ] Gate A: second-model review, focus: do the tags contradict
+- [x] Gate A: second-model review, focus: do the tags contradict
   MODEL-CLASSES.md?
 
 ## Branch
@@ -83,3 +83,12 @@ direct; external commits recorded in the Log as they land.
   green-criteria clause is gone. The range now spans S45's fix commit
   `4511add` as well, which touches no template; round 2's prompt
   names it out of scope. Round 2 dispatched to the same lane.
+- 2026-08-26 Gate A round 2 (codex lane): PASS, zero findings, all
+  three round-1 fixes verified against the diff and MODEL-CLASSES.md.
+  Acceptance re-run by the board owner: `bin/check` green, no model or
+  provider id under `templates/`, the five angle-bracket slots intact,
+  both tag lines present. Done. Cost-plan disposition: the brief-tags
+  checkbox is satisfied by `0f0311c`; the Delegating-prose checkbox
+  is closed as already-satisfied, the split now living in the skill's
+  delegation text (S4 record). Ticking the boxes in the aura board's
+  cost-plan note is a wiki edit left to the next handoff.

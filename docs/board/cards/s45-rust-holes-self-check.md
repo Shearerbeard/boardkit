@@ -49,7 +49,7 @@ the read-order table omits `templates/MANIFEST.md` and
 
 ## Gate checklist
 
-- [ ] Gate S: the acceptance runs above; vale on touched markdown.
+- [x] Gate S: the acceptance runs above; vale on touched markdown.
 - [ ] Gate A: second-model review, focus: which drift class does the
   check miss, and does any check assert something the docs do not
   promise?
