@@ -60,7 +60,7 @@ flowchart TD
   S42["S42 Fix doctor host checks that misfi…"]:::backlog
   S43["S43 Land the phase 2 residue - canary…"]:::done
   S44["S44 Consolidate the repeated path lit…"]:::backlog
-  S45["S45 rust-holes repo self-check with t…"]:::inprogress
+  S45["S45 rust-holes repo self-check with t…"]:::inreview
   S47["S47 model-class tags in the rust-hole…"]:::ready
   S1 -.- S6
   S1 -.- S9

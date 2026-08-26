@@ -39,10 +39,10 @@ kanban-plugin: board
 	Depends: S33. Gates: S -> U(acceptance) @ S. Executor: any.
 
 ## In Progress
-- [ ] **S45** [rust-holes repo self-check with template provenance stamp](s45-rust-holes-self-check.md)
-	Depends: none. Gates: S -> A @ S. Executor: any.
 
 ## In Review
+- [ ] **S45** [rust-holes repo self-check with template provenance stamp](s45-rust-holes-self-check.md)
+	Depends: none. Gates: S -> A @ S. Executor: any.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)
