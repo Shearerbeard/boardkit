@@ -2,7 +2,7 @@
 id: S45
 title: rust-holes repo self-check with template provenance stamp
 status: in-review
-commit-range: a2b3f2e..ff130a8
+commit-range: a2b3f2e..49b5501
 depends: []
 serialize-with: []
 lineage: none
@@ -127,3 +127,13 @@ direct; external commits recorded in the Log as they land.
   intended rule). Second fix round; a round-3 FAIL triggers the
   board-owner ruling. Range spans S47's and S4's commits, which touch
   no `bin/check` line; round 3's prompt names them out of scope.
+- 2026-08-26 Gate A round 3 (codex lane): FAIL, 2 BLOCKING, both
+  in-cycle: the read-order fix was incomplete (a second table under
+  the same section counted) and the heading split was a regression
+  (`#tag` at a line start read as a heading). Board-owner ruling
+  after two fix rounds: CONTINUE. Reason: rounds have converged 6, 4,
+  2 with no new scope, every finding stayed in cycle, and both
+  repairs are two lines with a seed each. Repaired in `49b5501`;
+  harness now 15 failing seeds plus one must-still-pass case. Round
+  4 dispatched; a round-4 FAIL escalates to Mike rather than a fifth
+  round.
