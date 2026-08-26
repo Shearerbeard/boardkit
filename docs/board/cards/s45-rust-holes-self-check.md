@@ -2,7 +2,7 @@
 id: S45
 title: rust-holes repo self-check with template provenance stamp
 status: in-review
-commit-range: a2b3f2e..605056b
+commit-range: a2b3f2e..4511add
 depends: []
 serialize-with: []
 lineage: none
@@ -99,3 +99,19 @@ direct; external commits recorded in the Log as they land.
   `scratch/seed-defects.sh`; vale clean on touched markdown. Commit
   `605056b` on rust-holes master; commit-range set; packet generated;
   Gate A dispatched to the codex lane.
+- 2026-08-26 Gate A round 1 (codex lane): FAIL, 5 BLOCKING + 1 MINOR.
+  Dispositions, all ACCEPTED and repaired in `4511add` by the board
+  owner (reviewer differs from both authors): (1) links rule skipped
+  same-directory targets, fragments, angle-wrapped forms; now every
+  target resolves against the referencing file. (2) read-order rule
+  matched substrings; now parses the table's first column. (3) the
+  `Template.` marker was promised by no doc; README "Using it" now
+  states the header convention, and the rule checks the paragraph
+  after the title structurally. (4) stamp rule accepted a partial
+  token anywhere before the first H2; now requires the full
+  instruction in the opening paragraph. (5) `**Private.**` accepted
+  on any line; now must open the README. (6) ruff findings, trailing
+  whitespace, missing final newline: cleaned, `ruff check` and
+  `ruff format --check` green. Seeded harness grew from 5 to 10
+  cases, one per evasion the reviewer named; all fail on their
+  intended rule. Round 2 dispatched to the same lane.
