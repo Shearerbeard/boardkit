@@ -72,6 +72,24 @@ direct
 
 ## Log
 
+- 2026-08-25 Reviewer-spend debt settled early: the opencode lane's
+  plain-text runs printed no usage, but opencode persists every
+  session in `~/.local/share/opencode/opencode.db` (the `session`
+  table carries cost, per-class token counts, model, and the staging
+  directory, which maps each row to its dispatch). Recovered figures,
+  all `baseten/zai-org/GLM-5.2-Fast`: echo probe $0.040 (18.8k in),
+  pre-vet read probe $0.020 (6.3k in), Gate A round 1 $0.617 (131.8k
+  in, 1.6k out, 30.1k reasoning, 624k cache-read), Gate A round 2
+  $0.543 (66.0k in, 2.3k out, 7.6k reasoning, 1.6M cache-read),
+  close canary $0.070 (28.3k in). Total delegated-lane spend for
+  this card: ~$1.29, of which the two Gate A rounds are $1.16.
+  Recovery targets for the record: the live `opencode.db`,
+  `opencode stats --days N --project <staging-dir>` for rollups,
+  `opencode export <session-id>` for full session JSON, and the
+  legacy `opencode-v2.db` plus `storage/session|message|part` JSON
+  for pre-2026-08-24 runs. Going forward the capture fix is to query
+  the DB by staging directory at each gate close, or run with
+  `--format json`.
 - 2026-08-25 Gate U passed: Mike approved the card, the two
   process-feedback entries, and the docs follow-up card as presented
   ("aprpoved - where would the feedback entries be filed to?"). The
@@ -82,8 +100,8 @@ direct
   after publication, outside the attested byte set), and minted S48
   for the two Gate D doc divergences (DOCKING.md `[stores]` overlay
   prose; PROCESS.md gate-close prose naming `close-review` and
-  `publish-pending`). Reviewer-spend recovery remains owed at wave
-  close. Card done.
+  `publish-pending`). Reviewer-spend recovery was settled later the
+  same day; see the log entry above. Card done.
 - 2026-08-24 Gate D passed: a fresh-context auditor (this harness's
   read-only explorer; this harness offers no cheaper in-harness class,
   so the lower-cost rule is met by context isolation rather than a
