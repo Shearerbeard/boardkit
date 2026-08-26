@@ -2,7 +2,7 @@
 id: S46
 title: rust-holes CONSUMING.md onboarding doc
 status: in-review
-commit-range: 49b5501..b2f57aa
+commit-range: 49b5501..264bbe1
 depends: [S4]
 serialize-with: []
 lineage: none
@@ -93,3 +93,16 @@ direct; external commits recorded in the Log as they land.
   agent entry file, the fmt-gate residual from S4, the seeded harness
   not checked in, no README pointer to docs/plans. Gate A dispatched
   to the codex lane.
+- 2026-08-26 Gate A round 1 (codex lane): FAIL, 3 BLOCKING + 1 MINOR,
+  all ACCEPTED and repaired in `264bbe1` by the board owner: (1) the
+  read order was circular (page deferred to the README table whose
+  first row is the page); the page now owns the consumer read order
+  and README stays the per-file table. (2) the commit standard was
+  partially restated; now points at the boardkit checkout's
+  PROCESS.md commit standards, keeping only the harness-trailer
+  warning. (3) the publication boundary was stated more broadly than
+  EXTRACTION owns it; now "never published" plus a pointer to
+  EXTRACTION's Standing obligations. (4) the skill's public home was
+  unnamed; now names the `Shearerbeard/claude-skills` marketplace.
+  Range spans S45's `32d7eac`, which touches only `bin/check`; round
+  2's prompt names it out of scope. Round 2 dispatched.
