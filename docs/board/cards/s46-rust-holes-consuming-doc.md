@@ -1,7 +1,7 @@
 ---
 id: S46
 title: rust-holes CONSUMING.md onboarding doc
-status: backlog
+status: in-progress
 depends: [S4]
 serialize-with: []
 lineage: none
@@ -70,3 +70,7 @@ direct; external commits recorded in the Log as they land.
 - 2026-08-23 Minted by feedback drain 8 from the rust-holes
   second-dev audit (adopted RH3 draft, adversarially reviewed there;
   S26/S36 depends dropped at the drain, see record item 3).
+- 2026-08-26 S4 done, so the dependency is satisfied; pulled to
+  in-progress under the cleanup execution plan. Executor lane:
+  opencode on bedrock, write-only dispatch from the rust-holes
+  worktree; reviewer lane: codex; Gate U is Mike's read.

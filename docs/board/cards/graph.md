@@ -26,13 +26,13 @@ flowchart TD
     S38["S38 Pick the board's visual home"]:::ready
     S39["S39 Machine-bootstrap recipe and acco…"]:::ready
     S40["S40 README developer path, canary bri…"]:::ready
-    S46["S46 rust-holes CONSUMING.md onboardin…"]:::backlog
+    S46["S46 rust-holes CONSUMING.md onboardin…"]:::inprogress
     S48["S48 Document stores overlay and close…"]:::ready
   end
   S1["S1 Wave-close retro with snapshots a…"]:::ready
   S2["S2 Wire pre-vet, deferrals, and pack…"]:::ready
   S3["S3 claude-skills defect sweep from t…"]:::ready
-  S4["S4 Declare the typed-holes skill can…"]:::inreview
+  S4["S4 Declare the typed-holes skill can…"]:::done
   S5["S5 Run the never-run Gate T on nativ…"]:::done
   S6["S6 Template baseline digest, templat…"]:::backlog
   S7["S7 Thin transport wrapper spike with…"]:::backlog

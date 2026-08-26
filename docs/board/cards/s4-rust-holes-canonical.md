@@ -1,7 +1,7 @@
 ---
 id: S4
 title: Declare the typed-holes skill canonical over PLAYBOOK
-status: in-review
+status: done
 commit-range: 0f0311c..fac496c
 depends: []
 serialize-with: [S47]
@@ -45,7 +45,7 @@ against the skill, not against PLAYBOOK prose.
 ## Gate checklist
 
 - [x] Gate S: `vale` on touched files; the never-publish rule intact.
-- [ ] Gate A: adversarial review, focus: did thinning PLAYBOOK drop any
+- [x] Gate A: adversarial review, focus: did thinning PLAYBOOK drop any
   rule that has no home in the skill?
 
 ## Branch
@@ -87,3 +87,13 @@ direct; external commits recorded in the Log as they land.
   notice intact; vale clean. Commit `fac496c` on rust-holes master;
   commit-range set; packet generated; Gate A dispatched to the codex
   lane.
+- 2026-08-26 Gate A (codex lane): PASS, zero findings, on `fac496c`.
+  Acceptance re-run by the board owner: no skill doctrine sentence
+  appears in PLAYBOOK (five spot-checked); fmt wording only in the
+  dispatch brief; both evidence counts only in EXTRACTION; README's
+  row and composition paragraph name the skill as the practice's
+  home; Private notice intact; `bin/check` green. Done. Residual
+  recorded on EXTRACTION's fmt-gate row: two per-module templates
+  still carry the nightly-first fmt form, outside this card's scope.
+  The public skill-canonical sentence is staged uncommitted in
+  claude-skills for Mike's gate, as the drain record specified.

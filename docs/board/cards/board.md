@@ -35,10 +35,10 @@ kanban-plugin: board
 	Depends: S33. Gates: S -> U(acceptance) @ S. Executor: any.
 
 ## In Progress
+- [ ] **S46** [rust-holes CONSUMING.md onboarding doc](s46-rust-holes-consuming-doc.md)
+	Depends: S4. Gates: S -> A -> U(acceptance) @ S. Executor: any.
 
 ## In Review
-- [ ] **S4** [Declare the typed-holes skill canonical over PLAYBOOK](s4-rust-holes-canonical.md)
-	Depends: none. Gates: S -> A @ A. Executor: any.
 - [ ] **S45** [rust-holes repo self-check with template provenance stamp](s45-rust-holes-self-check.md)
 	Depends: none. Gates: S -> A @ A. Executor: any.
 
@@ -63,10 +63,10 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 - [ ] **S44** [Consolidate the repeated path literals into a constants hierarchy](s44-path-constants-hierarchy.md)
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
-- [ ] **S46** [rust-holes CONSUMING.md onboarding doc](s46-rust-holes-consuming-doc.md)
-	Depends: S4. Gates: S -> A -> U(acceptance). Executor: any.
 
 ## Done
+- [ ] **S4** [Declare the typed-holes skill canonical over PLAYBOOK](s4-rust-holes-canonical.md)
+	Depends: none. Gates: S -> A. Executor: any.
 - [ ] **S5** [Run the never-run Gate T on native opencode routing](s5-gate-t-native-opencode.md)
 	Depends: none. Gates: M -> T. Executor: any.
 - [ ] **S11** [Tier the vale prose gate by artifact class](s11-vale-tiering.md)
