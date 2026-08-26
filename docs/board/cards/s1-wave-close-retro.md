@@ -59,5 +59,19 @@ direct
 
 ## Log
 
+- 2026-08-25 Scope addition, Mike-approved ("yes 'leave it there'"):
+  the retro owns the cross-harness reviewer-spend sweep. S33's log
+  (2026-08-25 entry) documents the opencode recovery targets and that
+  card's settled figures; the sweep extends the same recovery to past
+  waves and the other lanes. Targets: codex rollouts under
+  `~/.codex/sessions/**/*.jsonl` carry per-turn `total_token_usage`
+  (input, cached-input, output, reasoning; no cost field - derive from
+  pricing; newer-than-2026-06 material may sit in
+  `~/.codex/archived_sessions/`); the agy lane's session-store path is
+  reported by `agy_doctor` but its shape is unverified; in-harness
+  author agents expose no local spend store, and author-side spend is
+  out of the ledger's scope anyway. Method: sweep past card logs for
+  "spend not captured" notes and recover each from these stores in one
+  pass.
 - 2026-08-04 Authored from the four-agent audit; retro pattern traced to
   the s29 fixture card.
