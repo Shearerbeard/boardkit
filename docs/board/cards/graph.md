@@ -26,7 +26,7 @@ flowchart TD
     S38["S38 Pick the board's visual home"]:::ready
     S39["S39 Machine-bootstrap recipe and acco…"]:::ready
     S40["S40 README developer path, canary bri…"]:::ready
-    S46["S46 rust-holes CONSUMING.md onboardin…"]:::inprogress
+    S46["S46 rust-holes CONSUMING.md onboardin…"]:::inreview
     S48["S48 Document stores overlay and close…"]:::ready
   end
   S1["S1 Wave-close retro with snapshots a…"]:::ready

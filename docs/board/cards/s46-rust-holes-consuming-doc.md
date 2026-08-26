@@ -1,7 +1,8 @@
 ---
 id: S46
 title: rust-holes CONSUMING.md onboarding doc
-status: in-progress
+status: in-review
+commit-range: 49b5501..b2f57aa
 depends: [S4]
 serialize-with: []
 lineage: none
@@ -74,3 +75,13 @@ direct; external commits recorded in the Log as they land.
   in-progress under the cleanup execution plan. Executor lane:
   opencode on bedrock, write-only dispatch from the rust-holes
   worktree; reviewer lane: codex; Gate U is Mike's read.
+- 2026-08-26 Executor (bedrock lane, write-only) landed a 51-line
+  page and the README row. Board-owner repairs before Gate S: wrapped
+  to 72 columns; removed a closing line that was instruction residue
+  from the brief; added the clone command under Access (the audit's
+  finding 2 named the clone path as appearing in no doc); reworded
+  the fmt prerequisite to the post-S4 form; added the PLAYBOOK map
+  pointer and "no board of its own" to the discoverability list.
+  `bin/check` green (README row present), vale clean, no model ids
+  or machine paths. Commit `b2f57aa` on rust-holes master; packet
+  generated. The bus test and Gate A follow.
