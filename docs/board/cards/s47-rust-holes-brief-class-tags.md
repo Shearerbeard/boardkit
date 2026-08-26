@@ -92,3 +92,9 @@ direct; external commits recorded in the Log as they land.
   is closed as already-satisfied, the split now living in the skill's
   delegation text (S4 record). Ticking the boxes in the aura board's
   cost-plan note is a wiki edit left to the next handoff.
+- 2026-08-26 Intent validation (codex lane, finding 3) held the
+  deferred cost-plan tick against this card's acceptance. Both boxes
+  in the aura board's executor-cost-plan note are now ticked with
+  their pointers (`0f0311c` for the tags; the prose item closed as
+  already satisfied via S4 `fac496c`); the edit sits uncommitted in
+  the wiki checkout for its own board owner to commit.

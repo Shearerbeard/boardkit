@@ -149,3 +149,11 @@ direct; external commits recorded in the Log as they land.
   this last fix is one regex verified by the seeds; the recommendation
   is to accept the board owner's verification and close, with round 5
   available if Mike prefers the reviewer's word.
+- 2026-08-26 Intent validation (codex lane, finding 2) read the
+  harness's "half-filled template" seed as a reinterpretation. Board
+  owner's position, for Mike's stop: a half-filled template is one
+  whose instruction paragraph was consumed by filling it in, which is
+  exactly what the seed does (it strips the `Template.` opener that
+  the header rule checks); the card's own deliverable defines the
+  header as the thing verified. Recorded here so the equivalence is
+  a stated decision, not an unstated one.

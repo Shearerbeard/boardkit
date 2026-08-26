@@ -1,7 +1,7 @@
 ---
 id: S4
 title: Declare the typed-holes skill canonical over PLAYBOOK
-status: done
+status: in-review
 commit-range: 0f0311c..fac496c
 depends: []
 serialize-with: [S47]
@@ -45,8 +45,9 @@ against the skill, not against PLAYBOOK prose.
 ## Gate checklist
 
 - [x] Gate S: `vale` on touched files; the never-publish rule intact.
-- [x] Gate A: adversarial review, focus: did thinning PLAYBOOK drop any
-  rule that has no home in the skill?
+- [ ] Gate A: adversarial review, focus: did thinning PLAYBOOK drop any
+  rule that has no home in the skill? (passed on `fac496c`; reopened
+  for the staged fix)
 
 ## Branch
 
@@ -97,3 +98,15 @@ direct; external commits recorded in the Log as they land.
   still carry the nightly-first fmt form, outside this card's scope.
   The public skill-canonical sentence is staged uncommitted in
   claude-skills for Mike's gate, as the drain record specified.
+- 2026-08-26 Reopened to in-review by the board owner after the
+  end-of-run intent validation (codex lane, finding 4): the card was
+  closed with an acceptance gap. README "Using it" still says "read
+  the playbook and follow it", and four templates (`DESIGN.md`,
+  `MANIFEST.md`, `skeleton-conventions.md`, `golden-frame-harness.md`)
+  still name `../PLAYBOOK.md` as the rules home after this card made
+  it a map. The README sentence is in this card's scope; the four
+  template pointers are outside its five files. Both fixes are staged
+  uncommitted in rust-holes for Mike's stop: the README line lands
+  under this card on approval; the template pointers are a scope
+  extension Mike decides (extend S4, or a follow-up card). Gate A is
+  not re-ticked until the approved fix is reviewed.

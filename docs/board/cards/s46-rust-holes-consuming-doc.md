@@ -122,3 +122,9 @@ direct; external commits recorded in the Log as they land.
   still call `../PLAYBOOK.md` the rules home after S4 made it a map;
   second-model-family access is a prerequisite but not an Ask Mike
   line).
+- 2026-08-26 Intent validation (codex lane, finding 5): the standalone
+  path says "no skills installed" while the doctrine lives in the
+  skill, and never says how to read it without installing it. One
+  line naming the skill's public file path is staged uncommitted in
+  rust-holes for the same stop; if Mike approves it the page takes a
+  short re-review before Gate U closes.
