@@ -58,7 +58,7 @@ at Mike's call when the members land.
 
 ## Members
 
-S8, S12, S15, S30, S31, S32, S33, S36, S37, S38, S39, S40 carry
+S8, S12, S15, S30, S31, S32, S33, S36, S37, S38, S39, S40, S48 carry
 `epic: S41`. Membership is grouping, not dependency; `boardkit dag
 --to S41` computes the schedulable plan.
 
@@ -75,6 +75,10 @@ direct
 
 ## Log
 
+- 2026-08-25 S48 (document stores overlay and close-review) added to
+  the member list; minted at S33's Gate U close with `epic: S41` in
+  frontmatter, this prose list catching up. Membership is grouping;
+  the card's own depends stay [S33].
 - 2026-08-23 Board owner wrote the acceptance scenario onto the epic
   at Mike's direction: the second-developer target stated as a
   seven-step pass/fail run, each step mapped to the member that makes
