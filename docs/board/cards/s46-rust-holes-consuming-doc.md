@@ -128,3 +128,8 @@ direct; external commits recorded in the Log as they land.
   line naming the skill's public file path is staged uncommitted in
   rust-holes for the same stop; if Mike approves it the page takes a
   short re-review before Gate U closes.
+- 2026-08-26 Close evidence for the whole cleanup run filed at
+  [2026-08-26-cleanup-close.md](../evidence/2026-08-26-cleanup-close.md):
+  intent validation on both lanes (flash PASS, sol FAIL with six
+  dispositions) and the closing orientation canary (4/4). This card
+  holds the stop for the run.
