@@ -33,12 +33,12 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> D -> U @ S. Executor: smart.
 - [ ] **S40** [README developer path, canary brief template, plan navigation](s40-readme-developer-path.md)
 	Depends: none. Gates: S -> A @ S. Executor: any.
-- [ ] **S47** [model-class tags in the rust-holes dispatch brief](s47-rust-holes-brief-class-tags.md)
-	Depends: none. Gates: S -> A @ S. Executor: any.
 - [ ] **S48** [Document stores overlay and close-review in the living docs](s48-document-stores-and-close-review.md)
 	Depends: S33. Gates: S -> U(acceptance) @ S. Executor: any.
 
 ## In Progress
+- [ ] **S47** [model-class tags in the rust-holes dispatch brief](s47-rust-holes-brief-class-tags.md)
+	Depends: none. Gates: S -> A @ S. Executor: any.
 
 ## In Review
 - [ ] **S45** [rust-holes repo self-check with template provenance stamp](s45-rust-holes-self-check.md)

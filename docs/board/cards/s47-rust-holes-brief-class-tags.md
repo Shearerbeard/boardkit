@@ -1,7 +1,7 @@
 ---
 id: S47
 title: model-class tags in the rust-holes dispatch brief
-status: ready
+status: in-progress
 depends: []
 serialize-with: [S4]
 lineage: none
@@ -61,3 +61,8 @@ direct; external commits recorded in the Log as they land.
 - 2026-08-23 Minted by feedback drain 8 from the rust-holes
   second-dev audit (adopted RH4 draft, adversarially reviewed and
   narrowed to the template there).
+- 2026-08-26 Pulled to in-progress under the cleanup execution plan
+  while S45 sits at Gate A (WIP 2 of 2). Executor lane: opencode on
+  bedrock, write-only dispatch from the rust-holes worktree (shell
+  steps stall headless, see S45's log); reviewer lane: codex. S4 is
+  not in progress, so the serialize-with holds.
