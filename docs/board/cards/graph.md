@@ -26,6 +26,7 @@ flowchart TD
     S38["S38 Pick the board's visual home"]:::ready
     S39["S39 Machine-bootstrap recipe and acco…"]:::ready
     S40["S40 README developer path, canary bri…"]:::ready
+    S46["S46 rust-holes CONSUMING.md onboardin…"]:::backlog
     S48["S48 Document stores overlay and close…"]:::ready
   end
   S1["S1 Wave-close retro with snapshots a…"]:::ready
@@ -59,8 +60,11 @@ flowchart TD
   S42["S42 Fix doctor host checks that misfi…"]:::backlog
   S43["S43 Land the phase 2 residue - canary…"]:::done
   S44["S44 Consolidate the repeated path lit…"]:::backlog
+  S45["S45 rust-holes repo self-check with t…"]:::ready
+  S47["S47 model-class tags in the rust-hole…"]:::ready
   S1 -.- S6
   S1 -.- S9
+  S4 -.- S47
   S2 --> S7
   S13 --> S18
   S18 --> S20
@@ -74,5 +78,6 @@ flowchart TD
   S31 --> S36
   S28 --> S37
   S16 --> S38
+  S4 --> S46
   S33 --> S48
 ```

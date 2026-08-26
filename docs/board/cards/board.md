@@ -33,6 +33,10 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> D -> U @ S. Executor: smart.
 - [ ] **S40** [README developer path, canary brief template, plan navigation](s40-readme-developer-path.md)
 	Depends: none. Gates: S -> A @ S. Executor: any.
+- [ ] **S45** [rust-holes repo self-check with template provenance stamp](s45-rust-holes-self-check.md)
+	Depends: none. Gates: S -> A @ S. Executor: any.
+- [ ] **S47** [model-class tags in the rust-holes dispatch brief](s47-rust-holes-brief-class-tags.md)
+	Depends: none. Gates: S -> A @ S. Executor: any.
 - [ ] **S48** [Document stores overlay and close-review in the living docs](s48-document-stores-and-close-review.md)
 	Depends: S33. Gates: S -> U(acceptance) @ S. Executor: any.
 
@@ -61,6 +65,8 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
 - [ ] **S44** [Consolidate the repeated path literals into a constants hierarchy](s44-path-constants-hierarchy.md)
 	Depends: none. Gates: S -> A -> U(code-review). Executor: smart.
+- [ ] **S46** [rust-holes CONSUMING.md onboarding doc](s46-rust-holes-consuming-doc.md)
+	Depends: S4. Gates: S -> A -> U(acceptance). Executor: any.
 
 ## Done
 - [ ] **S5** [Run the never-run Gate T on native opencode routing](s5-gate-t-native-opencode.md)

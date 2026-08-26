@@ -58,9 +58,9 @@ at Mike's call when the members land.
 
 ## Members
 
-S8, S12, S15, S30, S31, S32, S33, S36, S37, S38, S39, S40, S48 carry
-`epic: S41`. Membership is grouping, not dependency; `boardkit dag
---to S41` computes the schedulable plan.
+S8, S12, S15, S30, S31, S32, S33, S36, S37, S38, S39, S40, S46, S48
+carry `epic: S41`. Membership is grouping, not dependency; `boardkit
+dag --to S41` computes the schedulable plan.
 
 ## Gate checklist
 
@@ -92,3 +92,6 @@ direct
   [2026-08-22-phase0-close.md](../evidence/2026-08-22-phase0-close.md)
   (Gate D 2 findings fixed; orientation canary 4/4; dag frontier
   recorded).
+- 2026-08-23 S46 (rust-holes CONSUMING.md) added to the member list,
+  minted by feedback drain 8; membership is grouping, the card's own
+  depends stay [S4].

@@ -3,7 +3,7 @@ id: S4
 title: Declare the typed-holes skill canonical over PLAYBOOK
 status: ready
 depends: []
-serialize-with: []
+serialize-with: [S47]
 lineage: none
 executor: any
 gates: "S -> A"
@@ -55,3 +55,8 @@ direct; external commits recorded in the Log as they land.
 
 - 2026-08-04 Authored from the rust-holes audit (playbook/skill twin,
   four divergences in nine days).
+- 2026-08-23 Serialized with S47 (drain 8): both cards touch
+  rust-holes `templates/dispatch-brief.md`. Drain 8 also vetted the
+  claude-skills retro §6a sentence for use when this card runs; the
+  public SKILL.md diff stays user-gated and outside this card's
+  scope.
