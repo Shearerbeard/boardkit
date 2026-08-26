@@ -1,7 +1,8 @@
 ---
 id: S4
 title: Declare the typed-holes skill canonical over PLAYBOOK
-status: in-progress
+status: in-review
+commit-range: 0f0311c..fac496c
 depends: []
 serialize-with: [S47]
 lineage: none
@@ -67,3 +68,22 @@ direct; external commits recorded in the Log as they land.
   worktree with the canonical skill staged beside the brief;
   reviewer lane: codex. Scope stays the card's five files; the public
   skill sentence is a separate, user-gated step outside this card.
+- 2026-08-26 Executor (bedrock lane, write-only) thinned PLAYBOOK,
+  updated README and EXTRACTION, and adopted the skill's fmt wording
+  in the dispatch brief. Board-owner repairs before Gate S, recorded
+  as deviations: reverted edits to `templates/skeleton-conventions.md`
+  and `templates/golden-frame-harness.md` (outside this card's five
+  files; the fmt residual there is noted on EXTRACTION's fmt-gate
+  row); removed the verbatim "Known limits" copy the executor kept
+  despite reporting it identical to the skill's; dropped two
+  "repo-specific" notes that restated the skill and README (fmt
+  fallback, never-publish); kept the provenance note and the clippy
+  flag-sequence note, the latter because the staged skill text does
+  not carry the `-A clippy::todo` sequence; rewrote PLAYBOOK as an
+  18-line map; wrapped prose to 72 columns; reworded the README row
+  so PLAYBOOK is described as the map, not as the templates.
+- 2026-08-26 Gate S passed: `bin/check` exits 0 on the rebased tree;
+  grep of the four divergence sites shows one owner each; Private
+  notice intact; vale clean. Commit `fac496c` on rust-holes master;
+  commit-range set; packet generated; Gate A dispatched to the codex
+  lane.

@@ -16,7 +16,7 @@ Admission test: where does the diff land.
 | [S1](s1-wave-close-retro.md) | Wave-close retro with snapshots and driver input | ready | - | any | S -> A -> U @ S |
 | [S2](s2-wiring-trio.md) | Wire pre-vet, deferrals, and packet staging into the CLI | ready | - | smart | S -> A @ S |
 | [S3](s3-skills-defect-sweep.md) | claude-skills defect sweep from the topology audit | ready | - | any | S -> A @ S |
-| [S4](s4-rust-holes-canonical.md) | Declare the typed-holes skill canonical over PLAYBOOK | in-progress | - | any | S -> A @ S |
+| [S4](s4-rust-holes-canonical.md) | Declare the typed-holes skill canonical over PLAYBOOK | in-review | - | any | S -> A @ S |
 | [S5](s5-gate-t-native-opencode.md) | Run the never-run Gate T on native opencode routing | done | - | any | M -> T |
 | [S6](s6-template-canary.md) | Template baseline digest, template-diff, and golden briefs | backlog | - | smart | S -> A |
 | [S7](s7-transport-wrapper-spike.md) | Thin transport wrapper spike with a canary harness | backlog | S2 | smart | S -> A -> U |
