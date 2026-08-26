@@ -2,7 +2,7 @@
 id: S45
 title: rust-holes repo self-check with template provenance stamp
 status: in-review
-commit-range: a2b3f2e..4511add
+commit-range: a2b3f2e..ff130a8
 depends: []
 serialize-with: []
 lineage: none
@@ -115,3 +115,15 @@ direct; external commits recorded in the Log as they land.
   `ruff format --check` green. Seeded harness grew from 5 to 10
   cases, one per evasion the reviewer named; all fail on their
   intended rule. Round 2 dispatched to the same lane.
+- 2026-08-26 Gate A round 2 (codex lane): FAIL, 4 BLOCKING; the six
+  round-1 dispositions verified fixed. Classification under the
+  re-review rule: two incomplete round-1 fixes (angle-wrapped link
+  with a title still evaded the links rule; read-order rows were
+  accepted from any README table) and two regressions the round-1
+  fix introduced (a heading with no blank line after it merged into
+  the first paragraph; template discovery lost recursion). All four
+  ACCEPTED and repaired in `ff130a8` by the board owner; the harness
+  gained one seed per finding (14 cases, all failing on their
+  intended rule). Second fix round; a round-3 FAIL triggers the
+  board-owner ruling. Range spans S47's and S4's commits, which touch
+  no `bin/check` line; round 3's prompt names them out of scope.
