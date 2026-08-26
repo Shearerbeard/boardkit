@@ -54,7 +54,7 @@ gaps).
 
 ## Gate checklist
 
-- [ ] Gate S: rust-holes `bin/check` green (S45); vale on touched
+- [x] Gate S: rust-holes `bin/check` green (S45); vale on touched
   markdown; `docs-bustest` run recorded.
 - [ ] Gate A: second-model review, focus: what would a cold reader
   still have to ask Mike, and is anything restated from a file that
@@ -85,3 +85,11 @@ direct; external commits recorded in the Log as they land.
   `bin/check` green (README row present), vale clean, no model ids
   or machine paths. Commit `b2f57aa` on rust-holes master; packet
   generated. The bus test and Gate A follow.
+- 2026-08-26 Gate S passed. Bus test scored 18/24 (survivable), no
+  P1; scorecard filed at
+  [2026-08-26-s46-bus-test.md](../evidence/2026-08-26-s46-bus-test.md).
+  Its four P2 items are outside this card's scope as minted and go to
+  Gate U as findings rather than silent scope growth: no repo-level
+  agent entry file, the fmt-gate residual from S4, the seeded harness
+  not checked in, no README pointer to docs/plans. Gate A dispatched
+  to the codex lane.
