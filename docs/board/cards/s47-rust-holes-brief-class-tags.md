@@ -2,7 +2,7 @@
 id: S47
 title: model-class tags in the rust-holes dispatch brief
 status: in-review
-commit-range: 605056b..9d6f6f9
+commit-range: 605056b..0f0311c
 depends: []
 serialize-with: [S4]
 lineage: none
@@ -75,3 +75,11 @@ direct; external commits recorded in the Log as they land.
   brief still instantiates by fill-the-brackets alone; vale clean.
   Commit `9d6f6f9` on rust-holes master; commit-range set; packet
   generated; Gate A dispatched to the codex lane.
+- 2026-08-26 Gate A round 1 (codex lane): FAIL, 3 BLOCKING, all
+  ACCEPTED and repaired in `0f0311c` by the board owner: the tags now
+  use the model-classes taxonomy names (skeleton: smart
+  writer-reviewer; fill: small explorer; reviewer: smart class with
+  frontier fallback, never the author), and the restated
+  green-criteria clause is gone. The range now spans S45's fix commit
+  `4511add` as well, which touches no template; round 2's prompt
+  names it out of scope. Round 2 dispatched to the same lane.
