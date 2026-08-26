@@ -56,7 +56,7 @@ gaps).
 
 - [x] Gate S: rust-holes `bin/check` green (S45); vale on touched
   markdown; `docs-bustest` run recorded.
-- [ ] Gate A: second-model review, focus: what would a cold reader
+- [x] Gate A: second-model review, focus: what would a cold reader
   still have to ask Mike, and is anything restated from a file that
   owns it?
 - [ ] Gate U (acceptance): Mike reads it as the second developer
@@ -112,3 +112,13 @@ direct; external commits recorded in the Log as they land.
   describes every file; it catalogs templates and examples). Both
   ACCEPTED and repaired in `f0d843d`. Second fix round; a round-3 FAIL
   takes the board-owner ruling. Round 3 dispatched.
+- 2026-08-26 Gate A round 3 (codex lane): PASS, zero findings, both
+  round-2 fixes verified, on `f0d843d`. Board owner re-checked:
+  `bin/check` green with the README row present, page at 80 lines,
+  no model ids or machine paths. Holding at in-review for Gate U:
+  Mike reads the page as the second developer would. Items carried
+  to that stop rather than absorbed: the four bus-test P2s, and two
+  minor observations from the intent validation (template headers
+  still call `../PLAYBOOK.md` the rules home after S4 made it a map;
+  second-model-family access is a prerequisite but not an Ask Mike
+  line).

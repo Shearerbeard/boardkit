@@ -58,7 +58,7 @@ Admission test: where does the diff land.
 | [S43](s43-phase2-residue-canary-fallback.md) | Land the phase 2 residue - canary fallback, degraded close, review notes | done | - | smart | S -> A -> U(code-review) |
 | [S44](s44-path-constants-hierarchy.md) | Consolidate the repeated path literals into a constants hierarchy | backlog | - | smart | S -> A -> U(code-review) |
 | [S45](s45-rust-holes-self-check.md) | rust-holes repo self-check with template provenance stamp | in-review | - | any | S -> A @ A |
-| [S46](s46-rust-holes-consuming-doc.md) | rust-holes CONSUMING.md onboarding doc | in-review | S4 | any | S -> A -> U(acceptance) @ A |
+| [S46](s46-rust-holes-consuming-doc.md) | rust-holes CONSUMING.md onboarding doc | in-review | S4 | any | S -> A -> U(acceptance) @ U |
 | [S47](s47-rust-holes-brief-class-tags.md) | model-class tags in the rust-holes dispatch brief | done | - | any | S -> A |
 | [S48](s48-document-stores-and-close-review.md) | Document stores overlay and close-review in the living docs | ready | S33 | any | S -> U(acceptance) @ S |
 
