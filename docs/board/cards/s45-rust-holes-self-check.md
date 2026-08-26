@@ -2,7 +2,7 @@
 id: S45
 title: rust-holes repo self-check with template provenance stamp
 status: in-review
-commit-range: a2b3f2e..49b5501
+commit-range: a2b3f2e..32d7eac
 depends: []
 serialize-with: []
 lineage: none
@@ -137,3 +137,15 @@ direct; external commits recorded in the Log as they land.
   harness now 15 failing seeds plus one must-still-pass case. Round
   4 dispatched; a round-4 FAIL escalates to Mike rather than a fifth
   round.
+- 2026-08-26 Gate A round 4 (codex lane): FAIL, 1 BLOCKING, a
+  regression of the round-3 heading fix: a tab-separated or bare ATX
+  heading merged into the opening paragraph. Both round-3 fixes were
+  verified. Repaired in `32d7eac` with the reviewer's own regex and two
+  harness seeds (18 failing seeds plus one must-pass case, all
+  green). Per the round-3 ruling, this FAIL escalates instead of
+  opening round 5: Gate A open, escalated to Mike. The board owner's
+  position for that stop: the four rounds converged 6, 4, 2, 1, every
+  finding stayed in the markdown-parsing family and in cycle, and
+  this last fix is one regex verified by the seeds; the recommendation
+  is to accept the board owner's verification and close, with round 5
+  available if Mike prefers the reviewer's word.
