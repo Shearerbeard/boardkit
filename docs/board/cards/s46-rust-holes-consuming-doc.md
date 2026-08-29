@@ -1,8 +1,8 @@
 ---
 id: S46
 title: rust-holes CONSUMING.md onboarding doc
-status: in-review
-commit-range: 49b5501..f0d843d
+status: done
+commit-range: 49b5501..f650b82
 depends: [S4]
 serialize-with: []
 lineage: none
@@ -59,7 +59,7 @@ gaps).
 - [x] Gate A: second-model review, focus: what would a cold reader
   still have to ask Mike, and is anything restated from a file that
   owns it?
-- [ ] Gate U (acceptance): Mike reads it as the second developer
+- [x] Gate U (acceptance): Mike reads it as the second developer
   would; stop.
 
 ## Branch
@@ -133,3 +133,20 @@ direct; external commits recorded in the Log as they land.
   intent validation on both lanes (flash PASS, sol FAIL with six
   dispositions) and the closing orientation canary (4/4). This card
   holds the stop for the run.
+- 2026-08-29 Gate U read, part 1: Mike read the page and accepted its
+  content ("consuming MD looks good"). The read raised one boundary
+  observation, accepted as-is for now and queued to the inbox as
+  FEEDBACK entry `2026-08-29 typed-holes-doctrine-home-once-public`:
+  the doctrine home inverts the family's usual chain and gets
+  revisited when the family goes public. The gate stays open on the
+  staged skill-path line and the carried P2 findings.
+- 2026-08-29 Gate U read, part 2: Mike approved the staged
+  skill-path line at the stop; landed as rust-holes `f650b82`. Short
+  re-review on the codex lane: PASS, zero findings, explicit verdict.
+  Commit-range extended to `f650b82`; the span crosses S4's `2d0a22b`
+  and the plan-log commit, both named out of scope in the re-review
+  prompt. Acceptance holds: bus-test scorecard filed with its
+  behavioral test passed at Gate S, and every ask-Mike step is named
+  in the file. The three residual bus-test P2s (agents entry file,
+  harness in gitignored scratch, README pointer to docs/plans) go to
+  FEEDBACK.md as proposals rather than being dropped. Done.

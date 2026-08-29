@@ -1,8 +1,8 @@
 ---
 id: S4
 title: Declare the typed-holes skill canonical over PLAYBOOK
-status: in-review
-commit-range: 0f0311c..fac496c
+status: done
+commit-range: 0f0311c..bcfce58
 depends: []
 serialize-with: [S47]
 lineage: none
@@ -45,7 +45,7 @@ against the skill, not against PLAYBOOK prose.
 ## Gate checklist
 
 - [x] Gate S: `vale` on touched files; the never-publish rule intact.
-- [ ] Gate A: adversarial review, focus: did thinning PLAYBOOK drop any
+- [x] Gate A: adversarial review, focus: did thinning PLAYBOOK drop any
   rule that has no home in the skill? (passed on `fac496c`; reopened
   for the staged fix)
 
@@ -110,3 +110,14 @@ direct; external commits recorded in the Log as they land.
   under this card on approval; the template pointers are a scope
   extension Mike decides (extend S4, or a follow-up card). Gate A is
   not re-ticked until the approved fix is reviewed.
+- 2026-08-29 Reopen resolved at the stop: Mike approved the staged
+  fix and extended the card's scope to the four template pointers.
+  Landed as rust-holes `2d0a22b`. Re-review on the codex lane, round
+  1: FAIL, 1 BLOCKING (README still called the playbook repo-neutral,
+  contradicting the map it now is); ACCEPTED and repaired in
+  `bcfce58`, which re-attributes the neutrality to the templates.
+  Round 2: PASS, zero findings, the round-1 fix verified. Gate A
+  re-ticked; commit-range extended to `bcfce58` (the span crosses
+  S46's `f650b82` and the plan-log commit, both named out of scope in
+  the review prompts). `bin/check` green and vale clean on both
+  commits. Done.

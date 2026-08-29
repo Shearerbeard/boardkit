@@ -16,7 +16,7 @@ Admission test: where does the diff land.
 | [S1](s1-wave-close-retro.md) | Wave-close retro with snapshots and driver input | ready | - | any | S -> A -> U @ S |
 | [S2](s2-wiring-trio.md) | Wire pre-vet, deferrals, and packet staging into the CLI | ready | - | smart | S -> A @ S |
 | [S3](s3-skills-defect-sweep.md) | claude-skills defect sweep from the topology audit | ready | - | any | S -> A @ S |
-| [S4](s4-rust-holes-canonical.md) | Declare the typed-holes skill canonical over PLAYBOOK | in-review | - | any | S -> A @ A |
+| [S4](s4-rust-holes-canonical.md) | Declare the typed-holes skill canonical over PLAYBOOK | done | - | any | S -> A |
 | [S5](s5-gate-t-native-opencode.md) | Run the never-run Gate T on native opencode routing | done | - | any | M -> T |
 | [S6](s6-template-canary.md) | Template baseline digest, template-diff, and golden briefs | backlog | - | smart | S -> A |
 | [S7](s7-transport-wrapper-spike.md) | Thin transport wrapper spike with a canary harness | backlog | S2 | smart | S -> A -> U |
@@ -57,11 +57,11 @@ Admission test: where does the diff land.
 | [S42](s42-doctor-docked-board-misfires.md) | Fix doctor host checks that misfire on in-repo board homes | backlog | - | smart | S -> A -> U(code-review) |
 | [S43](s43-phase2-residue-canary-fallback.md) | Land the phase 2 residue - canary fallback, degraded close, review notes | done | - | smart | S -> A -> U(code-review) |
 | [S44](s44-path-constants-hierarchy.md) | Consolidate the repeated path literals into a constants hierarchy | backlog | - | smart | S -> A -> U(code-review) |
-| [S45](s45-rust-holes-self-check.md) | rust-holes repo self-check with template provenance stamp | in-review | - | any | S -> A @ A |
-| [S46](s46-rust-holes-consuming-doc.md) | rust-holes CONSUMING.md onboarding doc | in-review | S4 | any | S -> A -> U(acceptance) @ U |
+| [S45](s45-rust-holes-self-check.md) | rust-holes repo self-check with template provenance stamp | done | - | any | S -> A |
+| [S46](s46-rust-holes-consuming-doc.md) | rust-holes CONSUMING.md onboarding doc | done | S4 | any | S -> A -> U(acceptance) |
 | [S47](s47-rust-holes-brief-class-tags.md) | model-class tags in the rust-holes dispatch brief | done | - | any | S -> A |
 | [S48](s48-document-stores-and-close-review.md) | Document stores overlay and close-review in the living docs | ready | S33 | any | S -> U(acceptance) @ S |
 
 ## Epics
 
-- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 5/14 done - S8 (ready), S12 (ready), S15 (done), S30 (done), S31 (done), S32 (done), S33 (done), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready), S46 (in-review), S48 (ready)
+- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 6/14 done - S8 (ready), S12 (ready), S15 (done), S30 (done), S31 (done), S32 (done), S33 (done), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready), S46 (done), S48 (ready)

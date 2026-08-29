@@ -1,7 +1,7 @@
 ---
 id: S45
 title: rust-holes repo self-check with template provenance stamp
-status: in-review
+status: done
 commit-range: a2b3f2e..32d7eac
 depends: []
 serialize-with: []
@@ -50,7 +50,7 @@ the read-order table omits `templates/MANIFEST.md` and
 ## Gate checklist
 
 - [x] Gate S: the acceptance runs above; vale on touched markdown.
-- [ ] Gate A: second-model review, focus: which drift class does the
+- [x] Gate A: second-model review, focus: which drift class does the
   check miss, and does any check assert something the docs do not
   promise?
 
@@ -157,3 +157,7 @@ direct; external commits recorded in the Log as they land.
   the header rule checks); the card's own deliverable defines the
   header as the thing verified. Recorded here so the equivalence is
   a stated decision, not an unstated one.
+- 2026-08-29 Escalation resolved at the stop: Mike accepted the
+  board owner's verification of the round-4 fix (`32d7eac`, 18
+  failing seeds plus the must-pass case, all green) and closed Gate
+  A without a fifth round. Done.
