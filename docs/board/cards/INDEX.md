@@ -61,7 +61,8 @@ Admission test: where does the diff land.
 | [S46](s46-rust-holes-consuming-doc.md) | rust-holes CONSUMING.md onboarding doc | done | S4 | any | S -> A -> U(acceptance) |
 | [S47](s47-rust-holes-brief-class-tags.md) | model-class tags in the rust-holes dispatch brief | done | - | any | S -> A |
 | [S48](s48-document-stores-and-close-review.md) | Document stores overlay and close-review in the living docs | ready | S33 | any | S -> U(acceptance) @ S |
+| [S49](s49-prepublication-docs-pass.md) | Pre-publication docs pass - feedback intake to issues, bus test, publish-gate rulings | done | - | any | S -> A |
 
 ## Epics
 
-- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 6/14 done - S8 (ready), S12 (ready), S15 (done), S30 (done), S31 (done), S32 (done), S33 (done), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready), S46 (done), S48 (ready)
+- [S41](s41-co-worker-consumption.md) Co-worker consumption readiness - 7/15 done - S8 (ready), S12 (ready), S15 (done), S30 (done), S31 (done), S32 (done), S33 (done), S36 (backlog), S37 (backlog), S38 (ready), S39 (ready), S40 (ready), S46 (done), S48 (ready), S49 (done)

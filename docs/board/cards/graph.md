@@ -28,6 +28,7 @@ flowchart TD
     S40["S40 README developer path, canary bri…"]:::ready
     S46["S46 rust-holes CONSUMING.md onboardin…"]:::done
     S48["S48 Document stores overlay and close…"]:::ready
+    S49["S49 Pre-publication docs pass - feedb…"]:::done
   end
   S1["S1 Wave-close retro with snapshots a…"]:::ready
   S2["S2 Wire pre-vet, deferrals, and pack…"]:::ready

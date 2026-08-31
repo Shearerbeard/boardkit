@@ -58,8 +58,8 @@ at Mike's call when the members land.
 
 ## Members
 
-S8, S12, S15, S30, S31, S32, S33, S36, S37, S38, S39, S40, S46, S48
-carry `epic: S41`. Membership is grouping, not dependency; `boardkit
+S8, S12, S15, S30, S31, S32, S33, S36, S37, S38, S39, S40, S46, S48,
+S49 carry `epic: S41`. Membership is grouping, not dependency; `boardkit
 dag --to S41` computes the schedulable plan.
 
 ## Gate checklist
@@ -75,6 +75,9 @@ direct
 
 ## Log
 
+- 2026-08-31 S49 (pre-publication docs pass) added to the member list;
+  minted retroactively as done after the work landed and pushed.
+  Membership is grouping; the card's own depends stay [].
 - 2026-08-25 S48 (document stores overlay and close-review) added to
   the member list; minted at S33's Gate U close with `epic: S41` in
   frontmatter, this prose list catching up. Membership is grouping;
