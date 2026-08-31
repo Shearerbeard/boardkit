@@ -85,3 +85,7 @@ direct
   commits belong to this card's close rather than its reviewed diff:
   `837097a` (the board-hygiene skill's stale inbox line, the same
   intake move) and this mint commit.
+- 2026-08-31 Orientation canary PASS 4/4 at session close
+  (deepseek-v4-flash via the opencode lane, graded against
+  `boardkit canary-key`). Evidence:
+  [2026-08-31-s49-close-canary.md](../evidence/2026-08-31-s49-close-canary.md).

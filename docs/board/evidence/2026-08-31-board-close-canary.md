@@ -36,10 +36,11 @@ stage.
 2. "ready is non-empty, so the next pull is the top ready card: S1
    (Wave-close retro with snapshots and driver input)... No promotion
    gap applies."
-3. "No deferred.md was rendered for this board... that absence reads
-   as no gates are open-deferred. None wait on anything." It flagged
-   that the surface carries no card logs, so it stated the renderer's
-   absence signal rather than checking log lines.
+3. The packet carries no deferred view, and the canary read that
+   absence correctly ("that absence reads as no gates are
+   open-deferred"), while flagging that the surface carries no card
+   logs, so it stated the renderer's absence signal rather than
+   checking log lines.
 4. Owner: "the session the user has put in charge of the board,
    exactly one at a time"; a named current session "is not derivable
    from these files." Stops: Gate U, Gate T, Gate F pre-approval,
