@@ -283,6 +283,6 @@ harness might load on its own.
 Friction with the process itself, a rule that fought the work, a gate that
 misfired, a template claim that turned out wrong, is signal for the kit
 rather than only for this repo. Record it as it happens in the repo's own
-friction log, and append kit-relevant items to the boardkit checkout's
-feedback inbox, which states its own entry format. Never edit the kit's
-templates or code from a consumer repo.
+friction log, and file kit-relevant items as issues on the kit's tracker
+(for boardkit, https://github.com/Shearerbeard/boardkit/issues). Never
+edit the kit's templates or code from a consumer repo.
