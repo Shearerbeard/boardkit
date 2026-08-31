@@ -85,7 +85,10 @@ follows the reviewer-differs-from-author invariant below, not the card's
   For a multi-commit range, the reviewer must differ from every model that
   wrote any commit in it. This holds regardless of class; a smart-class
   model may not review its own smart-class output, and a frontier model
-  may not review its own frontier output.
+  may not review its own frontier output. A repo's `REVIEW-TOOLING.md` may
+  tighten the invariant to family level, so that a reviewer from the
+  author's own model family cannot close the gate there; the stricter pin
+  wins.
 - The adversarial-review procedure itself is stated once, in
   `REVIEW-TOOLING.md`: fresh reviewer context, numbered findings each
   carrying its own disposition, an explicit verdict line, an empty return

@@ -14,13 +14,14 @@ Read both before dispatching a card.
 ## Card schema
 
 The card registry is one markdown file per card, with YAML frontmatter.
-Generated views sit alongside it: `INDEX.md` and `board.md` always, plus
-`deferred.md` whenever any gate is open-deferred; `boardkit
+Generated views sit alongside it: `INDEX.md`, `board.md`, and `graph.md`
+always, plus `deferred.md` whenever any gate is open-deferred; `boardkit
 render` writes them and `boardkit check` validates them against the cards
 and fails on drift. Never hand-edit a generated view. If a view looks wrong,
 fix the card frontmatter that produced it and regenerate.
 
-Frontmatter fields, all required except the last two: `commit-range`, which
+Frontmatter fields, required unless an entry below marks itself optional.
+Two are conditional rather than optional: `commit-range`, which
 is added at the moment the card enters `in-review`, and `side-quest`, which
 is absent unless the user has declared the flow a detached side quest (see
 their entries below):
@@ -263,7 +264,9 @@ checklist that repeats it at the gate is the one that fires.
 - Gate A, agent: a fresh subagent with no implementation context reviews the
   diff against the card's acceptance criteria and either finds issues or
   signs off explicitly. The reviewer's model must differ from every model
-  that authored the diff (the reviewer-differs-from-author invariant); for a
+  that authored the diff (the reviewer-differs-from-author invariant,
+  which a repo's `REVIEW-TOOLING.md` may tighten to family level - the
+  stricter pin wins); for a
   multi-commit range, the reviewer must differ from every model that wrote
   any commit in it, and a range whose authorship cannot be established
   defers rather than being reviewed blind. Findings are numbered, each with

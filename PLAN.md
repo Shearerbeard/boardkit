@@ -6,10 +6,10 @@ phase changes state. `EXTRACTION.md` holds the per-artifact source map.
 
 ## Current state (update every session)
 
-Last updated: 2026-08-22, at the wave-2 Gate U close.
+Last updated: 2026-08-31, at the pre-publication docs pass.
 
 **This file's phase narrative is historical; the kit's own board is the
-live tracker** (41 cards, `docs/board/cards/INDEX.md`). Since the
+live tracker** (48 cards, `docs/board/cards/INDEX.md`). Since the
 2026-07-21 entry below: Phase 3 shipped (board and delegation skills),
 the kit dogfoods its own board, the R-wave (S13-S25 registry and view
 features) closed at the 2026-08-22 user gate on the 2026-08-16 ruling
@@ -101,7 +101,7 @@ Standing rules for every phase:
 | 0 | Scaffold, EXTRACTION.md, snapshots of unversioned flow assets | S, A | done (commit 89a07ae) |
 | 1 | `boardkit` CLI: check/render/review-packet/init, boardkit.toml, golden test vs a Phase 1 snapshot of the aura board | S, A | done |
 | 2 | Process docs: PROCESS.md, MODEL-CLASSES.md, REVIEW-TOOLING template, AGENTS/CLAUDE shims | S, A, **U** | done (Gate U approved 2026-07-21) |
-| 3 | Skills plugin: typed-holes (new), board-hygiene (generalized), delegating-work (CLI-first rewrite); opencode agent defs | S, A | scaffold landed (manifests only, 2026-08-03); skill bodies pending |
+| 3 | Skills plugin: typed-holes (new), board-hygiene (generalized), delegating-work (CLI-first rewrite); opencode agent defs | S, A | done (scaffold 2026-08-03; board-hygiene and delegating-work bodies landed 2026-08-03, typed-holes ships from claude-skills) |
 | 4 | `boardkit init` full bootstrap: plugin install, claude-skills sibling detect, agent-def placement; temp-HOME install test | S, A, M | pending |
 | 5 | Dogfood: one card through the full lifecycle in a scratch repo, Claude Code leg + attended OpenCode leg | S, A, M, **T** | pending |
 | 6 | Public polish (README bus test plus the personal-data sweep and humanizer pass), then publish | S, A, **U** | pending |
@@ -140,6 +140,7 @@ make the agent-driver conversion run harder is the wrong choice.
 
 ## Publish-gate obligations
 
-Tracked in `EXTRACTION.md` ("Publish gate obligations"): strip `snapshots/`,
-genericize or remove `tests/golden/aura-cards/` fixture content, sweep for
-machine paths and account identifiers, README bus test cold-pass.
+Tracked in `EXTRACTION.md` ("Publish gate obligations"), with the
+2026-08-31 rulings recorded there: `snapshots/` stripped;
+`tests/golden/aura-cards/` and its machine paths ruled KEEP (live test
+fixtures, public provenance); README bus test cold-pass.

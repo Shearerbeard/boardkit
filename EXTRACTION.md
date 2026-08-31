@@ -60,13 +60,13 @@ material, stripped before publish).
 | Codex board owner | `REVIEW-TOOLING.md` harness bindings row | deferred | Named deferral: codex worked as a board owner (attended) but is out of v1 scope. The harness-bindings template keeps a codex row so adopters can wire it. |
 | Pi harness | claude-skills README mentions | deferred | Mentioned in the claude-skills README but not planned for boardkit. |
 
-## Snapshots (Phase 0 captures, strip before publish)
+## Snapshots (Phase 0 captures; stripped 2026-08-31, see the publish-gate rulings)
 
 | Path | Origin | Why captured |
 |---|---|---|
 | `snapshots/opencode/agent/*.md` | `~/.config/opencode/agent/` -> `~/.dotfiles` | Working copies for Phase 3 genericization (also safe in dotfiles). |
 | `snapshots/opencode/opencode.json` | same | Agent/skill-permission blocks. Checked: no real secrets (placeholder apiKey values only). |
-| `snapshots/user-skills/collaborating-with-*` | `~/.claude/skills/` | Previously unversioned anywhere; this is now their only backup. Source material for the `delegating-work` rewrite. |
+| `snapshots/user-skills/collaborating-with-*` | `~/.claude/skills/` | Previously unversioned anywhere; git history is now their only backup. Source material for the `delegating-work` rewrite. |
 
 ## Dropped (program-specific)
 
@@ -112,9 +112,13 @@ commits in the window at all.
 
 ## Publish gate obligations (Phase 6)
 
-- Remove or genericize `snapshots/` entirely.
-- Grep-sweep for `/Users/mshearer`, account identifiers, cost figures outside
-  clearly-marked examples.
+- `snapshots/`: ruled STRIP 2026-08-31 and removed from the tree; git
+  history keeps the only copy.
+- `tests/golden/aura-cards/` and the `/Users/mshearer` paths in fixtures
+  and one evidence doc: ruled KEEP 2026-08-31 - the cards are live test
+  fixtures, their provenance (`mezmo/aura`) is a public repo, and the
+  paths expose no credential. The sweep for account identifiers and cost
+  figures outside clearly-marked examples still stands.
 - README must pass a docs bus test cold: a fresh human or agent reaches a
   working board from the README alone. The bus test runs as a standing gate on
   every doc-producing phase, not only at publish.

@@ -24,7 +24,9 @@ Interview decisions (Mike, in-session 2026-08-09):
    deliberately and owns the consequence. This is the kit-contract half of
    the wiki's D4; the wiki's own keep-vs-track ruling stays with Mike at
    Gate A.
-4. Inbox contract: FEEDBACK.md stays the canonical intake. A maintainer
+4. Inbox contract: FEEDBACK.md stays the canonical intake. (Superseded
+   2026-08-31: feedback routes to the repo's GitHub issues; FEEDBACK.md is
+   untracked.) A maintainer
    drain MAY also sweep claude-skills `feedback/` for entries naming
    boardkit that were never mirrored, and the drain record must name
    that source when it does. This legitimizes what drains 5 and 6

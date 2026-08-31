@@ -176,13 +176,14 @@ exist to prevent.
 ## Stall protocol
 
 Agent CLIs commonly ship without a timeout flag, so the caller owns the
-deadline: wrap every delegated invocation in one (`timeout <seconds> <the
-delegation command>`) and treat the wrapper's exit as the delegation's
+deadline: wrap every delegated invocation in one (the `perl -e 'alarm N;
+exec @ARGV' --` recipe from the codex entry above; GNU `timeout` where the
+platform ships it) and treat the wrapper's exit as the delegation's
 outcome. On a stall, switch tools rather than retrying blind; the same
 prompt through the same stalled tool usually stalls again. An empty
 return, a zero-exit run with no final text, and any run without an explicit
-verdict are each a failed delegation, never a pass. Record the deadline this
-repo uses per tool alongside the invocations above.
+verdict are each a failed delegation, never a pass. This repo's recorded
+deadline: 10 minutes per delegated dispatch, every tool.
 
 A dispatched review also carries a liveness convention, so the harness
 detects a stall instead of the user asking about one. Run the delegation

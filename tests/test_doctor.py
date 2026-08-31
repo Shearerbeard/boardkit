@@ -6,7 +6,7 @@ rather than a traceback or a silence. Each quadrant test asserts the check
 id that should fire, not just that something failed.
 
 The pure helpers are tested directly, because their failure mode is a false
-positive on legitimate content - a template that says `timeout <seconds>`
+positive on legitimate content - a template that says `reviews/<ID>-<name>`
 reported as an unfilled placeholder - and that is cheapest to pin here.
 """
 
@@ -531,13 +531,14 @@ def test_an_unparseable_board_skips_the_view_check(tmp_path: Path) -> None:
 
 
 def test_placeholder_scan_ignores_prose_outside_the_fill_in_sections() -> None:
-    """`timeout <seconds>` in the stall protocol is legitimate template prose.
-    A whole-file angle-bracket scan would report it; the scoped one must not."""
+    """`reviews/<ID>-<name>` in the fix-round packet prose is legitimate
+    template prose. A whole-file angle-bracket scan would report it; the
+    scoped one must not."""
     shipped = (TEMPLATES_DIR / "REVIEW-TOOLING.md.template").read_text(encoding="utf-8")
 
-    assert "timeout <seconds>" in shipped
+    assert "reviews/<ID>-<name>" in shipped
     found = section_placeholders(shipped)
-    assert "timeout <seconds>" not in str(found)
+    assert "reviews/<ID>-<name>" not in str(found)
     assert set(found) <= set(REQUIRED_FILL_SECTIONS)
 
 

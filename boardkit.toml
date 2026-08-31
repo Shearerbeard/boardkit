@@ -35,8 +35,8 @@ not = "consumer-repo process fixes and aura-family work"
 [charter.route]
 aura = "aura-family cards, epics, and consolidation work"
 
-# The delegation contract: which transport serves each role. Scaffolded with
-# placeholders — fill them in, then run `boardkit doctor`.
+# The delegation contract: which transport serves each role. This repo's
+# routes below are live; `boardkit doctor` validates the wiring.
 [contract]
 version = 2
 

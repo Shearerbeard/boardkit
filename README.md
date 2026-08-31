@@ -28,8 +28,9 @@ deferral, not an omission (see `EXTRACTION.md`).
 
 ## Quick start
 
-boardkit is not published to a package index; it runs from this checkout
-via [uv](https://docs.astral.sh/uv/):
+Prerequisites: Python 3.12 or newer and
+[uv](https://docs.astral.sh/uv/getting-started/installation/). boardkit is
+not published to a package index; it runs from this checkout:
 
 ```sh
 export BOARDKIT_HOME=/path/to/boardkit   # its own line, before uv run
@@ -38,6 +39,21 @@ uv run --project "${BOARDKIT_HOME:-../boardkit}" boardkit check
 
 `boardkit init` scaffolds a new board in the current repo; `check`
 validates an existing one; `boardkit doctor` diagnoses the installation.
+Running a board end to end also takes an agent harness with the board
+skills installed. Claude Code:
+
+```sh
+claude plugin marketplace add Shearerbeard/boardkit
+claude plugin install board@boardkit
+```
+
+OpenCode or Codex:
+
+```sh
+cp -R plugins/board/skills/* ~/.agents/skills/
+```
+
+`boardkit doctor` names each piece still unwired.
 The `export` must be its own line: a same-line prefix expands the
 `../boardkit` default before the assignment lands and silently targets
 the wrong checkout.
@@ -99,6 +115,47 @@ fill in.
 The language skills the flow's writers and reviewers load (rust-*, python-*,
 docs-*) are not part of this kit; they install alongside it from
 [claude-skills](https://github.com/Shearerbeard/claude-skills).
+
+## Development
+
+The code lives in `src/boardkit/`, one module per concern: `cli.py` (the
+command surface), `config.py` (board discovery and `boardkit.toml`),
+`board.py` and `dag.py` (the card registry and graph queries), `doctor.py`
+(installation diagnosis), and `review_packet.py`, `receipts.py`, `store.py`
+(review evidence). The board-bound skills ship in `plugins/board/`; the docs
+`boardkit init` scaffolds live in `src/boardkit/data/templates/`. Tests sit
+in `tests/`, with golden fixtures under `tests/golden/`.
+
+```sh
+uv run pytest -q        # the suite is the count of record
+uv run ruff check       # lint; config in pyproject.toml
+vale <changed docs>     # prose lint; run `vale sync` once per checkout
+uv run boardkit check   # board validity; also what the pre-commit hook runs
+```
+
+pytest and ruff install with uv's dev dependency group; vale is a system
+tool - `brew install vale`, then `mkdir -p .vale/styles && vale sync` once
+per checkout (the styles dir must exist first, or vale syncs to its global
+path instead).
+
+There is no CI pipeline; the gates are local.
+`docs/board/pre-commit.sample` runs `boardkit check` on every commit - copy
+it into `.git/hooks/` to opt in. Commits follow conventional-commit form
+(`type(scope): summary`, as in the git history). Bugs and process friction
+go to GitHub issues; planned work is tracked as board cards under
+`docs/board/cards/` and advanced through the gates in
+`docs/board/PROCESS.md`. There is no changelog while the kit is
+unpublished - the board and the git history are the record.
+
+On this repo's own board, `boardkit check` prints two benign warning
+classes: commit-range warnings on old cards whose review trailers name
+commits a later rebase moved outside the recorded range (historical, and
+discharged at those cards' gates), and unresolvable ranges pointing into
+the external rust-holes repo, which resolve only on machines that have
+that checkout. A freshly scaffolded board prints neither.
+
+Code changes arrive as pull requests against `master` from a fork; open an
+issue first for anything larger than a typo fix.
 
 See `EXTRACTION.md` for where every piece of this kit comes from and what
 remains to build.
