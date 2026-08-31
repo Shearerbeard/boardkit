@@ -16,7 +16,8 @@ user-gates: []
 Mechanics: [PROCESS.md](../PROCESS.md). Required reading before pulling:
 [REVIEW-TOOLING.md](../REVIEW-TOOLING.md). Drain record:
 [2026-08-23-feedback-drain-8.md](../../plans/2026-08-23-feedback-drain-8.md).
-External repo: `~/dev/rust-holes` (private; never publish). Source:
+External repo: `~/dev/rust-holes` (private when minted; public since
+2026-08-31). Source:
 two unchecked items in the aura board's executor cost plan
 (2026-08-05). Serialized with S4 because both touch
 `templates/dispatch-brief.md`.
@@ -98,3 +99,7 @@ direct; external commits recorded in the Log as they land.
   their pointers (`0f0311c` for the tags; the prose item closed as
   already satisfied via S4 `fac496c`); the edit sits uncommitted in
   the wiki checkout for its own board owner to commit.
+- 2026-08-31 Context annotation: rust-holes went public with an
+  attribution notice (its `21aae96`, pushed to master), so the context
+  line's "(private; never publish)" label is amended to a dated form.
+  Gate and log entries stay as recorded.

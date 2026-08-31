@@ -17,7 +17,8 @@ epic: S41
 Mechanics: [PROCESS.md](../PROCESS.md). Required reading before pulling:
 [REVIEW-TOOLING.md](../REVIEW-TOOLING.md). Drain record:
 [2026-08-23-feedback-drain-8.md](../../plans/2026-08-23-feedback-drain-8.md).
-External repo: `~/dev/rust-holes` (private; never publish). Plan:
+External repo: `~/dev/rust-holes` (private when minted; public since
+2026-08-31). Plan:
 `rust-holes docs/plans/2026-08-23-second-dev-readiness.md`. Depends
 on S4 so the doctrine pointer it writes is the settled one; the
 docking dependency was deliberately dropped at the drain (record,
@@ -150,3 +151,9 @@ direct; external commits recorded in the Log as they land.
   in the file. The three residual bus-test P2s (agents entry file,
   harness in gitignored scratch, README pointer to docs/plans) go to
   FEEDBACK.md as proposals rather than being dropped. Done.
+- 2026-08-31 Context annotation: rust-holes went public with an
+  attribution notice (its `21aae96`, pushed to master), so the context
+  line's "(private; never publish)" label is amended to a dated form.
+  Gate and log entries stay as recorded; the access section this
+  card's deliverable describes was rewritten for the public repo in
+  that same commit.

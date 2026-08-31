@@ -4,7 +4,7 @@ This file traces every boardkit artifact to its source and records its
 disposition. It is the working contract for the extraction; it gets pruned to
 a short provenance note before publish.
 
-Source repositories (private, on the author's machine):
+Source repositories (on the author's machine):
 
 | Source | Path | What it holds |
 |---|---|---|

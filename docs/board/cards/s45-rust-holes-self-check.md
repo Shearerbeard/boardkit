@@ -16,7 +16,8 @@ user-gates: []
 Mechanics: [PROCESS.md](../PROCESS.md). Required reading before pulling:
 [REVIEW-TOOLING.md](../REVIEW-TOOLING.md). Drain record:
 [2026-08-23-feedback-drain-8.md](../../plans/2026-08-23-feedback-drain-8.md).
-External repo: `~/dev/rust-holes` (private; never publish). Plan:
+External repo: `~/dev/rust-holes` (private when minted; public since
+2026-08-31). Plan:
 `rust-holes docs/plans/2026-08-23-second-dev-readiness.md`.
 
 ## Scope
@@ -161,3 +162,8 @@ direct; external commits recorded in the Log as they land.
   board owner's verification of the round-4 fix (`32d7eac`, 18
   failing seeds plus the must-pass case, all green) and closed Gate
   A without a fifth round. Done.
+- 2026-08-31 Context annotation: rust-holes went public with an
+  attribution notice (its `21aae96`, pushed to master), so the context
+  line's "(private; never publish)" label is amended to a dated form.
+  Gate and log entries stay as recorded; the never-publish rule those
+  records name became the attribution rule in that same commit.

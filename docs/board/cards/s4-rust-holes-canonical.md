@@ -16,7 +16,8 @@ user-gates: []
 Mechanics: [PROCESS.md](../PROCESS.md). Required reading before pulling:
 [REVIEW-TOOLING.md](../REVIEW-TOOLING.md). Plan:
 [2026-08-04-productionize-verification.md](../../plans/2026-08-04-productionize-verification.md),
-stage 3. External repo: `~/dev/rust-holes` (private; never publish).
+stage 3. External repo: `~/dev/rust-holes` (private when minted;
+public since 2026-08-31).
 
 ## Scope
 
@@ -121,3 +122,8 @@ direct; external commits recorded in the Log as they land.
   S46's `f650b82` and the plan-log commit, both named out of scope in
   the review prompts). `bin/check` green and vale clean on both
   commits. Done.
+- 2026-08-31 Context annotation: rust-holes went public with an
+  attribution notice (its `21aae96`, pushed to master), so the context
+  line's "(private; never publish)" label is amended to a dated form.
+  Gate and log entries stay as recorded; the never-publish rule those
+  records name became the attribution rule in that same commit.
