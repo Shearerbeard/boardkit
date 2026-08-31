@@ -549,11 +549,10 @@ Friction with the board process itself, a rule that fought the work, a gate
 that misfired, a template claim that turned out wrong, is signal for the
 kit, not just for this repo. Record it as it happens in this repo's own
 friction log (a retro scratchpad or the closing handoff), and route the
-kit-relevant items to the boardkit checkout's `FEEDBACK.md` inbox
-(`${BOARDKIT_HOME:-../boardkit}/FEEDBACK.md`), which states its own entry
-format. Append an entry there; never edit the kit's templates or code from
-a consumer repo. A maintainer session drains the inbox into the kit's
-plans.
+kit-relevant items to the boardkit repo as a GitHub issue
+(https://github.com/Shearerbeard/boardkit/issues). File the issue; never
+edit the kit's templates or code from a consumer repo. A maintainer
+session triages the issues into the kit's plans.
 
 ## Recovery protocol
 

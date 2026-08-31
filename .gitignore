@@ -8,3 +8,4 @@ docs/board/reviews/
 .bench-runs/
 .boardkit/local.toml
 .claude/settings.local.json
+FEEDBACK.md
