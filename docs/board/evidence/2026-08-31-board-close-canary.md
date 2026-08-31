@@ -43,10 +43,10 @@ stage.
    checking log lines.
 4. Owner: "the session the user has put in charge of the board,
    exactly one at a time"; a named current session "is not derivable
-   from these files." Stops: Gate U, Gate T, Gate F pre-approval,
-   U(code-review) packets, and the standing user gates (architecture
-   and type-design decisions, acceptance, baselines, launches,
-   milestones).
+   from these files." It named the stops: the U and T user gates, the
+   pre-approval on Gate F, U(code-review) packets, and the standing
+   user gates (architecture and type-design decisions, acceptance,
+   baselines, launches, milestones).
 
 ## Grade
 
