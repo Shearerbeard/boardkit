@@ -2,7 +2,7 @@
 id: S39
 title: Machine-bootstrap recipe and account inventory
 status: in-review
-commit-range: c3ac009..c3adf44
+commit-range: c3ac009..5542bb2
 depends: []
 serialize-with: []
 lineage: primary
@@ -54,6 +54,12 @@ direct
 
 ## Log
 
+- 2026-08-31 Gate A round 4: codex, gpt-5.6-sol. VERDICT: FAIL, 1
+  finding with new evidence, not a stale re-raise: fix commit c3adf44
+  added only docs/board, leaving the template copy under src/
+  uncommitted - the fix existed solely in the worktree. Reviewer
+  correct; committed as 5542bb2. Round 5 verifies both copies at the
+  range head.
 - 2026-08-31 Gate A round 3: codex, gpt-5.6-sol. VERDICT: FAIL, 1
   finding - finding 3's fix accepted; finding 2 re-raised (checkout
   bullet duplicated README's clone-once; one pre-vet item still
