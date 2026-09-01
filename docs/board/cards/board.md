@@ -33,10 +33,10 @@ kanban-plugin: board
 	Depends: S33. Gates: S -> U(acceptance) @ S. Executor: any.
 
 ## In Progress
-- [ ] **S39** [Machine-bootstrap recipe and account inventory](s39-machine-bootstrap-recipe.md)
-	Depends: none. Gates: S -> A -> D -> U @ S. Executor: smart.
 
 ## In Review
+- [ ] **S39** [Machine-bootstrap recipe and account inventory](s39-machine-bootstrap-recipe.md)
+	Depends: none. Gates: S -> A -> D -> U @ A. Executor: smart.
 
 ## Backlog
 - [ ] **S6** [Template baseline digest, template-diff, and golden briefs](s6-template-canary.md)

@@ -1,7 +1,8 @@
 ---
 id: S39
 title: Machine-bootstrap recipe and account inventory
-status: in-progress
+status: in-review
+commit-range: c3ac009..a52f54a
 depends: []
 serialize-with: []
 lineage: primary
@@ -40,7 +41,7 @@ cold-test.
 
 ## Gate checklist
 
-- [ ] Gate S: `boardkit check`, `boardkit render --check`,
+- [x] Gate S: `boardkit check`, `boardkit render --check`,
   `boardkit doctor`, `vale` on touched markdown.
 - [ ] Gate A: adversarial prose review per the roster.
 - [ ] Gate D: drift audit before the user gate.
@@ -52,6 +53,11 @@ direct
 
 ## Log
 
+- 2026-08-31 Gate S passed: 518 tests green, ruff clean, vale clean
+  over the touched markdown, render and check green. Card entered
+  in-review over c3ac009..a52f54a (README second-machine section,
+  REVIEW-TOOLING bootstrap appendix in repo copy and template, notanton
+  cold-test runbook). Gate A next: pi lane per Mike's routing.
 - 2026-08-31 Pulled in-progress as the notanton cold-test vehicle.
   Mike scoped the session to boardkit install and verification on
   tang-nano-cores and snes-hello (hooks, remotes, and wiki docking
