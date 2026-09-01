@@ -54,6 +54,16 @@ direct
 
 ## Log
 
+- 2026-08-31 Round-bound ruling after fix round 2 (R3 re-raised
+  finding 2 once more; finding 3 accepted): CONTINUE, one more fix
+  round. The disagreement is ownership, not substance - the appendix
+  kept a checkout-count rule and one enumerated pre-vet item, and the
+  reviewer correctly reads both as another owner's facts. Fix round 3
+  deletes the checkout bullet outright (the README "Second machine"
+  section already states clone-once) and reduces the verification
+  bullet to a bare pointer. Trajectory 8 -> 2 -> 1 findings supports
+  convergence over escalation; if round 4 re-raises without new
+  evidence, escalate to Mike with the ledger rather than loop.
 - 2026-08-31 Gate A round 2: codex, gpt-5.6-sol. VERDICT: FAIL, 2
   findings, both re-raises of round 1 items 2 and 3 (appendix still
   enumerated pre-vet items; still asserted a README-stated clone URL).

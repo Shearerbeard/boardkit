@@ -268,9 +268,6 @@ kinds. The checkout mechanics live in the README quick start; the lane
 verification procedure is the pre-vet checklist in MODEL-CLASSES.md.
 This appendix owns the lane inventory between them.
 
-- The kit checkout: one clone per machine, of the remote the machine
-  obtained the kit from. One only - a second clone drifts ahead of the
-  first.
 - Per-harness config trees, by kind: the opencode config group (often
   dotfiles-managed), the sibling claude-skills install for the
   language skills, the codex config tree, and the Antigravity (agy)
@@ -281,8 +278,7 @@ This appendix owns the lane inventory between them.
   Credentials are the machine's own; nothing in a clone carries them,
   and account facts never appear as model ids.
 - Verification, per lane, before a wave depends on it: the pre-vet
-  checklist in `MODEL-CLASSES.md`, including its dispatch-shaped read
-  probe.
+  checklist in `MODEL-CLASSES.md`, applied as written.
 
 A machine that clears every bullet above and a green
 `boardkit doctor` is dispatch-ready. This appendix carries no clone
