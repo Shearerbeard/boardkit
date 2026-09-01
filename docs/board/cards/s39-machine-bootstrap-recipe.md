@@ -2,7 +2,7 @@
 id: S39
 title: Machine-bootstrap recipe and account inventory
 status: in-review
-commit-range: c3ac009..dbc542e
+commit-range: c3ac009..379a130
 depends: []
 serialize-with: []
 lineage: primary
@@ -54,6 +54,12 @@ direct
 
 ## Log
 
+- 2026-08-31 Gate A round 2: codex, gpt-5.6-sol. VERDICT: FAIL, 2
+  findings, both re-raises of round 1 items 2 and 3 (appendix still
+  enumerated pre-vet items; still asserted a README-stated clone URL).
+  No new scope. Both accepted and fixed in 379a130: appendix reduced
+  to lane inventory plus bare pointers, no clone-URL assertion. This
+  is fix round 2 of the round bound; round 3 verifies.
 - 2026-08-31 Gate A round 1: codex lane, model gpt-5.6-sol (provider
   openai; the pi lane's intended model, reached through codex after pi
   failed pre-vet on a Bedrock inference-profile routing error - pi
