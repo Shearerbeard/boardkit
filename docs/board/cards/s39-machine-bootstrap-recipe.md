@@ -2,7 +2,7 @@
 id: S39
 title: Machine-bootstrap recipe and account inventory
 status: in-review
-commit-range: c3ac009..379a130
+commit-range: c3ac009..c3adf44
 depends: []
 serialize-with: []
 lineage: primary
@@ -54,6 +54,11 @@ direct
 
 ## Log
 
+- 2026-08-31 Gate A round 3: codex, gpt-5.6-sol. VERDICT: FAIL, 1
+  finding - finding 3's fix accepted; finding 2 re-raised (checkout
+  bullet duplicated README's clone-once; one pre-vet item still
+  enumerated). Fix round 3 = c3adf44 under the ruling above. Round 4
+  verifies finding 2 only.
 - 2026-08-31 Round-bound ruling after fix round 2 (R3 re-raised
   finding 2 once more; finding 3 accepted): CONTINUE, one more fix
   round. The disagreement is ownership, not substance - the appendix
