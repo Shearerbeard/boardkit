@@ -235,14 +235,13 @@ carried out.
 ## Machine bootstrap appendix
 
 What a second machine needs to reach a dispatch-ready board, stated as
-kinds. The how-to for the checkout itself (uv, the export discipline,
-the verify commands) is the README quick start's; this appendix owns
-the lane inventory and nothing else.
+kinds. The checkout mechanics live in the README quick start; the lane
+verification procedure is the pre-vet checklist in MODEL-CLASSES.md.
+This appendix owns the lane inventory between them.
 
-- The kit checkout: one clone per machine, of whatever remote the
-  machine obtained the kit from. One only. A second clone drifts ahead
-  of the first, and a board command silently reads whichever one the
-  shell resolved last.
+- The kit checkout: one clone per machine, of the remote the machine
+  obtained the kit from. One only - a second clone drifts ahead of the
+  first.
 - Per-harness config trees, by kind: the opencode config group (often
   dotfiles-managed), the sibling claude-skills install for the
   language skills, the codex config tree, and the Antigravity (agy)
@@ -253,10 +252,9 @@ the lane inventory and nothing else.
   Credentials are the machine's own; nothing in a clone carries them,
   and account facts never appear as model ids.
 - Verification, per lane, before a wave depends on it: the pre-vet
-  checklist in `MODEL-CLASSES.md` - reachability, headroom, permission
-  profile, model identity - including its dispatch-shaped read probe.
+  checklist in `MODEL-CLASSES.md`, including its dispatch-shaped read
+  probe.
 
 A machine that clears every bullet above and a green
-`boardkit doctor` is dispatch-ready. The one fact this appendix
-deliberately does not carry is the kit's clone URL: the repo that
-shares the kit states it in its own README, once.
+`boardkit doctor` is dispatch-ready. This appendix carries no clone
+URL; a machine records where it cloned from in its own notes.
