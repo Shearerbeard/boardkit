@@ -2,7 +2,7 @@
 id: S39
 title: Machine-bootstrap recipe and account inventory
 status: in-review
-commit-range: c3ac009..a52f54a
+commit-range: c3ac009..dbc542e
 depends: []
 serialize-with: []
 lineage: primary
@@ -54,6 +54,18 @@ direct
 
 ## Log
 
+- 2026-08-31 Gate A round 1: codex lane, model gpt-5.6-sol (provider
+  openai; the pi lane's intended model, reached through codex after pi
+  failed pre-vet on a Bedrock inference-profile routing error - pi
+  resolves gpt-5.6-sol to a raw on-demand ID). Reviewer differs from
+  author (GLM). VERDICT: FAIL, 8 blocking findings, all accepted and
+  fixed in dbc542e: check-vs-doctor probe wording, appendix
+  deduplication plus per-harness config kinds, clone-url ownership
+  claim, dispatch-shaped lane probe, gitleaks-allowlisted canary
+  (AWS example keys pass - verified locally; ghp_-shaped canary
+  verified to trip), doctor clean-rerun requirement, two-commit split
+  with named paths, canary-key/deferred.md in the orientation probe.
+  Round 2 dispatched over dbc542e.
 - 2026-08-31 Inserted U(code-review) into the gate ladder: the card's
   commit range touches src/ (the REVIEW-TOOLING template copy), and an
   active code-touched card carries the packet gate per PROCESS.
