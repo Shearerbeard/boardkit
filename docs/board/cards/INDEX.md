@@ -51,7 +51,7 @@ Admission test: where does the diff land.
 | [S36](s36-rust-holes-docking.md) | rust-holes adopts the docking convention as second consumer | backlog | S31 | smart | S -> A -> U(code-review) |
 | [S37](s37-view-freshness-stamp.md) | Recomputable freshness stamp on the generated views | backlog | S28 | smart | S -> A -> U(code-review) |
 | [S38](s38-visual-surface-decision.md) | Pick the board's visual home | ready | S16 | smart | S -> A -> D -> U @ S |
-| [S39](s39-machine-bootstrap-recipe.md) | Machine-bootstrap recipe and account inventory | in-review | - | smart | S -> A -> U(code-review) -> D -> U @ A |
+| [S39](s39-machine-bootstrap-recipe.md) | Machine-bootstrap recipe and account inventory | in-review | - | smart | S -> A -> U(code-review) -> D -> U @ U |
 | [S40](s40-readme-developer-path.md) | README developer path, canary brief template, plan navigation | ready | - | any | S -> A @ S |
 | [S41](s41-co-worker-consumption.md) | Co-worker consumption readiness | backlog | - | smart | S -> U |
 | [S42](s42-doctor-docked-board-misfires.md) | Fix doctor host checks that misfire on in-repo board homes | backlog | - | smart | S -> A -> U(code-review) |

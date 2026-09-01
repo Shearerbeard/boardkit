@@ -43,7 +43,7 @@ cold-test.
 
 - [x] Gate S: `boardkit check`, `boardkit render --check`,
   `boardkit doctor`, `vale` on touched markdown.
-- [ ] Gate A: adversarial prose review per the roster.
+- [x] Gate A: adversarial prose review per the roster.
 - [ ] Gate U (code-review): packet to Mike; stop.
 - [ ] Gate D: drift audit before the user gate.
 - [ ] Gate U: Mike reviews the recipe; stop.
@@ -54,6 +54,14 @@ direct
 
 ## Log
 
+- 2026-08-31 Gate A passed: round 5, codex, gpt-5.6-sol, zero
+  findings, explicit PASS. Cycle ledger: R1 FAIL 8, R2 FAIL 2, R3
+  FAIL 1, R4 FAIL 1 (uncommitted-template evidence), R5 PASS 0.
+  Author GLM, reviewer GPT family every round; invariant held.
+  Cumulative reviewer spend: five codex runs, ~3-8 minutes each, one
+  600s deadline never reached. Next stop: U(code-review) packet to
+  Mike, presented together with the notanton runbook handoff and its
+  U1 sequence approval.
 - 2026-08-31 Gate A round 4: codex, gpt-5.6-sol. VERDICT: FAIL, 1
   finding with new evidence, not a stale re-raise: fix commit c3adf44
   added only docs/board, leaving the template copy under src/
