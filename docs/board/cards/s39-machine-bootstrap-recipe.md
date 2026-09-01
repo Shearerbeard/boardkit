@@ -1,7 +1,7 @@
 ---
 id: S39
 title: Machine-bootstrap recipe and account inventory
-status: ready
+status: in-progress
 depends: []
 serialize-with: []
 lineage: primary
@@ -52,5 +52,10 @@ direct
 
 ## Log
 
+- 2026-08-31 Pulled in-progress as the notanton cold-test vehicle.
+  Mike scoped the session to boardkit install and verification on
+  tang-nano-cores and snes-hello (hooks, remotes, and wiki docking
+  landed there by other agents; verified read-only). Pack to author:
+  recipe here, notanton runbook in docs/plans/.
 - 2026-08-22 Minted at the wave-2 Gate U (Phase 0) from the approved
   spread-readiness action list.

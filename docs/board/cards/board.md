@@ -27,14 +27,14 @@ kanban-plugin: board
 	Depends: none. Gates: S -> A -> U(code-review) @ S. Executor: smart.
 - [ ] **S38** [Pick the board's visual home](s38-visual-surface-decision.md)
 	Depends: S16. Gates: S -> A -> D -> U @ S. Executor: smart.
-- [ ] **S39** [Machine-bootstrap recipe and account inventory](s39-machine-bootstrap-recipe.md)
-	Depends: none. Gates: S -> A -> D -> U @ S. Executor: smart.
 - [ ] **S40** [README developer path, canary brief template, plan navigation](s40-readme-developer-path.md)
 	Depends: none. Gates: S -> A @ S. Executor: any.
 - [ ] **S48** [Document stores overlay and close-review in the living docs](s48-document-stores-and-close-review.md)
 	Depends: S33. Gates: S -> U(acceptance) @ S. Executor: any.
 
 ## In Progress
+- [ ] **S39** [Machine-bootstrap recipe and account inventory](s39-machine-bootstrap-recipe.md)
+	Depends: none. Gates: S -> A -> D -> U @ S. Executor: smart.
 
 ## In Review
 

@@ -58,6 +58,16 @@ The `export` must be its own line: a same-line prefix expands the
 `../boardkit` default before the assignment lands and silently targets
 the wrong checkout.
 
+## Second machine
+
+A machine that has never seen this repo reaches a working board the
+same way: install uv, clone this kit's GitHub remote once, point
+`BOARDKIT_HOME` at the checkout, and verify with `boardkit check`.
+What each review lane needs beyond that - which account kinds, which
+config trees, which probes prove them live - is the machine bootstrap
+appendix in `docs/board/REVIEW-TOOLING.md`. Credentials are always the
+machine's own; nothing in a clone is machine-local state.
+
 ## Diagnostics and routing
 
 A board declares a delegation contract in `boardkit.toml`: one `[routes.*]`

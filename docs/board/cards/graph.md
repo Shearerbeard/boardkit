@@ -24,7 +24,7 @@ flowchart TD
     S36["S36 rust-holes adopts the docking con…"]:::backlog
     S37["S37 Recomputable freshness stamp on t…"]:::backlog
     S38["S38 Pick the board's visual home"]:::ready
-    S39["S39 Machine-bootstrap recipe and acco…"]:::ready
+    S39["S39 Machine-bootstrap recipe and acco…"]:::inprogress
     S40["S40 README developer path, canary bri…"]:::ready
     S46["S46 rust-holes CONSUMING.md onboardin…"]:::done
     S48["S48 Document stores overlay and close…"]:::ready
