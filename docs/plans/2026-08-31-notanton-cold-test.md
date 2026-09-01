@@ -67,7 +67,11 @@ runs without plugins, doctor will name the gap.
 A5. Account inventory, by kind, never by model id. For each harness
 present (Claude Code, opencode, codex, agy if installed), record:
 which provider account kind answers (subscription, API key, Bedrock
-role), and whether a one-token probe answers. Kinds only.
+role), and prove each lane live with the dispatch-shaped read probe
+from `MODEL-CLASSES.md`: stage one small file where that lane's
+staging contract puts packets, and have the lane read a nonce back
+from the file's content. Kinds only; an answer probe alone does not
+vet a lane.
 
 ## Phase B - sandbox rehearsal (zero real-repo commits)
 
@@ -78,11 +82,14 @@ git clone ~/dev/tang-nano-cores /tmp/tang-sandbox
 cd /tmp/tang-sandbox && make hooks
 ```
 
-B2. Canary-secret probe, before any scaffold commit exists. Stage a
-fake key, attempt a commit, expect the hook to block it:
+B2. Canary-secret probe, before any scaffold commit exists. AWS's
+documented example keys are on gitleaks' allowlist and will NOT trip
+it; generate a fresh GitHub-token-shaped canary instead (verified
+against default gitleaks rules):
 
 ```sh
-printf 'aws_access_key_id = AKIAIOSFODNN7EXAMPLE\n' > probe.txt
+printf 'github_token = ghp_%s\n' \
+  "$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 36)" > probe.txt
 git add probe.txt
 git commit -m "chore: probe"
 ```
@@ -126,19 +133,28 @@ uv run --project "${BOARDKIT_HOME}" boardkit doctor
 | Doctor finding | Expected disposition |
 |---|---|
 | entry.parity WARN on CLAUDE.md | Keep. Their shim wording is the repo's own; the check warns, never errors. |
-| review-tooling.filled ERROR | Expected: the scaffold ships prompts. Fill the four sections for notanton's real harnesses, or record as an open item for Mike. |
-| roles.filled / routes.pin-source | Same: fill from notanton's actual lanes, kinds not model ids. |
+| review-tooling.filled ERROR | Expected at first: the scaffold ships prompts. Fill the four sections for notanton's real harnesses, kinds not model ids. |
+| roles.filled / routes.pin-source | Same: fill from notanton's actual lanes. |
 | skills.installed | Depends on A4; record what is actually installed. |
 
-B6. One scaffold commit in the sandbox, hooks live:
+Then rerun doctor to completion: the sandbox does not proceed to B6
+until doctor runs green, or until every remaining red item is an
+exception Mike has named and accepted in the run log. Record the final
+run verbatim either way.
+
+B6. Two scaffold commits in the sandbox, hooks live, named paths only
+(`git add -A` can sweep strays):
 
 ```sh
-git add -A
+git add boardkit.toml .gitignore docs/board
 git commit -m "chore: scaffold the boardkit board"
+git add AGENTS.md
+git commit -m "docs: add the boardkit dock to agents entry"
 ```
 
 Expected: gitleaks clean (markdown only), `make lint` a no-op over
-these files, commitlint accepts `chore:`. Record the output.
+these files, commitlint accepts `chore:` and `docs:`. Record the
+output of both commits.
 
 B7. Stop. File the run log. The mac board owner verifies the sandbox
 read-only, and Mike approves the real sequence at U1 before any commit
@@ -152,21 +168,25 @@ approval.
 
 ## Phase D - live installs (after U1)
 
-D1. tang-nano-cores: repeat B3, B4, B5, B6 on the real repo. Commit
-messages: `chore: scaffold the boardkit board` then `docs: add the
-boardkit dock to agents entry`.
+D1. tang-nano-cores: repeat B3, B4, B5, B6 on the real repo, the same
+two-commit split and the same messages as B6.
 
 D2. snes-hello, recipe-only. Same steps, no improvisation: any
 deviation from D1's recipe is a finding against the recipe, not a
 local fix to silently apply.
 
-D3. Orientation canary per board: a fresh agent session (one with no
-context from this run) reads `docs/board/cards/INDEX.md`, `board.md`,
-and the PROCESS.md recovery section, then answers: which cards are
-in-review and in-progress; what is the next pull; which gates are open
-or deferred; who is the board owner and where it stops for the user.
-Grade against what the views actually say. A miss is a finding on the
-board's legibility, recorded, not silently absorbed.
+D3. Orientation canary per board, run to the letter of the
+orientation-canary procedure in `docs/board/PROCESS.md`: compute the
+key first with `boardkit canary-key` (via the same BOARDKIT_HOME
+export), then dispatch a fresh agent session - one with no context
+from this run - on exactly the cold-start surface: `INDEX.md`,
+`board.md`, the PROCESS.md roles and recovery sections, and
+`deferred.md` unconditionally (when the view is absent, the brief says
+so and states that absence reads as no deferred gates). The canary
+answers the four questions from the procedure verbatim. Grade against
+the computed key, never the canary's confidence; file the key, the
+answers, and the grade as evidence. A miss is graded by the two miss
+classes in the procedure and recorded, not silently absorbed.
 
 ## Phase E - close
 

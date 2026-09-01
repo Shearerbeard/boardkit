@@ -263,34 +263,29 @@ the failure as process feedback rather than dropping the record.
 
 ## Machine bootstrap appendix
 
-What a second machine needs to reach a dispatch-ready board, and where
-each piece comes from. Account facts are stated as kinds, never as
-model ids; the live pins stay in the harness configs named under
-"Harness bindings" and resolve at dispatch time.
+What a second machine needs to reach a dispatch-ready board, stated as
+kinds. The how-to for the checkout itself (uv, the export discipline,
+the verify commands) is the README quick start's; this appendix owns
+the lane inventory and nothing else.
 
-- The kit checkout: one `git clone` of the remote the kit was obtained
-  from, at a path of that machine's choosing; `BOARDKIT_HOME` points
-  at it. One checkout per machine. A second clone drifts ahead of the
-  first, and a board command silently reads whichever one the shell
-  resolved last.
-- uv, which runs the CLI: the official standalone installer brings it
-  along with the Python version it needs; `uv --version` is the probe.
-- The board skills, by harness: Claude Code installs them through its
-  plugin marketplace; agent-skills harnesses take a copy under
-  `~/.agents/skills/`. `boardkit doctor` names any skill still
-  missing.
-- The review lanes, by account kind: an executor harness with a
-  subscription or API account of its own, a code-review lane reachable
-  from the board owner's harness, a prose-review lane, and a canary
-  lane that survives an outage of the first choices. Credentials are
-  the machine's own; nothing in a clone carries them.
-- Verification, per lane, before a wave depends on it: a reachability
-  probe shaped like a dispatch - stage a small file where the route's
-  staging contract says the packet sits, and have the reviewer read a
-  nonce back from its content - plus a one-token answer probe for the
-  harness itself. The full checklist is the pre-vet list in
-  `MODEL-CLASSES.md`.
+- The kit checkout: one clone per machine, of whatever remote the
+  machine obtained the kit from. One only. A second clone drifts ahead
+  of the first, and a board command silently reads whichever one the
+  shell resolved last.
+- Per-harness config trees, by kind: the opencode config group (often
+  dotfiles-managed), the sibling claude-skills install for the
+  language skills, the codex config tree, and the Antigravity (agy)
+  config where that lane is installed. None of these ship with a
+  clone; each machine brings or rebuilds its own.
+- Provider accounts, by kind - subscription, API key, cloud-role -
+  matched to the routes this board's `boardkit.toml` declares.
+  Credentials are the machine's own; nothing in a clone carries them,
+  and account facts never appear as model ids.
+- Verification, per lane, before a wave depends on it: the pre-vet
+  checklist in `MODEL-CLASSES.md` - reachability, headroom, permission
+  profile, model identity - including its dispatch-shaped read probe.
 
-A machine that clears every bullet above is dispatch-ready. The one
-fact this appendix deliberately does not carry is the kit's clone URL:
-that belongs to the repo's README, stated once.
+A machine that clears every bullet above and a green
+`boardkit doctor` is dispatch-ready. The one fact this appendix
+deliberately does not carry is the kit's clone URL: the repo that
+shares the kit states it in its own README, once.
