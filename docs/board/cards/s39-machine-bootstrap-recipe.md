@@ -7,7 +7,7 @@ depends: []
 serialize-with: []
 lineage: primary
 executor: smart
-gates: "S -> A -> D -> U"
+gates: "S -> A -> U(code-review) -> D -> U"
 user-gates: [review]
 epic: S41
 ---
@@ -44,6 +44,7 @@ cold-test.
 - [x] Gate S: `boardkit check`, `boardkit render --check`,
   `boardkit doctor`, `vale` on touched markdown.
 - [ ] Gate A: adversarial prose review per the roster.
+- [ ] Gate U (code-review): packet to Mike; stop.
 - [ ] Gate D: drift audit before the user gate.
 - [ ] Gate U: Mike reviews the recipe; stop.
 
@@ -53,6 +54,9 @@ direct
 
 ## Log
 
+- 2026-08-31 Inserted U(code-review) into the gate ladder: the card's
+  commit range touches src/ (the REVIEW-TOOLING template copy), and an
+  active code-touched card carries the packet gate per PROCESS.
 - 2026-08-31 Gate S passed: 518 tests green, ruff clean, vale clean
   over the touched markdown, render and check green. Card entered
   in-review over c3ac009..a52f54a (README second-machine section,
