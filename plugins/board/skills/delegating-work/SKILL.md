@@ -13,6 +13,7 @@ description: |
   Pair with `board-hygiene` at session close.
 metadata:
   boardkit-contract: 2
+license: MIT
 ---
 
 # Delegating work

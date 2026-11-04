@@ -1,0 +1,13 @@
+boardkit
+
+© 2026 Mike Shearer. MIT, see LICENSE.
+
+The kit's skills are meant to be dispatched into other repositories. If you
+adapt or re-author one, keep a Lineage block:
+
+    Source: Shearerbeard/boardkit (plugins/board/skills/<skill>), <commit>
+    License: MIT
+    Changes: <what you changed>
+
+EXTRACTION.md records where this kit's own pieces came from, in the same
+spirit.
