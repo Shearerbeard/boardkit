@@ -13,6 +13,7 @@ description: |
   dispatches the checklist needs.
 metadata:
   boardkit-contract: 2
+license: MIT
 ---
 
 # Board hygiene

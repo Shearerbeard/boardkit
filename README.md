@@ -172,3 +172,11 @@ issue first for anything larger than a typo fix.
 
 See `EXTRACTION.md` for where every piece of this kit comes from and what
 remains to build.
+
+## License and Attribution
+
+MIT, © 2026 Mike Shearer. See [LICENSE](LICENSE).
+
+Skills are meant to be adapted. If you re-author one, keep a Lineage block
+naming the source repo and skill path. Add the commit you started from and
+what you changed. [NOTICE](NOTICE) has the format.
