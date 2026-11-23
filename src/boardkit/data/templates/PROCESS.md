@@ -221,7 +221,13 @@ file:line, acceptance-check output verbatim, open questions, and anything
 discovered but not fixed. Where two executors fill work in parallel against
 the same crate or the same shared files, the brief also names that shared
 surface, and the executor reports a collision with the other's uncommitted
-work rather than resolving it.
+work rather than resolving it. For implementation work, name the approved
+spec path/revision, exact input commit, test owner and integration-source
+author/reviewer roles. Verify effective skill access or supply complete
+quoted rules. Missing inputs or access return to the board owner. Map named
+tests to required bodies and list remaining holes and expected intermediate
+red tests; new failures remain failures. Denied tools, missing prerequisites,
+type/scope changes and work collisions return to the owner without bypass.
 
 A brief names the role it dispatches and the pin source where that role's
 live model pins are read. It never names a model id. Models resolve from
@@ -233,7 +239,13 @@ fact lands after the run, in the cost ledger.
 
 Decision authority stays with the board owner. When a card allows an
 either-or outcome, the subagent reports the evidence and stops; the board
-owner decides and writes the log entry.
+owner decides and writes the log entry. A dependent card receives an exact
+predecessor revision only after the predecessor is recorded done with
+evidence and every retained gate has passed. A named intermediate gate may
+use a substitute only when the authorized user explicitly records its scope,
+decision-maker and required evidence under the consumer's contract. Batching
+a later review, draft PR publication and an attendance override do not waive
+acceptance gates. All other gates remain in force.
 
 Executor-fallback rule: a delegation tool can fail to deliver. After three
 failed delegation attempts on one unit of work, the board owner has two
@@ -279,7 +291,14 @@ checklist that repeats it at the gate is the one that fires.
   command, a missing tool, no network), is reported as unverified, never
   as a finding against the diff: the board owner runs the check itself
   or routes it to Gate S, and the review record says which checks the
-  reviewer actually ran. Never
+  reviewer actually ran. Code reviews include an evidence audit. Reconcile
+  the brief's authorship with receipts and source repairs before claiming
+  reviewer independence. For each critical assertion, identify the wrong
+  implementation it rejects and inspect the spec-derived oracle. Retain selected
+  counterexample/control evidence for critical limits, exclusions and
+  representation collisions; a green suite or hole panic alone is not that
+  evidence. Distinguish source inspection from owner-run and reviewer-run
+  checks. Never
   read an empty or failed reviewer return as a pass: a review with no
   verdict has not run. Zero findings is recorded as an explicit PASS, not
   silence. Two cases defer: self-review (the same model authored and would

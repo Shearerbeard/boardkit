@@ -194,6 +194,30 @@ def test_the_provenance_footer_says_to_regenerate(tmp_path: Path) -> None:
     assert "boardkit doctor" in text
 
 
+def test_gate_a_evidence_audit_is_quoted_from_the_consumer_contract(tmp_path: Path) -> None:
+    config = load_config(_board(tmp_path))
+    process = tmp_path / "docs" / "board" / "PROCESS.md"
+    source = process.read_text(encoding="utf-8")
+    start = source.index("Code reviews include an evidence audit.")
+    end = source.index("Never\n", start)
+    audit = source[start:end]
+    brief = build_brief(config, "S1")
+    unquoted = re.sub(r"^> ?", "", brief, flags=re.MULTILINE)
+
+    assert audit in unquoted
+    process.write_text(source.replace(audit, "Consumer-specific audit.\n  "), encoding="utf-8")
+    revised = re.sub(r"^> ?", "", build_brief(config, "S1"), flags=re.MULTILINE)
+    assert audit not in revised
+    assert "Consumer-specific audit." in revised
+
+
+def test_evidence_audit_is_not_invented_for_a_card_without_gate_a(tmp_path: Path) -> None:
+    card = CARD.replace('gates: "S -> A -> U(code-review)"', 'gates: "S -> U"')
+    text = _brief(tmp_path, card)
+
+    assert "Code reviews include an evidence audit." not in text
+
+
 # --- determinism and digest -------------------------------------------------
 
 
