@@ -145,10 +145,12 @@ def test_the_gate_a_bullet_states_the_re_review_convergence_discipline() -> None
     assert "regression the fix introduced" in flat
     assert "does not expand scope past ground already accepted" in flat
     assert "Round bound:" in flat
-    assert "after two fix rounds" in flat
-    assert "continue, card, or escalate" in flat
+    assert "three review rounds per decision scope" in flat
+    assert "initial review plus two repair verifications" in flat
+    assert "stop for a user ruling" in flat
+    assert "Changing reviewer, transport or wording does not reset the count" in flat
     assert "may not pass Gate A while unresolved in-scope findings remain" in flat
-    assert "failed fixes and fix-introduced regressions stay in cycle" in flat
+    assert "failed fixes and fix-introduced regressions are never carded as new scope" in flat
     assert "user escalation" in flat
     assert "never a silent stop or an unbounded loop" in flat
     assert "per-round finding counts" in flat
