@@ -314,11 +314,12 @@ checklist that repeats it at the gate is the one that fires.
   rule: each re-review round verifies the prior round's dispositions with
   evidence, re-raises findings whose fixes failed, and re-raises any
   regression the fix introduced in the reviewed diff. It does not expand
-  scope past ground already accepted. Round bound: after two fix rounds,
-  the board owner writes a ruling that names the next action: continue,
-  card, or escalate. The ruling may not pass Gate A while unresolved
-  in-scope findings remain; failed fixes and fix-introduced regressions
-  stay in cycle or escalate, never carded as new scope. A FAIL whose
+  scope past ground already accepted. Round bound: three review rounds per
+  decision scope, initial review plus two repair verifications. If unresolved,
+  stop for a user ruling with findings, dispositions and available cumulative
+  usage. Changing reviewer, transport or wording does not reset the count.
+  The ruling may not pass Gate A while unresolved in-scope findings remain;
+  failed fixes and fix-introduced regressions are never carded as new scope. A FAIL whose
   findings are all new scope - none re-raise a prior round's failed fix,
   and none are regressions the fix introduced - triggers the user
   escalation, taking the disagreement to the user with it recorded on the

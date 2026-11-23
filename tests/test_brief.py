@@ -172,6 +172,8 @@ def test_the_re_review_dispatch_brief_carries_the_convergence_instruction(
     assert "regression the fix introduced" in flat
     assert "may not pass Gate A while unresolved in-scope findings remain" in flat
     assert "never a silent stop or an unbounded loop" in flat
+    assert "initial review plus two repair verifications" in flat
+    assert "Changing reviewer, transport or wording does not reset the count" in flat
 
 
 def test_the_brief_carries_the_parallel_fill_interference_note(tmp_path: Path) -> None:

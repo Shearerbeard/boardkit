@@ -370,11 +370,13 @@ These bind every review dispatch, whatever the transport.
 - **Re-review rounds converge.** A re-review round verifies the prior
   round's dispositions with evidence, re-raises findings whose fixes
   failed, and re-raises any regression the fix introduced in the reviewed
-  diff. It does not expand scope past ground already accepted. After two
-  fix rounds, the board owner writes a ruling that names the next action:
-  continue, card, or escalate. The ruling may not pass Gate A while
-  unresolved in-scope findings remain; failed fixes and fix-introduced
-  regressions stay in cycle or escalate, never carded as new scope. A FAIL
+  diff. It does not expand scope past ground already accepted. Limit each
+  decision scope to three review rounds: initial review plus two repair
+  verifications. If unresolved, stop for a user ruling; changing reviewer,
+  transport or wording does not reset the count. The board log records
+  findings, dispositions and available cumulative usage. Never pass Gate A
+  with unresolved in-scope findings or card failed fixes and fix-introduced
+  regressions as new scope. A FAIL
   whose findings are all new scope - none re-raise a prior round's failed
   fix, and none are regressions the fix introduced - triggers the user
   escalation, taking the disagreement to the user with it recorded on the
