@@ -114,6 +114,12 @@ counts as unreachable, and its gate defers.
 Dispatch-time resolution complements this inventory; it does not replace
 it.
 
+For OpenCode, follow the kit README's "Updating existing boards" checks:
+pass the dispatch directory explicitly in API queries and verify the returned
+location before comparing effective agents/skills with approved sources.
+Record source hashes in the run receipt. Local definitions can override a
+global installation; an unqualified API request uses the server default location.
+
 ## Route mechanically, not by reading prose
 
 The prose tables in the repo's review-tooling and model-classes documents
@@ -159,11 +165,12 @@ Then, in order:
    only the role you asked for, so one half-written binding elsewhere on
    the board cannot block this dispatch, and it refuses rather than
    dispatching to a route that still carries template placeholders or a
-   pin source that points nowhere. A refusal is a real answer; take the
-   declared fallback or defer the gate.
+   pin source that points nowhere. A review configuration failure requires
+   an operator ruling, not reviewer fallback. Executor fallback remains
+   unchanged; other review failures follow PROCESS.md's slot-delivery rule.
 2. **Select exactly one transport.** The route line names it. Do not
    fan out across transports because two look plausible.
-3. **Load only the child skill the resolution names.** Not all three, not
+3. **Load only the child skill the resolution names.** Not every transport skill, not
    the one you used last time.
 4. **Read the pin at dispatch time from the resolution's pin source.**
    That field is a pointer to where live model pins are recorded, never a
@@ -182,12 +189,12 @@ Six roles, and the board's config binds a route to each. These are the
 vocabulary of a dispatch; no model name belongs here or in any brief.
 
 - **executor**: authors one card's work and reports back. Makes no board
-  writes and runs no git operations.
+  writes or git mutations; may run authorized read-only Git inspection.
 - **code-review**: reviews a code diff at Gate A, in the harness where the
   diff was written where possible.
-- **prose-review**: reviews a language-shaped artifact at Gate A, a plan,
-  spec, architecture note, product or marketing text. See the roster
-  below.
+- **prose-review**: reviews a non-code artifact when its agreed task gates
+  require it. Optional plan review follows the user's accept, decline or
+  substitute choice below.
 - **frontier-review**: the wave-scope adversarial review at Gate F, over
   an accumulated diff, before a wave-level user gate.
 - **drift-audit**: the Gate D pass that checks living documents' claims and
@@ -203,7 +210,7 @@ must pass but not whether it produced code or prose, so a generated brief
 prints both Gate A routes and quotes the repo's own rule for choosing
 between them. The board owner picks; the brief does not guess.
 
-## The language-shaped-review lane is a role with a roster
+## Technical review and editorial work
 
 Prose review is a role with a named default and named alternates, not a
 hardcoded tool. Whatever the board's own `roles.prose-review` routes list
@@ -221,16 +228,31 @@ among them. That is a customary chain and nothing more: where the repo's
 own `roles.prose-review` declaration differs from this paragraph, the
 declaration wins, and no model name belongs in either.
 
-A session whose primary is unapproved or unreachable takes the next route
-in the chain instead of stalling, and logs the switch on the card. Four
-ordinary reasons a primary is unavailable: the session lacks the spend
-approval a metered transport needs; a probe reports the transport
-unhealthy; quota is exhausted; or the primary's family authored the
-artifact under review, so the reviewer-differs-from-author invariant closes
-that route. Walk the chain. Only once it is exhausted does the gate defer.
+Offer optional Frontier plan review. The user may accept, decline or name a
+substitute; dispatch only after that choice. A decline leaves no required
+plan-review gate open. Specs, policy and configuration follow their agreed
+task gates; prose format alone creates no gate and does not select `general`.
+For code, use the appropriate programming-language-specific code-review
+agent with a capable model independent of the code's authors.
 
-The same shape governs every role. Prose review gets its own section
-because it is the lane most often written down as a tool name.
+Editorial work is separate: a prose writer can condense an approved argument
+and remove LLM-like wording, but cannot supply technical sign-off. Facts and
+requirements stay with the technical owner. A substantive rewrite returns to
+that owner and requires review of the affected claims.
+
+For initial review-route selection, an approved alternative may serve
+when the primary is ineligible for author independence or excluded by the
+operator's provider choice. Configuration or funding failures require an
+operator decision, not an automatic model switch. Once a review dispatch
+fails to deliver, follow the board's PROCESS.md slot-delivery rule.
+This does not change executor fallback.
+
+Frontier serves an accepted optional plan review or an explicitly selected
+tricky type question. The typed-holes skeleton-review section owns the
+default reviewer count and question sets. For Gate F, propose review of
+the completed accumulated DAG/PR and obtain approval or a logged skip.
+A partial skeleton, test, or fill rung does not automatically trigger it.
+A reviewer stall does not grant escalation authority.
 
 ## The metered lane and its preflight
 
@@ -248,12 +270,10 @@ order:
 Load the child and follow its steps. It owns running the probe and reading
 the report; they are not repeated here.
 
-What this router states is the interface. **The adapter must report ready
-before the first dispatch. Otherwise take the declared fallback route, or
-defer.** A probe reporting auth trouble, an exhausted quota, or missing
-config means the reviewer is unreachable under the pre-vet rule. The
-dispatch does not happen. Instead the gate it would have served stays open
-as a deferral, for the next user gate to surface.
+**The adapter must report ready before dispatch.** Funding or configuration
+failures require an operator ruling under PROCESS.md. Other preflight
+failures use the declared approved route or defer; they do not authorize
+an unapproved model switch.
 
 An approval carried over from an earlier session does not count. Neither
 does an inference from the user asking for a review.
@@ -347,14 +367,23 @@ In every degrade case the rule is the same: read the repo's own
 review-tooling and model-classes documents rather than improvising, and
 say in the card log which document you routed from.
 
+## Board-scoped review coordination
+
+For this board workflow, use the board's PROCESS.md review-slot contract
+for substantive rounds, unusable deliveries, and coordinator dispositions.
+The coordinator judges every return and authorizes repairs or escalation.
+The process owns the complete rule; do not duplicate its counters here or
+change gate-probes or plan-discipline. Executor fallback remains separate.
+
 ## Validity floor for any delegated review
 
 These bind every review dispatch, whatever the transport.
 
-- **Every final artifact gets one adversarial review before its user
-  gate**, by a model from a family other than its author's. A plan, a
-  card, an evidence write-up, and a decision record all count, not code
-  alone. There is no artifact class that reaches a user gate unreviewed.
+- **Independent review follows the agreed task gates.** Code retains
+  Gate A with a capable programming-language-specific reviewer independent
+  of its authors. Plan review is optional Frontier review, subject to the
+  user's accept, decline or substitute choice. Other non-code artifacts
+  follow their agreed gates rather than a universal prose-review requirement.
 - **The reviewer starts with fresh context.** No implementation context
   from the authoring session comes along: a reviewer that already holds
   the author's reasoning is checking its own work with extra steps.
@@ -367,21 +396,6 @@ These bind every review dispatch, whatever the transport.
   applied or the reason it was rejected, recorded to the card's log or its
   review directory. For a standalone prose artifact that is not a card,
   append that ledger to the artifact itself so the record travels with it.
-- **Re-review rounds converge.** A re-review round verifies the prior
-  round's dispositions with evidence, re-raises findings whose fixes
-  failed, and re-raises any regression the fix introduced in the reviewed
-  diff. It does not expand scope past ground already accepted. After two
-  fix rounds, the board owner writes a ruling that names the next action:
-  continue, card, or escalate. The ruling may not pass Gate A while
-  unresolved in-scope findings remain; failed fixes and fix-introduced
-  regressions stay in cycle or escalate, never carded as new scope. A FAIL
-  whose findings are all new scope - none re-raise a prior round's failed
-  fix, and none are regressions the fix introduced - triggers the user
-  escalation, taking the disagreement to the user with it recorded on the
-  ledger, never a silent stop or an unbounded loop. The dispatch brief for
-  a re-review round carries this discipline into the reviewer prompt, and
-  the ledger records per-round finding counts, cumulative reviewer spend,
-  and per-finding disposition verification evidence.
 - **The reviewer's model differs from every model that authored the work
   under review.** For a multi-commit range that means every commit in the
   range, and a range whose authorship cannot be established defers rather
@@ -389,35 +403,27 @@ These bind every review dispatch, whatever the transport.
   reviewing model so the invariant is checkable from the record.
 - **A review is never nested inside another delegation.** The board owner
   dispatches every gate review directly, or the gate defers.
-- **Cap repeated attempts on one unit of work at three.** Past three the
-  approach changes rather than the attempt count: stage the packet, switch
-  transports, or defer. Wrap every delegated invocation in a deadline,
-  since agent CLIs commonly ship without a timeout flag, and treat the
-  wrapper's exit as the delegation's outcome. On a stall, switch tools;
-  the same prompt through the same stalled tool usually stalls again.
+- **Execution controls follow the transport.** For external CLIs, use a
+  caller-owned deadline. For native children, record only controls the
+  harness supports. A final-answer word limit does not bound tool steps.
+  Keep available usage as evidence, not a counter shared across slots.
 - **Deferral semantics come from the repo's process document.** Log the
   gate open with the deferral shape that document defines, leave its
   checklist box unticked, continue with other eligible work, and surface
   the deferral at the next user gate. Resolving it later means running it
   properly, with a pre-vetted, reachable reviewer that satisfies the
   invariant above.
-- **Permission failures produce a staged packet, not a transport switch.**
-  Where a reviewer cannot read the path under review, stage the card,
-  spec, diff, and prompt into a review directory inside the working
-  directory and name the staged paths. Point reviewers at a packet from
-  `boardkit review-packet <id>` rather than assuming they can run a diff
-  themselves.
+
+## Review packets
+
+Capture review material under <base-repo>/.review/<card>/<role>/, gitignored and outside execution worktrees. Identify the review slot separately from the role, and isolate concurrent slots when necessary. Record the source worktree, specification revision, candidate SHA/range, actual authors, role/model, required and optional checks, and per-slot round/delivery state. Generate diffs, hashes, command transcripts, and available harness receipts by script rather than asking models to reconstruct them. Preserve prior round evidence and human dispositions when regenerating generated packet files. Verification commands run against the assigned candidate worktree, not the packet directory. Arrange authorized access to the packet and source worktree before dispatch; packet location must not restrict verification permissions.
 
 ## Budget etiquette
 
 Use the cheapest class that can do the job correctly, and escalate only on
 failure rather than by default. The ladder has rungs: a search task a
 small explorer-class model failed goes to a smart-class model next, not
-straight to frontier on the first miss. Frontier-class calls stay reserved
-for board ownership and for the wave-scope Gate F review, where the
-reviewer-differs-from-author invariant requires that class.
-
-A metered language-review transport stays reserved for language-shaped
-judgment: never a deterministic shell proxy for something a shell command
-answers exactly, and never a workaround for another reviewer's permission
-failure.
+straight to frontier on the first miss. Reserve Frontier review for accepted
+optional plan reviews, explicitly selected tricky questions and the separately
+approved completed wave review. Independence requires a different author
+family, not a more expensive model class.

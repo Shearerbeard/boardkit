@@ -91,6 +91,55 @@ the contract version it was written against, and `boardkit.toml` declares the
 same version under `[contract]`. Doctor compares them, so a kit that has
 moved ahead of a repo says so instead of behaving strangely.
 
+## Updating existing boards
+
+The CLI and installed board skills are shared, but `boardkit init` copies
+policy templates into each board. Updating the kit or reinstalling skills
+does not replace a board's existing `MODEL-CLASSES.md`, `REVIEW-TOOLING.md`
+or `boardkit.toml`. Contract stamps check schema compatibility, not whether
+same-version prose is current. There is no automatic policy migration command.
+
+After a routing-policy change, use `boardkit boards` to locate registered
+consumers and compare their routing sections with the updated templates.
+Preserve project-specific routes and historical receipts; do not run `init`
+over an existing board. Run `doctor`, `resolve-route` and `check` from each
+changed board. Keep model overrides in the machine's approved live mapping
+so a pin change does not require editing every board.
+
+Language skills such as `typed-holes` also install centrally. The rust-holes
+companion supplies templates and examples; it is not a runtime component
+that must be deployed into every Rust crate.
+
+For OpenCode, install shared agents globally and skills into one global
+discovery location. Use project copies only for deliberate overrides. Query
+the actual dispatch directory explicitly; an unqualified API call uses the
+server default location rather than shell cwd. With jq installed:
+
+```sh
+location=$(printf '%s' "$PWD" | jq -sRr @uri)
+opencode api get "/api/agent/rust-write?location%5Bdirectory%5D=$location"
+opencode api get "/api/skill?location%5Bdirectory%5D=$location"
+```
+
+Check the response's `location.directory` before comparing the resolved agent
+prompt/permissions and skill paths/content with the approved sources. Record
+source hashes in the run receipt.
+
+For an existing board, approve any needed process-doc updates, then regenerate
+`boardkit dispatch-brief <card-id>` and compare its contract digest with
+`boardkit doctor`. Retain the assembled assignment and its hash as well:
+the contract digest does not identify the card text or dispatch additions.
+Use a fresh child to prove the intended skill loads and ordinary checks run.
+Do not copy a corrected brief over an old one or treat a kit reinstall as a
+consumer-policy migration.
+
+Activation is a separate operator decision after approval of the linked
+skills, boardkit, and rust-holes synchronization PRs. Before activation,
+record each registered consumer's current and intended revisions, process
+copies, local agent overrides, required update, and verification status.
+Keep pending consumers visible; a skill reinstall does not update copied
+process documents. Do not overwrite existing briefs or historical receipts.
+
 ## Board resolution and the family registry
 
 The CLI computes which board it targets from the filesystem instead of
