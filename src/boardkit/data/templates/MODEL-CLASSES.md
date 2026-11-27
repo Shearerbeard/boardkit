@@ -34,9 +34,10 @@ The routing rule follows the shape of the artifact, not the topic:
   whether an argument holds and whether the document says what it means.
 - Code diffs go to a code-specialized reviewer: a family tuned for
   reading diffs and reasoning about program behavior.
-- The standing adversarial default, and the fallback after a stalled or
-  failed delegation, is a frontier model from a family other than the
-  one that authored the work under review.
+- Frontier review of a plan is optional: offer it during planning and
+  dispatch only after the user accepts or names a substitute. A stalled
+  review follows the board's delivery-failure rule, not an automatic
+  frontier fallback.
 
 This template names no vendors and no model ids, because the families a
 repo has installed differ per repo and drift faster than these rules do.
@@ -80,22 +81,14 @@ follows the reviewer-differs-from-author invariant below, not the card's
 
 ## Invariants
 
-- The reviewer-differs-from-author invariant: a Gate A or Gate F reviewer's
-  model must never be the same model that authored the diff under review.
-  For a multi-commit range, the reviewer must differ from every model that
-  wrote any commit in it. This holds regardless of class; a smart-class
-  model may not review its own smart-class output, and a frontier model
-  may not review its own frontier output. A repo's `REVIEW-TOOLING.md` may
-  tighten the invariant to family level, so that a reviewer from the
-  author's own model family cannot close the gate there; the stricter pin
-  wins.
-- The adversarial-review procedure itself is stated once, in
-  `REVIEW-TOOLING.md`: fresh reviewer context, numbered findings each
-  carrying its own disposition, an explicit verdict line, an empty return
-  or a missing verdict read as a failed delegation rather than a pass,
-  and the stall protocol. That procedure names no models and holds
-  whatever families a repo has installed, so this file does not restate
-  it.
+- Never self-review. Prefer a reviewer from a different family than every
+  author. At planning time, the user may approve a different model from the
+  same family when family availability is limited; record the exception's
+  scope. A repo may require family independence without exception; that
+  stricter rule wins.
+- For review rounds and verdicts see Gate A in `PROCESS.md`.
+  `REVIEW-TOOLING.md` gives the transport and packet instructions.
+
 - Gate A routing follows what the artifact is judged on: a code diff goes
   to the `code-review` role, a plan, spec, or prose artifact goes to the
   `prose-review` role. A card carries no field recording which kind it
@@ -103,8 +96,7 @@ follows the reviewer-differs-from-author invariant below, not the card's
   both routes rather than guessing on the board owner's behalf.
 - Gate D, the drift audit, runs on a lower-cost model in the board owner's
   own harness. It samples anchors and claims against the current repo
-  state and needs no review skill loaded, so there is no reason to spend
-  smart-class or frontier-class budget on it.
+  state and needs no review skill loaded.
 
 ## Reviewer pre-vet checklist
 
@@ -112,12 +104,7 @@ Take this inventory at session start, before planning a wave or
 promoting a card, not at the gate the reviewer serves. Read the
 harness's own agent configuration, record which executors and reviewers
 exist and what model each is pinned to, and confirm reachability for
-anything the plan will depend on. The pins are a constraint on the plan:
-the reviewer-differs-from-author invariant above decides which executor
-may author which card and which reviewer can close its gate, so a wave
-planned without knowing the pins can allocate work that no available
-reviewer is allowed to review. Discovering that at the gate means the
-work is already written by the wrong hand.
+each planned route. Agree on the assignments with the operator.
 
 The inventory opens with a question, not a file read: ask the session
 driver which providers are in play for this run. That constraint is a
@@ -190,8 +177,8 @@ decision.
 Use the cheapest class that can do the job correctly. Escalate on failure,
 not by default. If a small explorer class model fails a search task, try
 a smart-class model next; do not reach for frontier on the first miss.
-Reserve frontier orchestrator class calls for board ownership and Gate F,
-where the invariant above requires it.
+Reserve frontier calls for board ownership and Gate F; plan review remains
+optional and requires the user's choice at planning time.
 
 ## Wave-close cost duty
 

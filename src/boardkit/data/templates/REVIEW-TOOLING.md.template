@@ -13,53 +13,28 @@ with what is pinned here, this file wins.
 
 ## The standing rule
 
-Code changes retain the independent Gate A review defined in `PROCESS.md`
-and `MODEL-CLASSES.md`, using a capable programming-language-specific
-code-review agent. Run it in the board owner's harness when an eligible
-reviewer is available; otherwise use an approved independent model or defer.
-Offer optional Frontier plan review: the user may accept, decline or name
-a substitute before dispatch. Other non-code artifacts follow their agreed
-task gates. Prose format alone creates no review gate and does not select
-`general` as a technical reviewer.
-
-An adversarial review of a standalone prose artifact that is not a card (a
-plan, an ADR, a design doc) appends a numbered findings ledger to the
-artifact itself, so the record travels with it. The ledger carries an
-explicit verdict and names both the author model and the reviewer model.
-Each finding records its disposition: the fix applied, or the reason the
-finding was rejected. An empty or verdict-less return is a failed review,
-never a clean pass. Zero findings is recorded as an explicit PASS,
-distinguishable from a tool that silently returned nothing.
+At planning, agree which available models fill the roles in
+`MODEL-CLASSES.md`. Record any approved reviewer substitution and whether
+the plan or completed candidate gets a Frontier review.
 
 ## Fix-round packets
 
-The review-slot policy in PROCESS.md determines whether a repair needs a
-reviewer or owner verification. A new commit alone does not require another
-dispatch. Extend the card's range and preserve exact candidate evidence
-either way; a substantive re-review gets the full-range packet plus the
-prior findings and dispositions.
-
-Stage role-specific review material at `.review/<card>/<role>/` in the
-base repo, not an execution worktree. Use the existing `boardkit review-packet`
-command for scripted diff capture, then assemble the role packet without
-destroying prior receipts. Its configured output directory remains the
-legacy generator output; this convention does not add a role flag or
-change receipt lookup. Keep the source worktree and SHA/range explicit.
-The `--repo` override selects the worktree to inspect; `--suffix` remains
-the discriminator for a supplementary or second-repo packet.
+Use `boardkit review-packet` to capture the full candidate range. Stage
+the material for each reviewer under the base repo's gitignored
+`.review/<card>/<role>/`. Include the specification revision, source
+worktree and range, actual authors, required checks and optional diagnostics.
+For a repair, include the prior findings and dispositions. Keep prior
+receipts when regenerating a packet. Use `--repo` for another worktree
+and `--suffix` for a supplementary packet.
 
 ## Harness bindings
 
-One row per board-owner harness. Fill this in for your repo; the two
-example rows show the shape.
+Fill one row per available harness. A configured agent can fill a role;
+otherwise select the model and transport with the operator.
 
-| Board owner (harness) | Executor pool | Gate A reviewer | Gate F route | Defers |
+| Owner harness | Executor pool | Code reviewer | Frontier route | Pin source |
 | --- | --- | --- | --- | --- |
-| Claude Code | Claude subagents (`general`, `Explore`) | a non-Claude reviewer (a different-family CLI or agent) loading the language review skill, since the executors here author Claude diffs | a different-family frontier model via its own CLI | nothing |
-| OpenCode | small-class agents in-harness | a different-model OpenCode agent loading the language review skill | a different-family frontier model via its own CLI | nothing |
-<!-- | codex | codex subagents | per pre-vet; reviewer-differs-from-author invariant applies unchanged | a Claude Code frontier subagent | handoff or log writing, if this repo has one | -->
-<!-- codex is a known-working board-owner harness, deferred here only because
-     this repo has not wired it yet. Uncomment and fill in once it is. -->
+| <harness> | <available classes> | <approved reviewer> | <if selected> | <config path> |
 
 ## Tools, in order of preference
 
@@ -71,123 +46,27 @@ entirely; it ships empty on purpose.
    config lives.
 2. `<tool name>`: same.
 
-Code review uses a capable programming-language-specific reviewer. Plan
-review is optional Frontier review, with user decline or substitution.
-Specs, policy and configuration follow the task's agreed gates rather than
-a blanket `general` review. Editorial condensation cannot supply technical
-sign-off. A partial skeleton, test or fill stage does not automatically
-trigger the separately approved completed wave review.
-
-Record the split explicitly rather than leaving it to inference: name
-which reviewer takes card and gate reviews, and which takes ad-hoc
-adversarial review and the post-stall fallback. A bare request for a
-second-model review should resolve to one tool by reading this
-section.
+List any transport-specific staging or spend requirements beside its invocation.
 
 ## Transport rule
 
-This rule covers an EXTERNAL harness reaching into a different agent
-harness. Prefer CLI invocations over MCP transports for that:
-`opencode run` or `codex exec` rather than an MCP
-tool call into the same harness. The principle behind the preference is
-recoverability. Prefer a transport that returns a job handle immediately
-and runs the work behind that handle, because the caller can then poll it,
-bound it with a deadline, and reconnect after a client-side failure. A
-transport that completes the work inside the tool call leaves the caller
-nothing to hold. With no deadline the wait is unbounded, and a client that
-gives up has no way back to work the server has not finished. Judge a
-transport on that property rather than on which protocol it speaks. Use CLI invocations as the default; treat a
-work-inside-the-call path to another harness as a fallback that needs its
-own contract-shaped read probe (see Reviewer pre-vet) before a wave
-depends on it. If this repo has no
-such transport installed, delete the preceding sentence when filling
-this file in, so a filled-in copy never advertises a path nothing here
-can take.
+Use native subagent dispatch inside the owner's harness. For an external
+harness use a CLI with a caller-owned deadline, or a pre-vetted adapter
+with a recoverable job handle. Run mechanical checks in the candidate
+worktree. If a reviewer cannot read an input, give it a staged packet
+and verify access before starting the review.
 
-The rule does not apply within a harness. A board owner running natively
-inside a harness dispatches that harness's own pinned reviewer and
-executor agents through its in-session subagent dispatch, and never
-invokes its own harness's CLI from inside a session: the nested server
-breaks per-session cost capture and the "a review is never launched from
-inside another delegation" invariant. When a subagent cannot read a path
-the review needs - several harnesses reject reads outside the working
-directory - stage the packet under `.review/<card>/<role>/` in the base
-repo and arrange authorized access to it and the candidate worktree before
-dispatch. Packet placement does not reduce verification permissions.
-Falling back to a CLI self-invocation is not the remedy. Read the agent
-config for the current model pins before routing either way; agent names
-do not imply model families.
-
-Native OpenCode may override a subagent's model while retaining its reviewer
-profile and permissions. Select the model from the session's approved live
-pins. Check its family against every actual author and verify the resolved
-model in native metadata. Use programming-language-specific profiles for
-code ranges. A model override does not create a new review requirement or
-make the cheap `general` profile the default for plans and technical policy.
-An authorship conflict defers when no eligible ordinary model is available;
-it does not authorize Frontier spend.
-
-For a default code-review pin that shares an author's family, use the
-machine's pre-approved ordinary override while keeping the code-reviewer
-profile. Read the live pin mapping rather than copying model IDs here.
-An eligible pre-approved override needs no new model-choice approval, but
-cannot reopen an exhausted review allowance.
-
-A metered language-review harness is reserved for language-shaped review:
-judgment about a plan, a diff, or prose. It is never a deterministic shell
-proxy - anything a shell command answers exactly, run in a shell - and
-never a workaround for another reviewer's permission failure. A permission
-failure produces a locally staged packet, per the paragraph above. Inspection
-alone needs no writable checkout; use a disposable worktree for checks or
-mutation controls that need isolation, without authorizing source repairs.
-
-Review-slot feedback and delivery accounting come from PROCESS.md, not
-from the executor-fallback allowance. Do not silently switch models after
-a funding or configuration failure; return the decision to the operator.
-Session close accounts for every worktree a delegation created:
-list them, including `.agy-mcp/worktrees/job-*`, and retain failed attempts
-still needed as evidence. Remove only unneeded disposable worktrees with
-`git worktree remove`. A retry loop
-that burns a weekly budget and returns no verdict, leaving a dozen
-registered worktrees behind, is the recorded failure these three rules
-exist to prevent.
+The coordinator keeps failed-run evidence with the card. At session close
+account for delegated worktrees, including `.agy-mcp/worktrees/job-*`;
+use `git worktree remove` once their commits and evidence are safe.
 
 ## Stall protocol
 
-Agent CLIs commonly ship without a timeout flag, so the caller owns the
-deadline: wrap every delegated invocation in one (`perl -e 'alarm N; exec
-@ARGV' --`, since stock macOS ships no `timeout`; GNU `timeout` where the
-platform has it) and treat the wrapper's exit as the delegation's
-outcome. For review stalls, the coordinator applies PROCESS.md's delivery
-rule; do not retry blindly or automatically switch models. An empty
-return, a zero-exit run with no final text, and any run without an explicit
-verdict are each a failed delegation, never a pass. Record the deadline this
-repo uses per tool alongside the invocations above.
-
-For native children, use only execution controls the harness supports and
-record the agreed control. A word limit does not bound model steps.
-Do not invent a deadline parameter or poll a child whose harness forbids it.
-A configured step ceiling forces text at exhaustion but does not establish
-a valid review verdict.
-
-A dispatched review also carries a liveness convention, so the harness
-detects a stall instead of the user asking about one. Run the delegation
-in the background and check it mid-deadline. Growing output or CPU burn
-counts as alive; a quiet process at near-zero CPU minutes before the
-deadline is the recorded stall signature (two field
-cases: 17 and 10 minutes of silence at ~0.1s CPU). On that signature,
-report the stalled delivery to the coordinator for the PROCESS.md retry
-or escalation decision. Native children use harness notifications rather
-than this CLI polling convention.
-
-Read the verdict from the reviewer's own final message, the tail of its
-transcript or output. Never from the wrapper's exit code, and never from an
-intermediate tool line. The wrapper's exit says whether the delegation
-completed, which is a different question from what the reviewer concluded;
-a zero exit has shipped a truncated run more than once. An intermediate
-line can carry a finding the reviewer went on to withdraw. An output whose
-tail states no explicit verdict is a failed review, on the same footing as
-an empty return.
+Record the external CLI deadline with the tool invocation. For a
+background CLI, check liveness before the deadline. Native dispatch uses
+harness completion notifications. Read the verdict from the reviewer's
+final message. If delivery failed, keep the transcript and apply the
+delivery rule in `PROCESS.md`.
 
 ## Reviewer pre-vet
 

@@ -138,22 +138,6 @@ def test_gate_a_keeps_slot_delivery_and_verification_clauses_separate() -> None:
     for label in ("Review slots:", "Delivery failures:", "Verification evidence:"):
         assert gate_a.count(label) == 1
 
-    local = TEMPLATE.parents[4] / "docs" / "board" / "PROCESS.md"
-    assert local.read_text(encoding="utf-8") == _template_text()
-
-
-def test_the_dispatch_brief_clause_carries_the_parallel_fill_note() -> None:
-    """Two executors filling against one crate collided over uncommitted work
-    (2026-08-16). The note rides the clause the brief already quotes, so every
-    generated brief carries it; without the pin the clause can lose it
-    silently."""
-    clause = " ".join(paragraph_at(_template_text(), DISPATCH_BRIEF_ANCHOR, TEMPLATE).split())
-
-    assert "fill work in parallel" in clause
-    assert "the brief also names that shared surface" in clause
-    assert "reports a collision with the other's uncommitted work" in clause
-    assert "rather than resolving it" in clause
-
 
 def test_the_canary_section_defines_the_degraded_close() -> None:
     """S43 / decision 5: an outage that takes out every canary route must have

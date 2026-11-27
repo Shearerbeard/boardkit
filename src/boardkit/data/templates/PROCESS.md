@@ -199,47 +199,22 @@ their edges silently drop out of the schedulable DAG.
   another session runs them. Planning confers no standing authority. Once
   the user hands the board to another session, that session is the board
   owner, and the planner holds no live role until the user re-engages it.
-- Executor: a subagent the board owner dispatches to work one card. An
-  executor makes no board writes or git mutations; authorized read-only
-  Git inspection is allowed. It reports
-  back to the board owner, which is the only role that commits, updates
-  card status, or regenerates views. An executor may itself dispatch worker
-  subagents at most one nesting level below it; those workers delegate to
-  no one further.
-- Reviewer: a fresh-context agent the board owner dispatches for a gate. A
-  reviewer is never nested inside another delegation: the board owner
-  dispatches every gate review directly, or the gate defers rather than
-  being routed through an executor. The reviewer's model must differ from
-  every model that authored the diff under review (the
-  reviewer-differs-from-author invariant, see Gate A below and
-  `MODEL-CLASSES.md`).
+- Executor: works in its own worktree and commits its assigned scope under
+  the repo's commit rules. It returns the branch and commit range to the
+  board owner. The owner handles integration, push, PRs and worktree cleanup;
+  board state stays with the owner. An executor may dispatch
+  workers one level below it; those workers delegate to no one further.
+- Reviewer: a fresh-context agent the board owner dispatches directly for a
+  gate. It reviews the candidate worktree without git mutations and reports
+  findings to the board owner. The reviewer must satisfy the independence
+  rule in `MODEL-CLASSES.md`.
 
-A dispatch brief for a subagent contains the full card text, paths to any
-required reference material (not summaries of it), the scope rule ("only
-modify what the card names; if the task needs anything else, stop and
-report instead"), and the expected report format: what changed as
-file:line, acceptance-check output verbatim, open questions, and anything
-discovered but not fixed. Where two executors fill work in parallel against
-the same crate or the same shared files, the brief also names that shared
-surface, and the executor reports a collision with the other's uncommitted
-work rather than resolving it. For implementation work, name the approved
-spec path/revision, exact input commit, test owner and integration-source
-author/reviewer roles. Verify effective skill access or supply complete
-quoted rules. Missing inputs or access return to the board owner. Map named
-tests to required bodies and list remaining holes and expected intermediate
-red tests; new failures remain failures. Report denied tools without bypass.
-An optional diagnostic refusal permits independent authorized work to continue;
-denied writes, external access or required prerequisites stop the assignment.
-Missing dependencies, new platform tools, type/scope changes and work collisions
-return to the owner before a workaround.
+A dispatch brief for a subagent contains the full card, required references,
+exact input revision, allowed scope, test owner, and report format. Missing
+required inputs or access go back to the board owner.
 
-A brief names the role it dispatches and the pin source where that role's
-live model pins are read. It never names a model id. Models resolve from
-harness configuration at dispatch time, so an id written into a brief is a
-copy that starts going stale immediately, and a stale one can invert the
-reviewer-differs-from-author invariant by naming the very model that
-authored the diff. Where the record needs to say which model ran, that
-fact lands after the run, in the cost ledger.
+The brief names the role and pin source; live pins resolve at dispatch time.
+It never names a model id. The cost ledger records the model actually used.
 
 Decision authority stays with the board owner. When a card allows an
 either-or outcome, the subagent reports the evidence and stops; the board
@@ -251,16 +226,8 @@ decision-maker and required evidence under the consumer's contract. Batching
 a later review, draft PR publication and an attendance override do not waive
 acceptance gates. All other gates remain in force.
 
-Executor-fallback rule: a delegation tool can fail to deliver. After three
-failed delegation attempts on one unit of work, the board owner has two
-options: author the unit directly and log the takeover on the card, or
-name a second executor and redispatch. A card that needs a different
-threshold sets and logs its own. The board still owns git, gates, and board writes; only the
-authoring hand changes, and the switch is always logged, never silent. This
-rule covers authoring executors only. It does not excuse a Gate A reviewer
-from the reviewer-differs-from-author invariant: if the board owner's
-takeover means it authored the diff and its harness holds no other model
-family, that card's Gate A stays open rather than self-reviewing.
+After three failed executor deliveries on one unit, the owner records a
+takeover or assigns another executor. A card may specify its own threshold.
 
 ## Gates
 
@@ -277,76 +244,35 @@ checklist that repeats it at the gate is the one that fires.
   output, not a summary. Gate S also carries the doc-sync duty: the card's
   report names which living documents its diff affects, or states none
   (the duty itself is described under Gate D below).
-- Gate A, agent: a fresh subagent with no implementation context reviews the
-  diff against the card's acceptance criteria and either finds issues or
-  signs off explicitly. The reviewer's model must differ from every model
-  that authored the diff (the reviewer-differs-from-author invariant,
-  which a repo's `REVIEW-TOOLING.md` may tighten to family level - the
-  stricter pin wins); for a
-  multi-commit range, the reviewer must differ from every model that wrote
-  any commit in it, and a range whose authorship cannot be established
-  defers rather than being reviewed blind. Findings are numbered, each with
-  its resolution, recorded to the card's log or review directory so the
-  record is auditable finding-by-finding, not as an aggregate count. The
-  ledger also names the model that authored the diff and the model that
-  reviewed it, so the reviewer-differs-from-author invariant is checkable
-  from the record itself. A check the reviewer cannot execute, or one
-  that fails for reasons peculiar to the reviewer's sandbox (a denied
-  command, a missing tool, no network), is reported as unverified, never
-  as a finding against the diff: the board owner runs the check itself
-  or routes it to Gate S, and the review record says which checks the
-  reviewer actually ran. Code reviews include an evidence audit. Reconcile
-  the brief's authorship with receipts and source repairs before claiming
-  reviewer independence. For each critical assertion, identify the wrong
-  implementation it rejects and inspect the spec-derived oracle. Retain selected
-  counterexample/control evidence for critical limits, exclusions and
-  representation collisions; a green suite or hole panic alone is not that
-  evidence. Distinguish source inspection from owner-run and reviewer-run
-  checks. Never
-  read an empty or failed reviewer return as a pass: a review with no
-  verdict has not run. Zero findings is recorded as an explicit PASS, not
-  silence. Two cases defer: self-review (the same model authored and would
-  review), and a reviewer that pre-vet finds unreachable, unvetted, or
-  under-permissioned (see `MODEL-CLASSES.md`).
+- Gate A, agent: a fresh reviewer checks the candidate diff against the card's
+  scope and acceptance criteria. Select the reviewer under `MODEL-CLASSES.md`
+  and verify eligibility against the actual authors. Unknown authorship leaves
+  the gate open. Record author and reviewer identities, numbered findings,
+  their dispositions and an explicit verdict. A clean review returns PASS.
 
-  Review slots: A review slot is a named checkpoint for one work item, such
-  as skeleton, tests, implementation, or an approved Frontier review. Each
-  slot allows an initial substantive review and at most two repair
-  verifications. The coordinator judges every return, records dispositions,
-  and authorizes any repair before dispatching it. PASS, including PASS with
-  dispositioned minor findings, closes the slot without using the remaining
-  rounds. At the third substantive review, unresolved findings go to the
-  operator with the coordinator's recommendation and available usage. Other
-  slots do not consume this allowance. Changing reviewer, model, transport,
-  packet, or wording does not restart the same unresolved slot. Re-review
-  checks prior dispositions, failed repairs, and introduced regressions
-  without reopening accepted ground. An operator kickback returns to the
-  affected stage; an exhausted slot needs an explicit operator ruling before
-  further review.
+  Review slots: Each checkpoint on a card has its own initial review and
+  at most two repair verifications. The coordinator judges every return and
+  authorizes repairs. PASS closes the slot, including minor findings the
+  owner can dispose of.
 
-  Delivery failures: Track unusable dispatches separately within each review
-  slot. A stalled, empty, verdict-less, or required-prerequisite-blocked
-  return does not consume a substantive feedback round. The coordinator may
-  make one reasoned retry for a transient failure, subject to documented
-  service retry behavior and harness controls. A second failed delivery
-  escalates to the operator. Invalid model configuration or exhausted funds
-  escalates immediately; do not switch models or retry around an operator
-  decision. A substantive FAIL is delivered feedback, not a delivery
-  failure. Refusal of an optional diagnostic does not invalidate completed
-  substantive review.
+  Verify prior repairs and introduced regressions. If the third review
+  leaves findings unresolved, send the recommendation and available usage
+  to the operator. The allowance follows the slot across model or transport
+  changes.
+
+  Delivery failures: Count stalled, empty, verdict-less and prerequisite-blocked
+  returns separately for each slot. Allow one reasoned retry for a transient
+  failure, then escalate. Invalid configuration or exhausted funds go straight
+  to the operator. A substantive FAIL counts as feedback.
 
   Verification evidence: Name required and optional checks before dispatch.
-  Supply mechanical evidence for the exact candidate revision, including
-  commands, results, and unverified checks. Reviewers retain permission to
-  build, test, count, search, and inspect relevant source; supplied evidence
-  avoids unnecessary repetition but does not prohibit independent
-  verification. Reviewers run targeted checks to resolve doubt rather than
-  blindly repeating the full matrix. A missing required check stays open
-  until verified by an authorized owner; an optional diagnostic refusal does
-  not turn a substantive PASS into FAIL. The coordinator may verify minor or
-  documentation-only repairs without another model call when no substantive
-  question remains. Behavioral repairs require appropriate review within the
-  same slot.
+  Supply commands and results on the candidate revision. Reviewers may build,
+  test, search, count and inspect in its worktree; run targeted checks where
+  the evidence leaves doubt. Record unverified checks. A missing required
+  result stays open; refusing an optional diagnostic does not invalidate a
+  verdict. The coordinator can verify minor edits; behavioral repairs return
+  to the same review slot.
+
 - Gate M, manual: the agent exercises the behavior end to end and reports
   what happened.
 - Gate D, drift audit: before any user gate opens, a fresh lower-cost agent

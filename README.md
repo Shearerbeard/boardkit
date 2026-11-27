@@ -110,20 +110,10 @@ Language skills such as `typed-holes` also install centrally. The rust-holes
 companion supplies templates and examples; it is not a runtime component
 that must be deployed into every Rust crate.
 
-For OpenCode, install shared agents globally and skills into one global
-discovery location. Use project copies only for deliberate overrides. Query
-the actual dispatch directory explicitly; an unqualified API call uses the
-server default location rather than shell cwd. With jq installed:
-
-```sh
-location=$(printf '%s' "$PWD" | jq -sRr @uri)
-opencode api get "/api/agent/rust-write?location%5Bdirectory%5D=$location"
-opencode api get "/api/skill?location%5Bdirectory%5D=$location"
-```
-
-Check the response's `location.directory` before comparing the resolved agent
-prompt/permissions and skill paths/content with the approved sources. Record
-source hashes in the run receipt.
+Boardkit binds roles to transports. The harness supplies models, agent
+profiles and permissions. Named profiles are optional. If the harness
+has per-project overrides, inspect its effective configuration in the
+dispatch directory.
 
 For an existing board, approve any needed process-doc updates, then regenerate
 `boardkit dispatch-brief <card-id>` and compare its contract digest with
