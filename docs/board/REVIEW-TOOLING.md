@@ -41,8 +41,7 @@ none are copied here.
 
 Pin sources: `~/.config/opencode/opencode.json` and
 `~/.config/opencode/agent/*.md` for the opencode lane;
-`~/.codex/config.toml` for the codex lane; the agy doctor report for the
-Antigravity lane. Provider constraints for a given run come from the
+`~/.codex/config.toml` for the codex lane. Provider constraints for a given run come from the
 session-start provider question in the delegation inventory, not from
 this table.
 
@@ -62,9 +61,6 @@ run, per the rule that a diagnostic must not be a code-execution surface.
    frontier review. Repo-native paths, cwd at this repo, caller-owned
    deadline via `perl -e 'alarm N; exec @ARGV' --` (stock macOS has no
    `timeout`); rules in the `codex-cli` skill. Config in `~/.codex/`.
-3. `agy` (Antigravity bridge) - prose, plan, and spec review. Detached
-   jobs through the agy MCP tools; budget-gated, ask before spending.
-   Config in `~/.config/agy-mcp/config.toml`.
 
 For the configured code-review order, run `boardkit resolve-route code-review`.
 
@@ -138,8 +134,6 @@ Recovery recipe by harness:
   the record.
 - **codex (code-review fallback and Gate F frontier review):** copy the
   figures from the codex session log printed at the end of `codex exec`.
-- **agy (prose review):** copy the figures from the agy job summary shown
-  by the agy MCP tools; the job id is the session id.
 
 Record the aggregate and per-model figures in the wave-close retro. If
 per-session recovery fails mid-close, record what is recoverable and log
@@ -154,8 +148,7 @@ This appendix owns the lane inventory between them.
 
 - Per-harness config trees, by kind: the opencode config group (often
   dotfiles-managed), the sibling claude-skills install for the
-  language skills, the codex config tree, and the Antigravity (agy)
-  config where that lane is installed. None of these ship with a
+  language skills and the codex config tree. None of these ship with a
   clone; each machine brings or rebuilds its own.
 - Provider accounts, by kind - subscription, API key, cloud-role -
   matched to the routes this board's `boardkit.toml` declares.

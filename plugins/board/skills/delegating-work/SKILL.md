@@ -8,8 +8,7 @@ description: |
   to a transport with `boardkit resolve-route`, picks exactly one lane,
   loads only the child skill that resolution names, and generates the brief
   with `boardkit dispatch-brief`. It owns lane selection and the process
-  duties around a dispatch; how each transport is driven stays in the child
-  skills `opencode-cli`, `collaborating-with-antigravity`, and `codex-cli`.
+  duties around a dispatch; each transport skill explains its invocation.
   Pair with `board-hygiene` at session close.
 metadata:
   boardkit-contract: 2
@@ -158,19 +157,8 @@ revised text; the technical owner decides changes to the underlying claims.
 
 ## The metered lane and its preflight
 
-Some transports are metered and gated. When a resolution's route points at
-the Antigravity transport, its skill line names
-`collaborating-with-antigravity`, and that child owns the ordered
-preflight, both steps before the session's **first** dispatch and in this
-order:
-
-1. An explicit per-session spend approval, recorded in the session.
-2. The `agy_doctor` probe, run before the first dispatch rather than after
-   a failure. Its report names the agy version, the auth state, whether
-   the fallback CLI is present, and the session-store path.
-
-Load the child and follow its steps. It owns running the probe and reading
-the report; they are not repeated here.
+For a metered transport, obtain session spend approval and follow the
+preflight in the selected transport skill before its first dispatch.
 
 **The adapter must report ready before dispatch.** Funding or configuration
 failures require an operator ruling under PROCESS.md. Other preflight
@@ -223,10 +211,10 @@ schema:
 prints was built against a contract that has since moved. Regenerate it.
 Editing a brief forks the contract into a copy that nothing re-checks.
 
-For an executor that loads no skills, the generated brief is its entire
-context. Send it whole. Add only what the card cannot know, such as the
-scope rule for this dispatch and the expected report shape, and never
-trim the clauses out to save room.
+Give the worker the complete brief, inline or at a readable path named in
+the kickoff. Add the assignment scope and expected return if the card does
+not supply them. The owner resolves the route; the worker receives the
+card and the assignment.
 
 ## The router picks the lane; the children drive
 
@@ -240,12 +228,6 @@ never routes around a resolution.
   invocation, the model-selection rule, the staging recipe, and the
   subagent-flag caveat from the repo's review-tooling document, which
   pins them for this repo.
-- `collaborating-with-antigravity` drives the Antigravity CLI for
-  language-shaped review, and owns the spend-approval and probe preflight
-  above. Where it is not installed, the gate does not simply proceed: the
-  repo's review-tooling document carries the raw invocation and the budget
-  gate, and both still apply. Without a way to run the probe, treat the
-  transport as unvetted and apply the board's delivery rule.
 - `codex-cli` drives the codex CLI for a second-model read, with no
   per-session spend approval in its way. Where it is not installed, the
   review-tooling document carries the sandboxed invocation and the
