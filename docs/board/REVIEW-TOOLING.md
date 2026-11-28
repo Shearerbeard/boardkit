@@ -13,75 +13,35 @@ with what is pinned here, this file wins.
 
 ## The standing rule
 
-Every final artifact (a plan, a card, an evidence write-up, an architecture
-decision) gets one adversarial review by a model from a different family
-than its author, before it reaches a user gate. For code, that is the Gate
-A review defined in `PROCESS.md` and `MODEL-CLASSES.md`. Run it in the
-board owner's own harness when a reviewer there satisfies the
-reviewer-differs-from-author invariant, and reach outside that harness
-when none does: the invariant decides, convenience does not. A harness
-whose only reviewers share the author's family cannot close its own
-Gate A. For prose and design artifacts,
-pick a reviewer from a different family than the author using the
-harness-bindings table below.
-
-An adversarial review of a standalone prose artifact that is not a card (a
-plan, an ADR, a design doc) appends a numbered findings ledger to the
-artifact itself, so the record travels with it. The ledger carries an
-explicit verdict and names both the author model and the reviewer model.
-Each finding records its disposition: the fix applied, or the reason the
-finding was rejected. An empty or verdict-less return is a failed review,
-never a clean pass. Zero findings is recorded as an explicit PASS,
-distinguishable from a tool that silently returned nothing.
+At planning, agree which available models fill the roles in
+`MODEL-CLASSES.md`. Record any approved reviewer substitution and whether
+the plan or completed candidate gets a Frontier review.
 
 ## Fix-round packets
 
-The fix-commit re-review duty in `PROCESS.md` governs every fix round. The
-card's `commit-range` extends over the fix commit, the primary packet
-regenerates over the full range, and the fresh Gate A review reads that
-packet. Nothing in this section changes that. A packet built on the fix
-diff alone is never the packet a gate is graded on.
-
-`--suffix` supplements the duty, and only where a reviewer reads the round
-better with the fix commits isolated:
-
-```sh
-export BOARDKIT_HOME=/path/to/boardkit
-uv run --project "${BOARDKIT_HOME:-../boardkit}" boardkit review-packet \
-  <ID> --suffix <name> --commit-range <a>..<b>
-```
-
-That lands in `reviews/<ID>-<name>` and leaves `reviews/<ID>` untouched, so
-the regenerated full-range packet stays whole while the fix diff sits
-readable beside it. Both are regenerable working material; the card and its
-log hold the durable record, per the retention contract in `PROCESS.md`.
-Without the suffix the supplementary run overwrites the packet the current
-re-review is reading. `PROCESS.md` names the same flag for a card spanning
-more than one repo; one mechanism serves both, and the suffix is whatever
-tells two packets apart.
-
-The shape this repo runs: extend the range, regenerate the primary packet,
-dispatch the re-review on it, and hand the reviewer the fix commit's own
-numbered diff alongside. Generate the supplementary packet where a range
-cannot isolate the fix commits by itself, since fix commits separated by
-foreign commits are not expressible as `A..B`. The extended range and its
-full-range packet are owed either way.
+Use `boardkit review-packet` to capture the full candidate range. Stage
+the material for each reviewer under the base repo's gitignored
+`.review/<card>/<role>/`. Include the specification revision, source
+worktree and range, actual authors, required checks and optional diagnostics.
+For a repair, include the prior findings and dispositions. Keep prior
+receipts when regenerating a packet. Use `--repo` for another worktree
+and `--suffix` for a supplementary packet.
 
 ## Harness bindings
 
 One row per board-owner harness this repo has actually run a board
 session from. Live model pins resolve at dispatch time from the harness
-configs named in the Pin sources column; per the no-model-ids rule,
+configs listed below; per the no-model-ids rule,
 none are copied here.
 
 | Board owner (harness) | Executor pool | Gate A reviewer | Gate F route | Defers |
 | --- | --- | --- | --- | --- |
-| Claude Code | Claude subagents (`general`, `Explore`) | opencode CLI reviewer, codex CLI as fallback (both author no Claude diffs, so the invariant holds for any Claude-authored card) | codex CLI frontier model | nothing |
+| Claude Code | Claude subagents | code reviewer from different model family | frontier model via CLI | nothing |
+| OpenCode | pinned agents | code reviewer independent of authors; optional plan review with user choice | user-approved Frontier review | when no independent model available |
 
 Pin sources: `~/.config/opencode/opencode.json` and
 `~/.config/opencode/agent/*.md` for the opencode lane;
-`~/.codex/config.toml` for the codex lane; the agy doctor report for the
-Antigravity lane. Provider constraints for a given run come from the
+`~/.codex/config.toml` for the codex lane. Provider constraints for a given run come from the
 session-start provider question in the delegation inventory, not from
 this table.
 
@@ -93,7 +53,7 @@ run, per the rule that a diagnostic must not be a code-execution surface.
 ## Tools, in order of preference
 
 1. `opencode run -m` with the plain provider/model path read from the pin
-   sources above - code review at Gate A. Staged
+   sources above - code and technical plan/spec review at Gate A. Staged
    packet in a dedicated directory per the `working-dir` contract;
    invocation and validity rules in the `opencode-cli` skill. Binary on
    PATH; pins in `~/.config/opencode/`.
@@ -101,108 +61,28 @@ run, per the rule that a diagnostic must not be a code-execution surface.
    frontier review. Repo-native paths, cwd at this repo, caller-owned
    deadline via `perl -e 'alarm N; exec @ARGV' --` (stock macOS has no
    `timeout`); rules in the `codex-cli` skill. Config in `~/.codex/`.
-3. `agy` (Antigravity bridge) - prose, plan, and spec review. Detached
-   jobs through the agy MCP tools; budget-gated, ask before spending.
-   Config in `~/.config/agy-mcp/config.toml`.
 
-Card and gate reviews go to the opencode lane first; ad-hoc adversarial
-review and the post-stall fallback go to the codex lane. A bare request
-for a second-model review resolves to the codex lane.
-
-Route by what the artifact is judged on. Code review goes to the
-code-specialized reviewers, in the harness where the diff was written. A
-reviewer whose strength is natural language rather than code is reserved for
-the artifacts judged on language: plans, prose, specs, architecture, product,
-and marketing review. It is not the default code reviewer. If such a reviewer
-runs on a metered or capped budget, record that here as a gate: no use
-without explicit user approval in the current session.
-
-Record the split explicitly rather than leaving it to inference: name
-which reviewer takes card and gate reviews, and which takes ad-hoc
-adversarial review and the post-stall fallback. A bare request for a
-second-model review should resolve to one tool by reading this
-section.
+For the configured code-review order, run `boardkit resolve-route code-review`.
 
 ## Transport rule
 
-This rule covers an EXTERNAL harness reaching into a different agent
-harness. Prefer CLI invocations over MCP transports for that:
-`opencode run` or `codex exec` rather than an MCP
-tool call into the same harness. The principle behind the preference is
-recoverability. Prefer a transport that returns a job handle immediately
-and runs the work behind that handle, because the caller can then poll it,
-bound it with a deadline, and reconnect after a client-side failure. A
-transport that completes the work inside the tool call leaves the caller
-nothing to hold. With no deadline the wait is unbounded, and a client that
-gives up has no way back to work the server has not finished. Judge a
-transport on that property rather than on which protocol it speaks. Use CLI invocations as the default; treat a
-work-inside-the-call path to another harness as a fallback that needs its
-own contract-shaped read probe (see Reviewer pre-vet) before a wave
-depends on it. If this repo has no
-such transport installed, delete the preceding sentence when filling
-this file in, so a filled-in copy never advertises a path nothing here
-can take.
+Use native subagent dispatch inside the owner's harness. For an external
+harness use a CLI with a caller-owned deadline, or a pre-vetted adapter
+with a recoverable job handle. Run mechanical checks in the candidate
+worktree. If a reviewer cannot read an input, give it a staged packet
+and verify access before starting the review.
 
-The rule does not apply within a harness. A board owner running natively
-inside a harness dispatches that harness's own pinned reviewer and
-executor agents through its in-session subagent dispatch, and never
-invokes its own harness's CLI from inside a session: the nested server
-breaks per-session cost capture and the "a review is never launched from
-inside another delegation" invariant. When a subagent cannot read a path
-the review needs - several harnesses reject reads outside the working
-directory - stage the packet (card, spec, diff, prompt) into a `.review/`
-directory inside the working directory and name those staged paths.
-Falling back to a CLI self-invocation is not the remedy. Read the agent
-config for the current model pins before routing either way; agent names
-do not imply model families.
-
-A metered language-review harness is reserved for language-shaped review:
-judgment about a plan, a diff, or prose. It is never a deterministic shell
-proxy - anything a shell command answers exactly, run in a shell - and
-never a workaround for another reviewer's permission failure. A permission
-failure produces a locally staged packet, per the paragraph above. Work
-that only reads asks for no write mode and no worktree.
-
-Cap repeated dispatch attempts on one unit of work at three, matching the
-executor-fallback rule in `PROCESS.md`. Past three, the approach changes
-rather than the attempt count. The ways out: a re-staged packet the
-transport can actually read; a different transport; a deferred gate. Session close accounts for every worktree a delegation created:
-list them, and remove the strays (`.agy-mcp/worktrees/job-*` and whatever
-your own transports leave behind) with `git worktree remove`. A retry loop
-that burns a weekly budget and returns no verdict, leaving a dozen
-registered worktrees behind, is the recorded failure these three rules
-exist to prevent.
+The coordinator keeps failed-run evidence with the card. At session close
+account for delegated worktrees, including `.agy-mcp/worktrees/job-*`;
+use `git worktree remove` once their commits and evidence are safe.
 
 ## Stall protocol
 
-Agent CLIs commonly ship without a timeout flag, so the caller owns the
-deadline: wrap every delegated invocation in one (the `perl -e 'alarm N;
-exec @ARGV' --` recipe from the codex entry above; GNU `timeout` where the
-platform ships it) and treat the wrapper's exit as the delegation's
-outcome. On a stall, switch tools rather than retrying blind; the same
-prompt through the same stalled tool usually stalls again. An empty
-return, a zero-exit run with no final text, and any run without an explicit
-verdict are each a failed delegation, never a pass. This repo's recorded
-deadline: 10 minutes per delegated dispatch, every tool.
-
-A dispatched review also carries a liveness convention, so the harness
-detects a stall instead of the user asking about one. Run the delegation
-in the background and check it mid-deadline. Growing output or CPU burn
-counts as alive; a quiet process at near-zero CPU minutes before the
-deadline is the recorded stall signature (two field
-cases: 17 and 10 minutes of silence at ~0.1s CPU). On that signature,
-kill it, retry once at most, then switch transports or defer - the
-bounded retry-then-switch above, triggered by the harness's own check
-rather than by waiting out the full deadline.
-
-Read the verdict from the reviewer's own final message, the tail of its
-transcript or output. Never from the wrapper's exit code, and never from an
-intermediate tool line. The wrapper's exit says whether the delegation
-completed, which is a different question from what the reviewer concluded;
-a zero exit has shipped a truncated run more than once. An intermediate
-line can carry a finding the reviewer went on to withdraw. An output whose
-tail states no explicit verdict is a failed review, on the same footing as
-an empty return.
+External CLI deadline on this board: 10 minutes. For a
+background CLI, check liveness before the deadline. Native dispatch uses
+harness completion notifications. Read the verdict from the reviewer's
+final message. If delivery failed, keep the transcript and apply the
+delivery rule in `PROCESS.md`.
 
 ## Reviewer pre-vet
 
@@ -254,8 +134,6 @@ Recovery recipe by harness:
   the record.
 - **codex (code-review fallback and Gate F frontier review):** copy the
   figures from the codex session log printed at the end of `codex exec`.
-- **agy (prose review):** copy the figures from the agy job summary shown
-  by the agy MCP tools; the job id is the session id.
 
 Record the aggregate and per-model figures in the wave-close retro. If
 per-session recovery fails mid-close, record what is recoverable and log
@@ -270,8 +148,7 @@ This appendix owns the lane inventory between them.
 
 - Per-harness config trees, by kind: the opencode config group (often
   dotfiles-managed), the sibling claude-skills install for the
-  language skills, the codex config tree, and the Antigravity (agy)
-  config where that lane is installed. None of these ship with a
+  language skills and the codex config tree. None of these ship with a
   clone; each machine brings or rebuilds its own.
 - Provider accounts, by kind - subscription, API key, cloud-role -
   matched to the routes this board's `boardkit.toml` declares.

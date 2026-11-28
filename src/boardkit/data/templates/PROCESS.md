@@ -199,52 +199,35 @@ their edges silently drop out of the schedulable DAG.
   another session runs them. Planning confers no standing authority. Once
   the user hands the board to another session, that session is the board
   owner, and the planner holds no live role until the user re-engages it.
-- Executor: a subagent the board owner dispatches to work one card. An
-  executor makes no board writes and runs no git operations; it reports
-  back to the board owner, which is the only role that commits, updates
-  card status, or regenerates views. An executor may itself dispatch worker
-  subagents at most one nesting level below it; those workers delegate to
-  no one further.
-- Reviewer: a fresh-context agent the board owner dispatches for a gate. A
-  reviewer is never nested inside another delegation: the board owner
-  dispatches every gate review directly, or the gate defers rather than
-  being routed through an executor. The reviewer's model must differ from
-  every model that authored the diff under review (the
-  reviewer-differs-from-author invariant, see Gate A below and
-  `MODEL-CLASSES.md`).
+- Executor: works in its own worktree and commits its assigned scope under
+  the repo's commit rules. It returns the branch and commit range to the
+  board owner. The owner handles integration, push, PRs and worktree cleanup;
+  board state stays with the owner. An executor may dispatch
+  workers one level below it; those workers delegate to no one further.
+- Reviewer: a fresh-context agent the board owner dispatches directly for a
+  gate. It reviews the candidate worktree without git mutations and reports
+  findings to the board owner. The reviewer must satisfy the independence
+  rule in `MODEL-CLASSES.md`.
 
-A dispatch brief for a subagent contains the full card text, paths to any
-required reference material (not summaries of it), the scope rule ("only
-modify what the card names; if the task needs anything else, stop and
-report instead"), and the expected report format: what changed as
-file:line, acceptance-check output verbatim, open questions, and anything
-discovered but not fixed. Where two executors fill work in parallel against
-the same crate or the same shared files, the brief also names that shared
-surface, and the executor reports a collision with the other's uncommitted
-work rather than resolving it.
+A dispatch brief for a subagent contains the full card, required references,
+exact input revision, allowed scope, test owner, and report format. Missing
+required inputs or access go back to the board owner.
 
-A brief names the role it dispatches and the pin source where that role's
-live model pins are read. It never names a model id. Models resolve from
-harness configuration at dispatch time, so an id written into a brief is a
-copy that starts going stale immediately, and a stale one can invert the
-reviewer-differs-from-author invariant by naming the very model that
-authored the diff. Where the record needs to say which model ran, that
-fact lands after the run, in the cost ledger.
+The brief names the role and pin source; live pins resolve at dispatch time.
+It never names a model id. The cost ledger records the model actually used.
 
 Decision authority stays with the board owner. When a card allows an
 either-or outcome, the subagent reports the evidence and stops; the board
-owner decides and writes the log entry.
+owner decides and writes the log entry. A dependent card receives an exact
+predecessor revision only after the predecessor is recorded done with
+evidence and every retained gate has passed. A named intermediate gate may
+use a substitute only when the authorized user explicitly records its scope,
+decision-maker and required evidence under the consumer's contract. Batching
+a later review, draft PR publication and an attendance override do not waive
+acceptance gates. All other gates remain in force.
 
-Executor-fallback rule: a delegation tool can fail to deliver. After three
-failed delegation attempts on one unit of work, the board owner has two
-options: author the unit directly and log the takeover on the card, or
-name a second executor and redispatch. A card that needs a different
-threshold sets and logs its own. The board still owns git, gates, and board writes; only the
-authoring hand changes, and the switch is always logged, never silent. This
-rule covers authoring executors only. It does not excuse a Gate A reviewer
-from the reviewer-differs-from-author invariant: if the board owner's
-takeover means it authored the diff and its harness holds no other model
-family, that card's Gate A stays open rather than self-reviewing.
+After three failed executor deliveries on one unit, the owner records a
+takeover or assigns another executor. A card may specify its own threshold.
 
 ## Gates
 
@@ -261,53 +244,35 @@ checklist that repeats it at the gate is the one that fires.
   output, not a summary. Gate S also carries the doc-sync duty: the card's
   report names which living documents its diff affects, or states none
   (the duty itself is described under Gate D below).
-- Gate A, agent: a fresh subagent with no implementation context reviews the
-  diff against the card's acceptance criteria and either finds issues or
-  signs off explicitly. The reviewer's model must differ from every model
-  that authored the diff (the reviewer-differs-from-author invariant,
-  which a repo's `REVIEW-TOOLING.md` may tighten to family level - the
-  stricter pin wins); for a
-  multi-commit range, the reviewer must differ from every model that wrote
-  any commit in it, and a range whose authorship cannot be established
-  defers rather than being reviewed blind. Findings are numbered, each with
-  its resolution, recorded to the card's log or review directory so the
-  record is auditable finding-by-finding, not as an aggregate count. The
-  ledger also names the model that authored the diff and the model that
-  reviewed it, so the reviewer-differs-from-author invariant is checkable
-  from the record itself. A check the reviewer cannot execute, or one
-  that fails for reasons peculiar to the reviewer's sandbox (a denied
-  command, a missing tool, no network), is reported as unverified, never
-  as a finding against the diff: the board owner runs the check itself
-  or routes it to Gate S, and the review record says which checks the
-  reviewer actually ran. Never
-  read an empty or failed reviewer return as a pass: a review with no
-  verdict has not run. Zero findings is recorded as an explicit PASS, not
-  silence. Two cases defer: self-review (the same model authored and would
-  review), and a reviewer that pre-vet finds unreachable, unvetted, or
-  under-permissioned (see `MODEL-CLASSES.md`). Fix-commit re-review duty:
-  when Gate A findings are fixed in a new commit, the card's `commit-range`
-  extends to include the fix commit, the review packet regenerates over the
-  full range, and a fresh Gate A review covers the fix commit. Marking a
-  card done without this leaves the fix commit unreviewed. An external-repo
-  card (`lineage: none`) carries the same duty: the fix commit extends the
-  logged sha range and the card's `commit-range`, and the packet regenerates
-  over the full range with `--repo <path>` for a fresh Gate A. Convergence
-  rule: each re-review round verifies the prior round's dispositions with
-  evidence, re-raises findings whose fixes failed, and re-raises any
-  regression the fix introduced in the reviewed diff. It does not expand
-  scope past ground already accepted. Round bound: after two fix rounds,
-  the board owner writes a ruling that names the next action: continue,
-  card, or escalate. The ruling may not pass Gate A while unresolved
-  in-scope findings remain; failed fixes and fix-introduced regressions
-  stay in cycle or escalate, never carded as new scope. A FAIL whose
-  findings are all new scope - none re-raise a prior round's failed fix,
-  and none are regressions the fix introduced - triggers the user
-  escalation, taking the disagreement to the user with it recorded on the
-  ledger, never a silent stop or an unbounded loop. The dispatch brief for
-  a re-review round carries this discipline into the reviewer prompt. The
-  ledger records per-round finding counts, cumulative reviewer spend, and
-  per-finding disposition verification evidence as required fields, so the
-  cycle's shape is auditable from the record.
+- Gate A, agent: a fresh reviewer checks the candidate diff against the card's
+  scope and acceptance criteria. Select the reviewer under `MODEL-CLASSES.md`
+  and verify eligibility against the actual authors. Unknown authorship leaves
+  the gate open. Record author and reviewer identities, numbered findings,
+  their dispositions and an explicit verdict. A clean review returns PASS.
+
+  Review slots: Each checkpoint on a card has its own initial review and
+  at most two repair verifications. The coordinator judges every return and
+  authorizes repairs. PASS closes the slot, including minor findings the
+  owner can dispose of.
+
+  Verify prior repairs and introduced regressions. If the third review
+  leaves findings unresolved, send the recommendation and available usage
+  to the operator. The allowance follows the slot across model or transport
+  changes.
+
+  Delivery failures: Count stalled, empty, verdict-less and prerequisite-blocked
+  returns separately for each slot. Allow one reasoned retry for a transient
+  failure, then escalate. Invalid configuration or exhausted funds go straight
+  to the operator. A substantive FAIL counts as feedback.
+
+  Verification evidence: Name required and optional checks before dispatch.
+  Supply commands and results on the candidate revision. Reviewers may build,
+  test, search, count and inspect in its worktree; run targeted checks where
+  the evidence leaves doubt. Record unverified checks. A missing required
+  result stays open; refusing an optional diagnostic does not invalidate a
+  verdict. The coordinator can verify minor edits; behavioral repairs return
+  to the same review slot.
+
 - Gate M, manual: the agent exercises the behavior end to end and reports
   what happened.
 - Gate D, drift audit: before any user gate opens, a fresh lower-cost agent

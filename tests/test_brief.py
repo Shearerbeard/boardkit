@@ -23,7 +23,6 @@ from boardkit.brief import (
     DECISION_AUTHORITY_ANCHOR,
     DISPATCH_BRIEF_ANCHOR,
     GATE_A_ROUTING_ANCHOR,
-    RE_REVIEW_CONVERGENCE_ANCHOR,
     BriefError,
     build_brief,
     gate_tokens,
@@ -154,44 +153,29 @@ def test_both_process_clauses_are_quoted(tmp_path: Path) -> None:
     assert DECISION_AUTHORITY_ANCHOR in text
 
 
-def test_the_re_review_dispatch_brief_carries_the_convergence_instruction(
-    tmp_path: Path,
-) -> None:
-    """S14: the convergence discipline lives in the Gate A bullet the brief
-    quotes, so a re-review round's reviewer prompt carries it. The anchor
-    pins the clause; if the template drops it, this fails instead of shipping
-    a brief whose reviewer can loop without bound."""
-    text = _brief(tmp_path)
-    # The brief quotes clauses with a "> " prefix per line, so a phrase that
-    # wraps across lines reads "> " between its words. Strip the prefix, then
-    # collapse whitespace, so the anchor and phrases match regardless of wrap.
-    flat = " ".join(re.sub(r"^> ?", "", line).strip() for line in text.splitlines() if line.strip())
-
-    assert RE_REVIEW_CONVERGENCE_ANCHOR in flat
-    assert "re-raises findings whose fixes failed" in flat
-    assert "regression the fix introduced" in flat
-    assert "may not pass Gate A while unresolved in-scope findings remain" in flat
-    assert "never a silent stop or an unbounded loop" in flat
-
-
-def test_the_brief_carries_the_parallel_fill_interference_note(tmp_path: Path) -> None:
-    """Two executors filling in parallel against one crate collided over each
-    other's uncommitted work (2026-08-16). The note rides the dispatch-brief
-    clause, so every brief carries it; this fails if the clause loses it."""
-    text = _brief(tmp_path)
-    flat = " ".join(re.sub(r"^> ?", "", line).strip() for line in text.splitlines() if line.strip())
-
-    assert "fill work in parallel" in flat
-    assert "the same crate or the same shared files" in flat
-    assert "the brief also names that shared surface" in flat
-    assert "reports a collision with the other's uncommitted work rather than resolving it" in flat
-
-
 def test_the_provenance_footer_says_to_regenerate(tmp_path: Path) -> None:
     text = _brief(tmp_path)
 
     assert "Regenerate this brief rather than editing it" in text
     assert "boardkit doctor" in text
+
+
+def test_review_slot_policy_is_quoted_from_the_consumer(tmp_path: Path) -> None:
+    config = load_config(_board(tmp_path))
+    process = tmp_path / "docs" / "board" / "PROCESS.md"
+    source = process.read_text(encoding="utf-8")
+    start = source.index("  Review slots:")
+    end = source.index("- Gate M,", start)
+    policy = source[start:end]
+    unquoted = re.sub(r"^> ?", "", build_brief(config, "S1"), flags=re.MULTILINE)
+
+    assert policy in unquoted
+    replacement = "  Consumer-owned review-slot policy.\n"
+    process.write_text(source.replace(policy, replacement), encoding="utf-8")
+    revised = re.sub(r"^> ?", "", build_brief(config, "S1"), flags=re.MULTILINE)
+
+    assert policy not in revised
+    assert replacement in revised
 
 
 # --- determinism and digest -------------------------------------------------

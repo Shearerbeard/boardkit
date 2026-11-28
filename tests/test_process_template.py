@@ -132,41 +132,11 @@ def test_every_gate_the_brief_can_quote_has_a_bullet() -> None:
     assert "Deferrals" not in quoted[-1]
 
 
-def test_the_gate_a_bullet_states_the_re_review_convergence_discipline() -> None:
-    """S14: the fix-commit re-review duty gains a convergence rule, a round
-    bound with a named escalation, and ledger fields, all beside it in the
-    same Gate A bullet the dispatch brief quotes."""
+def test_gate_a_keeps_slot_delivery_and_verification_clauses_separate() -> None:
     gate_a = gate_bullets(_template_text(), ("A",))[0]
-    flat = " ".join(gate_a.split())
 
-    assert "Convergence rule:" in flat
-    assert "verifies the prior round's dispositions with evidence" in flat
-    assert "re-raises findings whose fixes failed" in flat
-    assert "regression the fix introduced" in flat
-    assert "does not expand scope past ground already accepted" in flat
-    assert "Round bound:" in flat
-    assert "after two fix rounds" in flat
-    assert "continue, card, or escalate" in flat
-    assert "may not pass Gate A while unresolved in-scope findings remain" in flat
-    assert "failed fixes and fix-introduced regressions stay in cycle" in flat
-    assert "user escalation" in flat
-    assert "never a silent stop or an unbounded loop" in flat
-    assert "per-round finding counts" in flat
-    assert "cumulative reviewer spend" in flat
-    assert "per-finding disposition verification evidence" in flat
-
-
-def test_the_dispatch_brief_clause_carries_the_parallel_fill_note() -> None:
-    """Two executors filling against one crate collided over uncommitted work
-    (2026-08-16). The note rides the clause the brief already quotes, so every
-    generated brief carries it; without the pin the clause can lose it
-    silently."""
-    clause = " ".join(paragraph_at(_template_text(), DISPATCH_BRIEF_ANCHOR, TEMPLATE).split())
-
-    assert "fill work in parallel" in clause
-    assert "the brief also names that shared surface" in clause
-    assert "reports a collision with the other's uncommitted work" in clause
-    assert "rather than resolving it" in clause
+    for label in ("Review slots:", "Delivery failures:", "Verification evidence:"):
+        assert gate_a.count(label) == 1
 
 
 def test_the_canary_section_defines_the_degraded_close() -> None:
